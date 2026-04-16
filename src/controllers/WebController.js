@@ -1712,87 +1712,67 @@ controller.trasladarDetenido = (req, res) => {
     const id = req.params.id;
     const login = req.username || "sistema";
     let { Movil, personalCustodio, observaciones, id_comisaria_destino } = req.body;
-    console.log("ID DETENIDO: ", id);
+
+    id_comisaria_destino = parseInt(id_comisaria_destino);
+
     req.getConnection((err, conn) => {
-        if (err) {
-            return res.json(err);
+        if (err) return res.redirect(`/detenidos?error=1`);
+        // 🔹 Obtener datos del detenido
+        conn.query(`
+        SELECT im.id_InternoMovimiento, il.id_Persona, im.id_InternoProntuario,
+                im.Unidad_Alojado, im.Unidad_Destino
+        FROM pol_internomovimiento im
+        INNER JOIN pol_internolegajo il USING(id_InternoLegajo)
+        WHERE il.id_InternoLegajo = ?
+        ORDER BY id_InternoMovimiento DESC LIMIT 1
+        `, [id], (err, rows) => {
+
+        if (err || !rows.length) {
+            console.error(err);
+            return res.redirect(`/detenidos?error=1`);
         }
-        // Obtener datos del detenido actual ANTES de modificar
-        conn.query("SELECT pol_internomovimiento.id_InternoMovimiento, pol_internolegajo.id_Persona, pol_internomovimiento.id_InternoProntuario, pol_internomovimiento.Unidad_Alojado, pol_internomovimiento.Unidad_Destino FROM pol_internomovimiento INNER JOIN pol_internolegajo USING(id_InternoLegajo) WHERE pol_internolegajo.id_InternoLegajo = ? ORDER BY id_InternoMovimiento DESC LIMIT 1", [id], (err, rows) => {
+
+        const movimiento = rows[0];
+
+        // 🔹 Datos para notificación
+        conn.query(`SELECT p.Apellido, p.Nombre, p.Dni, u1.Detalle AS unidad_origen, u2.Detalle AS unidad_destino FROM pol_internolegajo il INNER JOIN pol_persona p USING(id_Persona) LEFT JOIN pol_unidades u1 ON u1.id_Unidades = ? LEFT JOIN pol_unidades u2 ON u2.id_Unidades = ? WHERE il.id_InternoLegajo = ?`, [movimiento.Unidad_Alojado, id_comisaria_destino, id], (err, data) => {
+
+            if (err || !data.length) {
+            return res.redirect(`/detenidos?error=1`);
+            }
+
+            const detenido = data[0];
+
+            // ✅ INSERT ÚNICO
+            const notificacion = {
+            id_Usuario: null, // 👈 ya no se usa
+            id_InternoLegajo: id,
+            Movil: Movil || "",
+            PersonalCustodio: personalCustodio || "",
+            Observaciones: observaciones || "",
+            Unidad_Origen_Codigo: movimiento.Unidad_Destino,
+            Unidad_Destino_Codigo: id_comisaria_destino,
+            Apellido_Detenido: detenido.Apellido,
+            Nombre_Detenido: detenido.Nombre,
+            DNI_Detenido: detenido.Dni,
+            Unidad_Origen: detenido.unidad_origen,
+            Unidad_Destino: detenido.unidad_destino,
+            Tipo_Notificacion: "TRASLADO",
+            Estado: "pendiente",
+            id_unidad_destino: id_comisaria_destino
+            };
+
+            conn.query("INSERT INTO pol_notificaciones SET ?", notificacion, (err) => {
                 if (err) {
-                    console.error("Error al obtener datos:", err);
+                    console.error("Error insertando notificación:", err);
                     return res.redirect(`/detenidos?error=1`);
                 }
-                let id_Persona = null;
-                let id_InternoProntuario = null;
-                let Unidad_Alojado = null;
-                let Unidad_Destino = null;
-                id_comisaria_destino = parseInt(id_comisaria_destino);
-                if (rows.length > 0) {
-                    id_Persona = rows[0].id_Persona;
-                    id_InternoProntuario = rows[0].id_InternoProntuario;
-                    Unidad_Alojado = rows[0].Unidad_Alojado;
-                    id_InternoMovimiento = rows[0].id_InternoMovimiento;
-                    Unidad_Destino = rows[0].Unidad_Destino;
-                }
-                // Obtener datos del detenido para la notificación
-                conn.query("SELECT pol_persona.Apellido, pol_persona.Nombre, pol_persona.Dni, u_origen.Detalle AS unidad_origen, u_destino.Detalle AS unidad_destino FROM pol_internolegajo INNER JOIN pol_persona USING(id_Persona) LEFT JOIN pol_unidades AS u_origen ON u_origen.id_Unidades = ? LEFT JOIN pol_unidades AS u_destino ON u_destino.id_Unidades = ? WHERE id_InternoLegajo = ?", [Unidad_Alojado, id_comisaria_destino, id], (err, detenidoData) => {
-                        if (err || !detenidoData.length) {
-                            console.log("No se pudo obtener datos del detenido para notificaciones");
-                            return res.redirect(`/detenidos?error=1`);
-                        }
-                        const detenido = detenidoData[0];
-                        // Obtener usuarios con acceso a la unidad destino (excepto administradores)
-                        conn.query("SELECT DISTINCT pol_usuarios.id_usuario FROM pol_usuarios INNER JOIN pol_usuariounidades USING(id_usuario) INNER JOIN pol_usuarioperfiles ON pol_usuarioperfiles.id_usuario = pol_usuarios.id_usuario WHERE pol_usuariounidades.id_Unidades = ? AND pol_usuariounidades.Estado = 1 AND pol_usuarioperfiles.id_rol != 4", [id_comisaria_destino], (err, usuarios) => {
-                                if (err) {
-                                    console.error("Error al obtener usuarios:", err);
-                                    return res.redirect(`/detenidos?error=1`);
-                                }
 
-                                // Si no hay usuarios, simplemente redirigir con éxito
-                                if (!usuarios || usuarios.length === 0) {
-                                    console.log("No hay usuarios para notificar en esa unidad, traslado completado sin notificaciones",
-                                    );
-                                    return res.redirect(`/detenidos?success=1`);
-                                }
+                res.redirect(`/detenidos?msg=pedido_traslado`);
+                });
 
-                                // Insertar notificaciones para cada usuario CON LOS DATOS DEL TRASLADO
-                                let notificacionesInsertadas = 0;
-                                console.log("USUARIOS ENCONTRADOS:", usuarios.length);
-                                usuarios.forEach((usuario) => {
-                                    const notificacionData = {
-                                        id_usuario: usuario.id_usuario,
-                                        id_InternoLegajo: id,
-                                        Movil: Movil || "",
-                                        PersonalCustodio: personalCustodio || "",
-                                        Observaciones: observaciones || "",
-                                        Unidad_Origen_Codigo: Unidad_Destino,
-                                        Unidad_Destino_Codigo: id_comisaria_destino,
-                                        Apellido_Detenido: detenido.Apellido,
-                                        Nombre_Detenido: detenido.Nombre,
-                                        DNI_Detenido: detenido.Dni,
-                                        Unidad_Origen: detenido.unidad_origen,
-                                        Unidad_Destino: detenido.unidad_destino,
-                                        Tipo_Notificacion: "TRASLADO",
-                                    };
-                                    console.log("INSERTANDO NOTIFICACIÓN:", JSON.stringify(notificacionData));
-                                    conn.query("INSERT INTO pol_notificaciones SET ?", notificacionData, (err, result) => {
-                                        if (!err) {
-                                            notificacionesInsertadas++;
-                                            console.log(`Notificación insertada para usuario ${usuario.id_usuario}`);
-                                        } else {
-                                            console.error("Error al insertar notificación:", err);
-                                        }
-                                    },
-                                    );
-                                });
-                                res.redirect(`/detenidos?msg=pedido_traslado`);
-                            },
-                        );
-                    },
-                );
-            },
-        );
+            });
+        });
     });
 };
 
@@ -2037,94 +2017,83 @@ controller.estadisticas = (req, res) => {
 };
 
 controller.obtenerNotificaciones = (req, res) => {
-    const id_usuario = req.user.id; // Del JWT en el middleware
+    const id_usuario = req.user.id;
     req.getConnection((err, conn) => {
-        if (err) {
-            return res.status(500).json({ error: "Error de conexión" });
-        }
-        conn.query("SELECT * FROM pol_notificaciones WHERE id_usuario = ? AND Leida = FALSE AND Estado = 'pendiente' ORDER BY Fecha_Creacion DESC", [id_usuario], (err, notificaciones) => {
+        if (err) return res.status(500).json({ error: "Error conexión" });
+        // 🔹 1. Obtener unidades del usuario
+        conn.query(`SELECT id_Unidades FROM pol_usuariounidades WHERE id_usuario = ? AND Estado = 1`, [id_usuario], (err, unidades) => {
+
+            if (err) return res.status(500).json({ error: "Error unidades" });
+
+            if (!unidades.length) {
+                return res.json({ notificaciones: [], total_no_leidas: 0 });
+            }
+
+            const ids = unidades.map(u => u.id_Unidades);
+
+            // 🔹 2. Traer notificaciones + estado usuario
+            conn.query(`SELECT n.*, IF(nu.leida IS NULL, 0, nu.leida) AS leida FROM pol_notificaciones n LEFT JOIN pol_notificaciones_usuarios nu ON n.id_Notificacion = nu.id_notificacion AND nu.id_usuario = ? WHERE n.id_unidad_destino IN (?) AND n.Estado = 'pendiente' ORDER BY n.Fecha_Creacion DESC`, [id_usuario, ids], (err, notificaciones) => {
                 if (err) {
-                    console.error("Error al obtener notificaciones:", err);
-                    return res.status(500).json({ error: "Error en la consulta" });
+                console.error(err);
+                return res.status(500).json({ error: "Error consulta" });
                 }
-                conn.query("SELECT COUNT(*) AS total FROM pol_notificaciones WHERE id_usuario = ? AND Leida = FALSE", [id_usuario], (err, countResult) => {
-                        if (err) {
-                            return res.status(500).json({ error: "Error en la consulta" });
-                        }
-                        
-                        res.json({
-                            notificaciones: notificaciones,
-                            total_no_leidas: countResult[0].total,
-                        });
-                    },
-                );
-            },
-        );
+                const noLeidas = notificaciones.filter(n => n.leida === 0).length;
+
+                res.json({
+                notificaciones,
+                total_no_leidas: noLeidas
+                });
+            });
+        });
     });
 };
 
 controller.responderNotificacion = (req, res) => {
     const id_Notificacion = req.params.id;
-    const { respuesta } = req.body; // 'aceptada' o 'rechazada'
+    const { respuesta } = req.body;
     const id_usuario = req.user.id;
     const login = req.username || "sistema";
 
     req.getConnection((err, conn) => {
-        if (err) {
-            return res.status(500).json({ error: "Error de conexión" });
+        if (err) return res.status(500).json({ error: "Error conexión" });
+        conn.query(`SELECT * FROM pol_notificaciones WHERE id_Notificacion = ?`, [id_Notificacion], (err, rows) => {
+        if (err || !rows.length) {
+            return res.status(500).json({ error: "Notificación no encontrada" });
         }
-        console.log("ID NOTIFICACION: ", id_Notificacion);
-        console.log("RESPUESTA: ", respuesta);
-        console.log("ID USUARIO: ", id_usuario);
-
+        const notif = rows[0];
+        conn.query(`INSERT INTO pol_notificaciones_usuarios (id_notificacion, id_usuario, leida, fecha_lectura) VALUES (?, ?, 1, NOW()) ON DUPLICATE KEY UPDATE leida = 1`, [id_Notificacion, id_usuario]);
         if (respuesta === "aceptada") {
-            // Si se acepta, primero obtener los datos de la notificación
-            conn.query("SELECT * FROM pol_notificaciones WHERE id_Notificacion = ? AND id_usuario = ?", [id_Notificacion, id_usuario], (err, notificaciones) => {
-                if (err || !notificaciones.length) {
-                    console.error("Error al obtener notificación:", err);
-                    return res.status(500).json({ error: "Notificación no encontrada" });
+        conn.query(`SELECT Estado FROM pol_notificaciones WHERE id_Notificacion = ?`, [id_Notificacion], (err, result) => {
+            if (err || !result.length) {
+            return res.status(500).json({ error: "Error verificando estado" });
+            }
+            const estadoActual = result[0].Estado;
+            if (estadoActual === "aceptada") {
+            return res.json({
+                success: false,
+                message: "Esta notificación ya fue procesada por otro usuario"
+            });
+            }
+            const detalle = `Movil: ${notif.Movil}, Personal: ${notif.PersonalCustodio}, Obs: ${notif.Observaciones}`;
+            conn.query(`INSERT INTO pol_internomovimiento (id_InternoLegajo, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, 'TRASLADO', ?, ?)`, [
+            notif.id_InternoLegajo, notif.Unidad_Origen_Codigo, notif.Unidad_Destino_Codigo, detalle, login], (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: "Error traslado" });
                 }
-                const notif = notificaciones[0];
-                console.log("NOTIFICACION NUMUIERO: ", notif);
-                // Insertar el movimiento de traslado en pol_internomovimiento
-                const detalleMovimiento = `Movil: ${notif.Movil || ""}, Personal: ${notif.PersonalCustodio || ""}, Observaciones: ${notif.Observaciones || ""}`;
-                    conn.query("INSERT INTO pol_internomovimiento (id_InternoLegajo, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, 'TRASLADO', ?, ?)", [notif.id_InternoLegajo, notif.Unidad_Origen_Codigo, notif.Unidad_Destino_Codigo, JSON.stringify(detalleMovimiento), login], (err, result) => {
-                            if (err) {
-                                console.error("Error al insertar movimiento:", err);
-                                return res.status(500).json({ error: "Error al procesar traslado" });
-                            }
-                            // Actualizar la notificación a aceptada
-                            conn.query("UPDATE pol_notificaciones SET Estado = ?, Leida = TRUE, Fecha_Lectura = NOW() WHERE id_Notificacion = ?", ["aceptada", id_Notificacion],
-                                (err, result) => {
-                                    if (err) {
-                                        console.error("Error al actualizar notificación:", err);
-                                        return res.status(500).json({ error: "Error al actualizar notificación" });
-                                    }
-                                    res.json({
-                                        success: true,
-                                        message:"Traslado aceptado y registrado en base de datos",
-                                    });
-                                },
-                            );
-                        },
-                    );
-                },
-            );
+                conn.query(`UPDATE pol_notificaciones SET Estado = 'aceptada' WHERE id_Notificacion = ?`, [id_Notificacion]);
+                return res.json({
+                    success: true,
+                    message: "Traslado aceptado correctamente"
+                });
+            });
+        });
         } else {
-            // Si se rechaza, solo marcar como rechazada
-            conn.query("UPDATE pol_notificaciones SET Estado = ?, Leida = TRUE, Fecha_Lectura = NOW() WHERE id_Notificacion = ? AND id_usuario = ?", [respuesta, id_Notificacion, id_usuario],
-                (err, result) => {
-                    if (err) {
-                        console.error("Error al actualizar notificación:", err);
-                        return res.status(500).json({ error: "Error al procesar respuesta" });
-                    }
-                    res.json({
-                        success: true,
-                        message: `Notificación marcada como ${respuesta}`,
-                    });
-                },
-            );
+            conn.query(`UPDATE pol_notificaciones SET Estado = 'rechazada' WHERE id_Notificacion = ?`, [id_Notificacion]);
+            return res.json({ success: true, message: "Notificación rechazada" });
         }
+
+        });
     });
 };
 
