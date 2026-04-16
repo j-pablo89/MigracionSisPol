@@ -1,0 +1,37 @@
+<%- include('_modal_cambio_clave') %>
+<footer>
+    <div class="py-3">
+        <div class="d-md-flex justify-content-md-around text-center">
+            <div>
+                <h6 class="text-white text-borderWhite">Ministerio de Seguridad</h6>     
+            </div>
+            <div>
+                <h6 class="text-white text-borderWhite">Todos los derechos reservados &copy; - 2026</h6>
+            </div>
+            <div>
+                <h6 class="text-white text-borderWhite">By Gestión de T.I.C. SPT</h6>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/script.js"></script>
+<script>
+    (function(){
+        try{
+            // Bloqueo global: evita que el botón "Atrás" navegue fuera de la aplicación
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function (e) {
+                history.pushState(null, null, location.href);
+            });
+        }catch(err){
+            console.error('Anti-back script error', err);
+        }
+    })();
+</script>
+</body>
+</html>

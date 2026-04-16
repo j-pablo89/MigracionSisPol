@@ -1,0 +1,304 @@
+<%- include ('partials/_header2')%>
+
+<div class="container mainSection mb-5" id="main-container" data-page="agregar_detenido">
+    <% if (typeof errorMessage !== 'undefined') { %>
+      <div class="alert alert-danger">
+        <%= errorMessage %>
+      </div>
+    <% } %>
+    <form class="row g-3 bg-light fw-bold mt-5 border border-5 border-primary validar-formulario" action="/guardar_detenido" method="POST" id="formDetenido" >
+      <div class="modal-header d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
+          <h3 class="fw-bold text-white my-3">AGREGAR DETENIDO</h3>
+      </div>
+      <h5 class="fw-bold text-black">Datos Personales</h5>
+      <div class="col-md-4">
+        <label for="Dni" class="form-label">Nro Documento</label>
+        <input type="text" class="form-control" name="Dni" id="Dni" maxlength="8" inputmode="numeric" pattern="\d{8}" title="El DNI debe contener exactamente 8 números" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+      </div>
+      <div class="clear-fix"></div>
+      <div class="col-md-6">
+        <label for="Apellido" class="form-label">Apellido</label>
+        <input type="text" class="form-control" name="Apellido" id="Apellido" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-6">
+        <label for="Nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="Nombre" id="Nombre" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-6 ">
+        <label for="Sexo_nombre" class="form-label">Genero</label>
+        <select id="Sexo_nombre" name="Sexo" required>
+          <option value="">Seleccione género</option>
+          <option value="MASCULINO">MASCULINO</option>
+          <option value="FEMENINO">FEMENINO</option>
+          <option value="TRANS MASCULINO">TRANS MASCULINO</option>
+          <option value="TRANS FEMENINO">TRANS FEMENINO</option>
+          <option value="NO BINARIO">NO BINARIO</option>
+        </select>
+      </div>
+      <div class="col-md-6">  
+        <label for="Fecha_nacimiento" class="form-label">Fecha Nacimiento</label>
+        <input type="date" class="form-control" name="Fecha_nacimiento" id="Fecha_nacimiento" required>
+        <div class="mt-2">
+          <label class="fw-bold text-primary">Edad: </label>
+          <span id="edadCalculada">--</span>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label for="Domicilio" class="form-label">Domicilio</label>
+        <input type="text" class="form-control" name="Domicilio" id="Domicilio" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-6">
+        <label for="Provincia_nombre" class="form-label">Provincia</label>
+        <select id="Provincia_id" name="id_provincia" placeholder="Seleccione provincia" required>
+          <option value="">Seleccione provincia</option>
+          <% for (prov of provincia){%>
+            <option value="<%= prov.id_provincia %>"><%= prov.Nombre %></option>
+          <%}%>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="Localidad_nombre" class="form-label">Localidad</label>
+        <select id="Localidad_id" aria-label="Default select example" name="id_localidad" placeholder="Seleccione localidad" required>
+          <option value="">Seleccione localidad</option>
+          <% for (loc of localidades){%>
+            <option value="<%= loc.id_localidad %>" data-provincia="<%= loc.id_provincia %>">
+              <%= loc.nombre %>
+            </option>  
+          <%}%>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="Personal_fuerza" class="form-label">Personal Fuerza</label>
+        <select class="form-select" aria-label="Default select example" name="Personal_fuerza" id="Personal_fuerza" required>
+          <option value="" selected disabled>Seleccione</option>
+          <option value="SI">SI</option>
+          <option value="NO">NO</option>
+        </select>
+      </div>
+      <div class="clearfix"></div> 
+      <h5 class="fw-bold text-black">Causa</h5>
+      <div class="col-md-6">
+        <label for="Oficio_Numero" class="form-label">Oficio</label>
+        <input type="text" class="form-control" id="Oficio_Numero" name="Oficio_Numero" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-6">
+        <label for="Oficio_Fecha" class="form-label">Fecha Oficio</label>
+        <input type="date" class="form-control" id="Oficio_Fecha" name="Oficio_Fecha" required>
+      </div>
+      <div class="col-md-6">
+        <label for="Causa" class="form-label">Causa</label>
+        <input type="text" class="form-control" id="Causa" name="Causa" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-6">
+        <label for="Autoridad_judicial" class="form-label">Autoridad Judicial Interviniente</label>
+        <select id="Autoridad_judicial_id" name="id_autoridad_judicial" required>
+          <option value="">Seleccione autoridad</option>
+          <% for (autoridad of autoridades) { %>
+            <option value="<%= autoridad.id_AutoridadJudicial %>">
+              <%= autoridad.descripcion %>
+            </option>
+          <% } %>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="Comisaria_dependiente" class="form-label">Comisaría Dependiente</label>
+        <select id="Comisaria_dependiente_id" name="id_comisaria_dependiente" required>
+          <option value="">Seleccione comisaría</option>
+          <% for (unidad of unidades) { %>
+            <option value="<%= unidad.id_Unidades %>">
+              <%= unidad.Detalle %>
+            </option>
+          <% } %>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="Comisaria_alojamiento" class="form-label">Comisaría Alojamiento</label>
+        <select id="Comisaria_alojamiento_id" name="id_comisaria_alojamiento" required>
+          <option value="">Seleccione comisaría</option>
+          <% for (unidad of unidades) { %>
+            <option value="<%= unidad.id_Unidades %>">
+              <%= unidad.Detalle %>
+            </option>
+          <% } %>
+        </select>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="Fecha_hecho" class="form-label">Fecha Hecho</label>
+        <input type="date" class="form-control" id="Fecha_hecho" name="Fecha_hecho" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="Fecha_Detencion" class="form-label">Fecha Detención</label>
+        <input type="date" class="form-control" id="Fecha_Detencion" name="Fecha_Detencion" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="Situacion_procesal" class="form-label">Situación Procesal</label>
+        <select id="Situacion_procesal" name="Situacion_procesal" required>
+          <option value="">Seleccione situación</option>
+          <option value="CONDENADO">CONDENADO</option>
+          <option value="PROCESADO">PROCESADO</option>
+          <option value="PREVENTIVA">PREVENTIVA</option>
+        </select>
+      </div>
+      <div class="form-group mb-3" style="display: none;" id="divFecha">
+        <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+          <label for="Cantidad-dias">Días:</label>
+          <input type="number" id="Cantidad-dias" min="0" max="31" class="form-control" style="width: 80px;" required readonly>             
+          <label for="Cantidad-meses">Meses:</label>
+          <input type="number" id="Cantidad-meses" min="0" max="12" class="form-control" style="width: 80px;" required readonly>         
+          <label for="Cantidad-anios">Años:</label>
+          <input type="number" id="Cantidad-anios" class="form-control" style="width: 80px;" required readonly>         
+          <label for="Fecha_cumple_condena">Fecha Cumple Condena:</label>
+          <input type="date" id="Fecha_cumple_condena" name="Fecha_cumple_condena" class="form-control" style="width: 200px">                              
+        </div>    
+        <h4 class="mt-4 text-center">Tiempo</h4>
+        <h6 class="mb-3 text-center" id="Diferencia-total"></h6>   
+      </div>
+      <h5 class="fw-bold text-black">Datos Víctima</h5>
+      <div class="col-md-6 mb-3">
+        <label for="Apellido_victima" class="form-label">Apellido</label>
+        <input type="text" class="form-control" id="Apellido_victima" name="Apellido_victima" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="Nombre_victima" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="Nombre_victima" name="Nombre_victima" onkeyup="this.value = this.value.toUpperCase()" required>
+      </div>
+      <div class="col-md-12 mb-3">
+        <label for="Detalle" class="form-label">Observaciones</label>
+        <textarea class="form-control" id="Detalle" name="Detalle" onkeyup="this.value = this.value.toUpperCase()" required></textarea>
+      </div>
+      <div class="col-6 text-center mb-3 mt-5">
+        <a href="/detenidos" class="btn btn-danger-strong border border-1 border-black">Cancelar</a>
+      </div>
+      <div class="col-6 text-center mb-3 mt-5">
+        <button type="submit" class="btn btn-success-strong border border-1 border-black">Guardar</button>
+      </div>
+    </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const fechaHecho = document.querySelector("#Fecha_hecho");
+  const fechaDetencion = document.querySelector("#Fecha_Detencion");
+  const fechaOficio = document.querySelector("#Oficio_Fecha");
+
+  if (fechaHecho) fechaHecho.max = hoy;
+  if (fechaDetencion) fechaDetencion.max = hoy;
+  if (fechaOficio) fechaOficio.max = hoy;
+
+});
+
+document.getElementById("Fecha_nacimiento").addEventListener("change", function() {
+    const fechaNacimiento = new Date(this.value);
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+    const mes = hoy.getMonth() - fechaNacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+        edad--;
+    }
+    document.getElementById("edadCalculada").textContent = edad + " años";
+});
+
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  const provinciaSelect = new TomSelect("#Provincia_id", {
+    create: false,
+    sortField: { field: "text", direction: "asc" },
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const localidadSelect = new TomSelect("#Localidad_id", {
+    create: false,
+    sortField: { field: "text", direction: "asc" },
+    maxOptions: null,
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const autoridadSelect = new TomSelect("#Autoridad_judicial_id", {
+  create: false,
+    sortField: { field: "text", direction: "asc" },
+    maxOptions: null,
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const comisariaDepSelect = new TomSelect("#Comisaria_dependiente_id", {
+    create: false,
+    sortField: { field: "text", direction: "asc" },
+    maxOptions: null,
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const comisariaAlojSelect = new TomSelect("#Comisaria_alojamiento_id", {
+    create: false,
+    sortField: { field: "text", direction: "asc" },
+    maxOptions: null,
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const sexoSelect = new TomSelect("#Sexo_nombre", {
+    create: false
+  });
+
+  const situacionProcesalSelect = new TomSelect("#Situacion_procesal", {
+    create: false
+  });
+
+  // ✅ GUARDAR OPCIONES ORIGINALES (CLAVE)
+  const localidadesOriginales = [];
+
+  document.querySelectorAll("#Localidad_id option").forEach(opt => {
+    localidadesOriginales.push({
+      value: opt.value,
+      text: opt.text,
+      provincia: opt.dataset.provincia
+    });
+  });
+
+  // ✅ FILTRO LOCALIDAD SEGÚN PROVINCIA (ARREGLADO)
+  provinciaSelect.on("change", function(value) {
+
+    localidadSelect.clear(true); // limpia selección
+    localidadSelect.clearOptions(); // limpia opciones
+
+    const filtradas = localidadesOriginales.filter(loc => 
+      !value || loc.provincia == value
+    );
+
+    filtradas.forEach(loc => {
+      localidadSelect.addOption({
+        value: loc.value,
+        text: loc.text
+      });
+    });
+
+    localidadSelect.refreshOptions(false);
+  });
+
+});
+
+</script>
+
+<%- include('partials/_footer') %>

@@ -1,0 +1,407 @@
+*{
+    box-sizing: border-box;
+    font-family: "Lato", sans-serif;
+}
+
+.root{
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-size: 15px;
+}
+.mainSection{
+    flex-grow: 1;
+}
+
+/* CONTENEDOR */
+#watermark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* TEXTO */
+.watermark-text {
+  position: absolute;
+  font-size: 26px;
+  color: rgba(143, 143, 143, 0.2);
+  transform: rotate(-30deg);
+  white-space: nowrap;
+  user-select: none;
+  font-weight: bold;
+}
+
+.fondoimagen {
+    position: relative;
+    font-family: "Lato", sans-serif;
+    margin: 0;
+    background: url(../img/fondo2.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed; 
+    line-height: 20px;
+    
+}
+.bg-image{
+    position: relative;
+    font-family: "Lato", sans-serif;
+    margin: 0;
+    background: url(../img/policia2.jpg);
+    background-size: cover;
+}
+
+.fila-eliminada {
+    background-color: #f8d7da; /* rojo suave */
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  
+
+.btn-sispol{
+    background-color: rgb(0, 119, 255);
+}
+
+.fondoImagenPatrones{
+    background-image: url(../img/logo_policiallll.svg);
+    background-repeat: repeat;
+    background-position: center;
+    background-repeat: repeat;
+    background-size: 50px 100px;
+    
+}
+
+.linkarchivo{
+    color: rgb(0, 85, 182);
+    font-weight: bold;
+}
+
+
+.linkarchivo:hover{
+    color: rgb(182, 0, 0);
+    text-decoration: underline;
+}
+
+
+.btn-sispol:hover{
+    background-color: rgb(0, 85, 182);
+    color: white;
+}
+
+.fondoGradiente{
+    background: rgb(0,0,0);
+    background: linear-gradient(166deg, rgba(0,0,0,1) 0%, rgba(43,43,47,1) 49%, rgba(88,88,88,1) 100%, rgba(0,212,255,1) 100%);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+.text-border{
+    text-shadow: 2px 2px 4px black;
+}
+.text-borderWhite{
+    text-shadow: 2px 2px 4px rgb(184, 184, 184);
+}
+
+.text-terciary{
+    color: rgb(210, 210, 210);
+}
+
+.text-bg-terciary{
+    background-color: rgb(125, 125, 125);
+    color: rgb(255, 255, 255);
+}
+
+.imagen-shadow{
+    box-shadow: 1px 1px 2px rgb(255, 255, 255);
+    border-radius: 45px;
+}
+
+.centrar-botones .centrar-td{
+    text-align: center;
+}
+.table-responsive {
+    max-height: 500px; /* Ajusta la altura máxima según tus necesidades */
+    overflow-y: auto;
+}
+
+.btn {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+
+.bg-primary{
+    background-color: rgb(0, 119, 255);
+}
+
+.tamanioImagen{
+    width: 150px;
+    height: 400px;
+}
+
+.tamanioImagen2{
+    width: 80px;
+    height: 400px;
+}
+.tamanioImagen3{
+    width: 120px;
+    height: 120px;
+}
+.tamanioImagen4{
+    width: 250px;
+    height: 250px;
+}
+.tamanioImagen3miniatura{
+    width: 80px;
+    height: 80px;
+}
+
+dialog 
+{
+      border: none;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+dialog::backdrop 
+{
+      background: rgba(0,0,0,0.5);
+    }
+
+
+
+/* ESTILO PARA IMAGENES PREVIAS */
+
+#preview1, #preview2 , #preview3, #preview4 {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    margin-top: 10px;
+  }
+
+.estiloLetra {
+    -webkit-text-stroke: 1px blue; 
+    text-shadow: 2px 2px 5px rgba(2, 6, 255, 0.5), 0 0 20px blue, 0 0 20px blue;
+}
+
+.recorte {
+  width: 350px;       /* área visible */
+  height: 200px;      /* recorte */
+  overflow: hidden;   /* oculta el resto */
+  position: relative;
+  filter: invert(20%) sepia(40%) saturate(3500%) hue-rotate(217deg) brightness(133%) contrast(500%);
+  
+}
+.logo {
+  position: absolute;
+  top: -50px;         /* mueve la imagen hacia arriba */
+  left: 50%;          /* centra horizontalmente */
+  transform: translateX(-50%); /* ajusta el centrado */
+  filter:
+    drop-shadow(1px 1px 15px rgba(255, 255, 255, 0.4))
+    drop-shadow(1px 1px 15px rgba(255, 254, 254, 0.3));
+  
+}
+
+
+/*ESTILO PARA EL ALERT*/
+.swal2-container {
+  z-index: 20000 !important;
+}
+
+.foto-persona{
+    width:100%;
+    height:220px;
+    object-fit:contain;
+    background:#000;
+    
+}
+.card{
+    overflow:hidden;
+}
+
+.text-sispol{
+     color: rgb(0, 204, 255);
+}
+
+.bg-sispol{
+    background-color: rgb(0, 204, 255);
+}
+
+.foto-persona{
+    transition: transform .3s;
+}
+
+.card:hover .foto-persona{
+    transform: scale(1.05);
+}
+
+
+
+/* --- TABLA MOVIMIENTOS --- */
+.tabla-movimientos {
+    /* Fuerza que respete los anchos */
+   min-width: 1400px;    
+   white-space: nowrap;    
+
+}
+
+.tabla-movimientos th,
+.tabla-movimientos thead td { /* Evita salto de línea */
+  overflow: hidden;       /* Oculta texto que se pasa del ancho */
+  text-overflow: ellipsis;/* Agrega "..." al final del texto largo */
+   position: sticky;
+    top: 0;
+    z-index: 10;
+   
+}
+
+#tablaUsuarios thead th, #tablaDetenidos thead th { /* Evita salto de línea */
+    overflow: hidden;       /* Oculta texto que se pasa del ancho */
+  text-overflow: ellipsis;/* Agrega "..." al final del texto largo */
+   position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-bordo{
+    --bs-table-bg: #B00020;
+    --bs-table-striped-bg: #9c001c;
+    --bs-table-hover-bg: #850018;
+    --bs-table-border-color: #9c001c;
+    color: #ffffff;
+}
+
+.bg-danger-strong{
+    background-color: rgb(160, 0, 0);
+}
+
+.btn-danger-strong{
+    background-color: rgb(160,0,0);
+}
+
+.btn-danger-strong:hover{
+    background-color: rgb(120,0,0);
+    color: white;   
+}
+.text-danger-strong{
+    color: rgb(160,0,0);
+
+}
+
+.bg-success-strong{
+    background-color: rgb(0, 148, 44);
+}
+
+.btn-success-strong{
+    background-color: rgb(0, 148, 44);
+}
+
+.btn-success-strong:hover{
+    background-color:rgb(0, 117, 35);
+    color: white;   
+}
+.text-success-strong{
+    color:rgb(0, 148, 44);
+
+}
+
+.preview-img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.ts-wrapper {
+  width: 100%;
+}
+
+/* 🔹 Contenedor principal de TomSelect */
+.ts-control {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 38px; /* igual que .form-control */
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  border: 1px solid #000000;
+  border-radius: 0.375rem;
+  box-shadow: none;
+}
+
+/* 🔹 Input interno */
+.ts-control input {
+  font-size: 1rem;
+}
+
+/* 🔹 Flechita */
+.ts-control::after {
+  border-color: #6c757d transparent transparent transparent;
+}
+
+/* 🔹 Dropdown */
+.ts-dropdown {
+  border-radius: 0.375rem;
+  border: 1px solid #ced4da;
+}
+
+/* 🔹 Quitar estilos raros */
+.ts-wrapper.single .ts-control {
+  background-image: none !important;
+}
+
+/* 🔹 Focus igual a Bootstrap */
+.ts-control.focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+}
+
+
+
+/* MOBILE: columna */
+.acciones-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* DESKTOP: grilla */
+@media (min-width: 768px) {
+  .acciones-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+
+  .acciones-grid .btn {
+    width: 100%;
+  }
+}
+
+
+
+
+.col-id { width: 50px;}
+.col-nombre { width: 200px; }
+.col-doc { width: 120px; }
+.col-dep, .col-aloj { width: 180px; }
+.col-dest { width: 160px; }
+.col-fecha { width: 130px; }
+.col-tipo { width: 130px; }
+.col-user { width: 120px; }
+.col-obs { width: 250px; }
+.col-usuario {width: 100px;}
+.col-tipouser {width: 150px;}
+.col-horaConexion {width: 150px;}
+.col-tipoConexion {width: 150px;}
+

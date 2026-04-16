@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SisPol - Ministerio de Seguridad</title>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootswatch.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="shortcut icon" href="/img/logo_policial.png">
+    <link rel="stylesheet" href="/css/style-bar.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
+  </head>
+  <body class="root fondoImagenPatrones" data-usuario="<%= session.apellido %> - <%= session.dni %>" >
+
+    <!-- 🔥 MARCA DE AGUA -->
+  <div id="watermark"></div>
+
+    <!--HEADER-->
+    <header class="header d-flex justify-content-between py-1 align-items-center">
+      <div class="header__toggle d-flex d-md-none align-items-center">
+        <i class="bx bx-menu" id="header-toggle"></i>
+        <form class="d-flex d-md-none align-items-center ms-5 ps-5 w-75" action="/interleg" method="get" role="search">
+          <input type="search" name="q" class="form-control form-control-sm" placeholder="Buscar..." aria-label="Buscar" style="width:120px">
+          <button class="btn btn-outline-light btn-sm ms-1" type="submit"><i class="bx bx-search"></i></button>
+        </form>
+      </div>
+      <div class="flex-grow-1 d-flex justify-content-evenly">
+        <div class="clear-fix d-none d-md-flex"></div>
+        <form class="d-none d-md-flex align-items-center w-50 ms-5" action="/interleg" method="get" role="search">
+          <input type="search" name="q" class="form-control form-control-sm ms-5" placeholder="Buscar..." aria-label="Buscar">
+          <button class="btn btn-outline-light btn-sm ms-1 " type="submit"><i class="bx bx-search"></i></button>
+        </form>
+      </div>
+      <div class="d-flex align-items-center justify-content-center gap-3 me-2">
+        <img src="<%= session.avatar %>" class="header__img" />
+        <h6 class="text-white d-none d-md-block m-0" id="nombreUsuario"><%= session.firstnamesecondname %></h6>
+      </div>
+    </header>
+    
+    <!-- MODAL NOTIFICACIONES -->
+    <dialog id="modalNotificaciones" class="border border-3 border-primary bg-light p-0">
+      <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+        <h5 class="modal-title text-white" id="tituloDetenido">NOTIFICACIONES</h5>
+        <button type="button" class="btn btn-danger-strong text-end cerrarModalRegresar px-2 py-0" onclick="document.getElementById('modalNotificaciones').close()" value="CERRAR">X</button>
+      </div>
+      <hr>
+      <div class="modal-body p-3" id="notificacionesBody" style="max-height: 400px; overflow-y: auto;">
+          <p class="text-black text-center">No hay notificaciones</p>
+      </div>
+      <hr>
+      <div class="modal-footer p-3 d-flex justify-content-center">
+        <button type="button" class="btn btn-danger-strong cerrarModalRegresar border border-1 border-black" onclick="document.getElementById('modalNotificaciones').close()">CERRAR</button>
+      </div>
+    </dialog>
+    
+    <!--NAV-->
+    <div class="nav" id="navbar">
+      <nav class="nav__container">
+        <div>
+          <a href="/inicio">
+            <div class="d-flex align-items-center">
+                <img src="/img/logo_policial.png" width="50px">  
+                <h3 class="text-white fw-bolder text-border" >Sis<span style="color: rgb(0, 119, 255);" >Pol</span></h3>
+            </div>
+          </a>
+          <hr>
+          <div class="nav__list">
+            <div class="nav__items">
+              <h3 class="nav__subtitle">Perfil</h3>
+              <a href="/inicio" class="nav__link active">
+                <i class="bx bx-home nav__icon"></i>
+                <span class="nav__name">Inicio</span>
+                
+              </a>
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO' ) ? 'disabled' : '' %>">
+                <a href="#" class="nav__link">
+                  <i class="bx bx-user nav__icon"></i>
+                  <span class="nav__name">Perfil</span>
+                  <i
+                    class="bx bx-chevron-down nav__icon nav__dropdown-icon"
+                  ></i>
+                </a>
+                <div class="nav__dropdown-collapse ">
+                  <div class="nav__dropdown-content">
+                    <a href="#" class="nav__dropdown-item modalCambiarClave" data-id="<%= session.userId %>">Cambiar clave</a>
+                  </div>
+                </div>
+              
+              </div>
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO') ? 'disabled' : '' %>">
+              <a href="#" class="nav__link" id="notificacionesContainer" style="cursor: pointer; position: relative;">
+                <i class="bx bx-bell nav__icon" id="bellIcon"></i>
+                <span class="nav__name ">Notificaciones</span>
+                <span class="badge bg-danger" id="notificacionesBadge" style="display: none; position: absolute; top: 0; right: 0;">0</span>
+              </a>
+              </div>
+            </div>
+            <div class="nav__items">
+              <h3 class="nav__subtitle">Menu</h3>
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO') ? 'disabled' : '' %>">
+                <a href="#" class="nav__link">
+                  <i class="bx bxs-face-mask nav__icon"></i>
+                  <span class="nav__name">Detenidos</span>
+                  <i
+                    class="bx bx-chevron-down nav__icon nav__dropdown-icon"
+                  ></i>
+                </a>
+                <div class="nav__dropdown-collapse">
+                  <div class="nav__dropdown-content">
+                    <a href="/agregar_detenido" class="nav__dropdown-item">Nuevo</a>
+                    <a href="/detenidos" class="nav__dropdown-item">Listado</a>
+                    <!-- <a href="/servicioPenitenciario" class="nav__dropdown-item">En SPT</a>
+                    <a href="/liberados" class="nav__dropdown-item">Liberados</a>                   -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR') ? 'd-none' : '' %>">
+                <a href="#" class="nav__link">
+                  <i class="bx bxs-user-detail nav__icon"></i>
+                  <span class="nav__name">Usuarios</span>
+                  <i
+                    class="bx bx-chevron-down nav__icon nav__dropdown-icon"
+                  ></i>
+                </a>
+                <div class="nav__dropdown-collapse">
+                  <div class="nav__dropdown-content">
+                    <a href="/agregar_usuario" class="nav__dropdown-item">Nuevo</a>
+                    <a href="/usuarios" class="nav__dropdown-item">Listado</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR') ? 'd-none' : '' %>">
+                <a href="#" class="nav__link">
+                  <i class="bx bx-user nav__icon"></i>
+                  <span class="nav__name">Auditor</span>
+                  <i
+                    class="bx bx-chevron-down nav__icon nav__dropdown-icon"
+                  ></i>
+                </a>
+                <div class="nav__dropdown-collapse">
+                  <div class="nav__dropdown-content">
+                    <a href="/movimientos_comisarias" class="nav__dropdown-item">Movimientos Comisarias</a>
+                    <a href="/estadisticas" class="nav__dropdown-item">Estadisticas</a>
+                    <a href="/usuarios_conectados" class="nav__dropdown-item">Usuarios Conectados</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="nav__items">
+              <h3 class="nav__subtitle">ACCESO</h3>
+              <span class="nav__name <% if (session.nombre_rol === "ADMINISTRADOR" ) { %>active text-danger<% } else if (session.nombre_rol === "USUARIO GENERAL") { %>active text-success<% } %>"><%= session.nombre_rol %></span>
+              <% if (session.nombre_rol && session.nombre_rol !== "ADMINISTRADOR" && session.nombre_rol !== "USUARIO GENERAL") { %>
+                <% if (session.unidades && session.unidades.length > 0) { %>
+                  <div>
+                      <h5 class="nav__name">Unidades Habilitadas</h5>
+                    </a>
+                      <ul class="nav__name">
+                        <% session.unidades.forEach(unidad => { %>
+                          <li class="nav__dropdown-item"><%= unidad.Detalle %></li>
+                        <% }) %>
+                      </ul>
+                  </div>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <a href="/logout" class="nav__link nav__logout">
+            <i class="bx bx-log-out nav__icon"></i>
+            <span class="nav__name">Salir</span>
+        </a>
+      </nav>
+    </div>
+

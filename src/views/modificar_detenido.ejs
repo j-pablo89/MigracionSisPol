@@ -1,0 +1,142 @@
+<%- include ('partials/_header2')%>
+
+<div class="container mainSection mb-5" id="main-container" data-page="modificar_detenido">
+    <form class="row g-3 bg-light fw-bold mt-5 border border-5 border-primary validar-datalists" action="/actualizar_detenido/<%= detenidos.id_InternoLegajo %>" method="POST">
+      <div class="modal-header d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
+        <h3 class="fw-bold text-white my-3">MODIFICAR DETENIDO</h3>
+      </div>
+      <input type="hidden" name="id_Persona" id="id_Persona" value="<%= detenidos.IdPersona %>">
+      <input type="hidden" name="id_InternoLegajo" id="id_InternoLegajo" value="<%= detenidos.id_InternoLegajo %>">
+        <h5 class="fw-bold text-black">Datos Personales</h5>
+        <div class="col-md-4">
+            <label for="Dni" class="form-label">Nro Documento</label>
+            <input type="number" class="form-control" name="Dni" id="Dni" max="99999999" value="<%= detenidos.Dni%>" oninput="this.value = this.value.slice(0, 8)"required>
+        </div>
+        <div class="clear-fix"></div>
+        <div class="col-md-6">
+          <label for="Apellido" class="form-label">Apellido</label>
+          <input type="text" class="form-control" name="Apellido" id="Apellido" value="<%= detenidos.Apellido %>" onkeyup="this.value = this.value.toUpperCase()" required>
+        </div>
+        <div class="col-md-6">
+          <label for="Nombre" class="form-label">Nombre</label>
+          <input type="text" class="form-control" name="Nombre" id="Nombre" value="<%= detenidos.Nombre %>" onkeyup="this.value = this.value.toUpperCase()" required>
+        </div>
+        <div class="col-md-6">
+          <label for="Sexo_nombre" class="form-label">Genero</label>
+          <select id="Sexo_nombre" name="Sexo" required>
+            <option value="">Seleccione género</option>
+            <option value="MASCULINO">MASCULINO</option>
+            <option value="FEMENINO">FEMENINO</option>
+            <option value="TRANS MASCULINO">TRANS MASCULINO</option>
+            <option value="TRANS FEMENINO">TRANS FEMENINO</option>
+            <option value="NO BINARIO">NO BINARIO</option>
+          </select>
+        </div>
+        <div class="col-md-6">  
+            <label for="Fecha_nacimiento" class="form-label">Fecha Nacimiento</label>
+            <input type="date" class="form-control" name="Fecha_nacimiento" id="Fecha_nacimiento" value="<%= detenidos.Fecha_nacimiento %>" required>
+        </div>
+        <div class="col-md-6">
+            <label for="Domicilio" class="form-label">Domicilio</label>
+            <input type="text" class="form-control" name="Domicilio" id="Domicilio" value="<%= detenidos.Domicilio %>" onkeyup="this.value = this.value.toUpperCase()" required>
+        </div>
+        <div class="col-md-6">
+          <label for="Provincia_nombre" class="form-label">Provincia</label>
+          <select id="Provincia_id" name="id_provincia" placeholder="Seleccione provincia" required>
+            <option value="">Seleccione provincia</option>
+            <% for (prov of provincia){%>
+              <option value="<%= prov.id_provincia %>"><%= prov.Nombre %></option>
+            <%}%>
+          </select>
+        </div>
+        <div class="col-md-6">
+         <label for="Localidad_nombre" class="form-label">Localidad</label>
+          <select id="Localidad_id" aria-label="Default select example" name="id_localidad" placeholder="Seleccione localidad" required>
+            <option value="">Seleccione localidad</option>
+            <% for (loc of localidades){%>
+              <option value="<%= loc.id_localidad %>" data-provincia="<%= loc.id_provincia %>">
+                <%= loc.nombre %>
+              </option>  
+            <%}%>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="Personal_fuerza" class="form-label">Personal Fuerza</label>
+          <select class="form-select" aria-label="Default select example" name="Personal_fuerza" id="Personal_fuerza" required>
+            <option value="<%= detenidos.Personal_Fuerza %>" selected><%= detenidos.Personal_Fuerza %></option>
+            <option value="1">SI</option>
+            <option value="2">NO</option>
+          </select>
+        </div>
+        <div class="col-6 text-center mb-3 mt-5">
+          <a href="/detenidos" class="btn btn-danger-strong border border-1 border-black">CANCELAR</a>
+        </div>
+        <div class="col-6 text-center mb-3 mt-5">
+          <button type="submit" class="btn btn-success-strong border border-1 border-black">GUARDAR</button>
+        </div>
+      </form> 
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+  const provinciaSelect = new TomSelect("#Provincia_id", {
+    create: false,
+    sortField: { field: "text", direction: "asc" },
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const localidadSelect = new TomSelect("#Localidad_id", {
+    create: false,
+    sortField: { field: "text", direction: "asc" },
+    maxOptions: null,
+    render: {
+      option: function(data, escape) {
+        return `<div>${escape(data.text)}</div>`;
+      }
+    }
+  });
+
+  const sexoSelect = new TomSelect("#Sexo_nombre", {
+    create: false
+  });
+
+  
+  // ✅ GUARDAR OPCIONES ORIGINALES (CLAVE)
+  const localidadesOriginales = [];
+
+  document.querySelectorAll("#Localidad_id option").forEach(opt => {
+    localidadesOriginales.push({
+      value: opt.value,
+      text: opt.text,
+      provincia: opt.dataset.provincia
+    });
+  });
+
+  // ✅ FILTRO LOCALIDAD SEGÚN PROVINCIA (ARREGLADO)
+  provinciaSelect.on("change", function(value) {
+
+    localidadSelect.clear(true); // limpia selección
+    localidadSelect.clearOptions(); // limpia opciones
+
+    const filtradas = localidadesOriginales.filter(loc => 
+      !value || loc.provincia == value
+    );
+
+    filtradas.forEach(loc => {
+      localidadSelect.addOption({
+        value: loc.value,
+        text: loc.text
+      });
+    });
+
+    localidadSelect.refreshOptions(false);
+  });
+  
+});
+</script>
+
+<%- include ('partials/_footer')%>

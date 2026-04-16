@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISPOL</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootswatch.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="shortcut icon" href="/img/logo_policial.png">
+</head>
+<% if (typeof timeout !== 'undefined' && timeout) { %>
+<script>
+    Swal.fire({
+        icon: 'warning',
+        title: 'Sesión finalizada',
+        text: 'La sesión se cerró por inactividad.',
+        confirmButtonText: 'Aceptar'
+    });
+</script>
+<% } %>
+<body class="fondoimagen root">
+    <header>
+        <div>
+            <div class="d-sm-flex align-items-center text-center justify-content-center mt-4">
+                <img src="/img/logo_policial.png" width="150px">  
+                <h1 class="text-white fw-bolder text-border display-1 me-md-3" >Sis<span style="color: rgb(0, 119, 255);">Pol</span></h1>
+            </div>
+        </div>
+    </header>
+    <main class="mainSection">
+        <div class="d-flex justify-content-center mt-5 pt-md-5">
+            <div class="card text-white bg-dark mb-3 mx-auto">
+                <div class="card-header text-center">INICIO SESIÓN</div>
+                    <div class="card-body">
+                        <form action="/login" method="POST">
+                            <div class="form-floating mb-3">
+                                <input name="username" type="text" class="form-control" id="floatingInput" placeholder="username" maxlength="8" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                                <label for="floatingInput">Usuario</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input name="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" autocomplete="off" required>
+                                <label for="floatingPassword">Contraseña</label>
+                            </div>
+                            <div class="form-floating text-center">
+                                <input type="submit" value="INGRESAR" class="btn" style="background-color: rgb(0, 119, 255);">
+                            </div>
+                        </form>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    

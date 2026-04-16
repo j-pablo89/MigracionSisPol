@@ -1,0 +1,383 @@
+<%- include('partials/_header2') %>
+
+
+<div class="mainSection" id="main-container" data-page="listar_detenidos">
+    <div class="mainSection mb-5">
+        <div class="container mt-5 mb-3">
+            <h3 class="text-white text-center text-borderWhite">ALOJADOS EN COMISARIA</h3>
+        </div>
+        <div>
+            <div class="mb-3">
+                <div class="col-md-4 col-6 mb-2">
+                     <label class="text-white d-none d-md-block form-label">Buscar:</label>
+                     <label class="text-white d-block d-md-none form-label">Buscar:</label>
+                     <input type="text" id="filtroBusqueda" class="form-control">
+                </div>
+            </div>
+            <div class="table-responsive d-none d-md-block" id="tablaDetenidos">
+                <table class="table table-hover" id="tablaDetenidos">
+                    <thead>
+                        <tr class="table-primary">
+                            <th scope="col">Orden</th>
+                            <th scope="col" class="text-center">Foto</th>
+                            <th scope="col" class="text-center">Apellido</th>
+                            <th scope="col" class="text-center">Nombre</th>
+                            <th scope="col" class="text-center">DNI</th>
+                            <th scope="col" class="text-center">Alojamiento</th>
+                            <th scope="col" class="text-center">Causas</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="centrar-botones">
+                        <% if (detenidos) { %> 
+                            <% j = 1 %>
+                                <% for (detenido of detenidos) { %>
+                                <textarea hidden id="detalle-<%= detenido.id_InternoLegajo %>"><%= detenido.Detalle %></textarea>
+                                <tr>
+                                    <td class="align-middle text-center"><u>
+                                    <button class="btn btn-outline abrir-modal-detalle fs-5"
+                                        data-id="<%= detenido.id_InternoLegajo %>" 
+                                        data-nombre="<%= detenido.NOMBRE %>" 
+                                        data-apellido="<%= detenido.APELLIDO %>"
+                                        data-dni="<%= detenido.DNI %>"
+                                        data-alojado="<%= detenido.Unidad_Destino %>"
+                                        data-origen="<%= detenido.Unidad_Alojado %>"
+                                        data-frente="<%= detenido.frente %>"
+                                        data-detdestino="<%= detenido.detalle_destino %>"
+                                        data-sexo="<%= detenido.SEXO %>"
+                                        data-domicilio="<%= detenido.DOMICILIO %>"
+                                        data-fechanacimiento="<%= detenido.FECHA_NACIMIENTO %>"
+                                        data-localidad="<%= detenido.LOCALIDAD %>"
+                                        data-provincia="<%= detenido.PROVINCIA %>">
+                                        
+                                        <%= j %>
+                                        <%= console.log("DETALLES: ", detenido.Detalle )%>
+                                        </u>
+                                    </td>
+                                    <% if (detenido.frente) { %>
+                                        <td class="centrar-td"><a href="/agregar_foto/<%= detenido.id_InternoLegajo%>"><img src="<%= detenido.frente %>" alt="Foto Frente"  class="tamanioImagen3"></a></td>
+                                    <% } else { %>
+                                        <td class="centrar-td"><a href="/agregar_foto/<%= detenido.id_InternoLegajo%>"><img src="img/perfil.ico" alt=""></a></td>
+                                    <% } %>
+                                    <td class="align-middle text-center"><%= detenido.APELLIDO%></td>
+                                    <td class="align-middle text-center"><%= detenido.NOMBRE%></td>
+                                    <td class="align-middle text-center"><%= detenido.DNI%></td>
+                                    <td class="align-middle text-center"><%= detenido.detalle_destino%></td>                                                           
+                                    <td class="align-middle text-center"><a href="/causa_detenido/<%= detenido.id_InternoLegajo %>" class="fw-bold fs-5"> <u><%= detenido.cantidad_causas %></u></a></td>
+                                    <td class="align-middle text-center">
+                                        <% if (detenido.traslado_pendiente > 0) { %>
+                                            <span class="badge bg-warning text-dark fs-6">Traslado Pendiente a <%= detenido.traslado_destino %></span>
+                                        <% } else { %>
+                                        <button class="btn btn-outline-danger abrir-modal-opciones"
+                                          data-id="<%= detenido.id_InternoLegajo %>"
+                                          data-nombre="<%= detenido.NOMBRE %>"
+                                          data-apellido="<%= detenido.APELLIDO %>"
+                                          data-dni="<%= detenido.DNI %>"
+                                          data-alojado="<%= detenido.Unidad_Destino %>"
+                                          data-origen="<%= detenido.Unidad_Alojado%>"
+                                          data-frente="<%= detenido.frente %>"
+                                          data-cantidad_causas="<%= detenido.cantidad_causas %>"
+                                          data-esadmin="<%= session.nombre_rol === 'ADMINISTRADOR' %>">ACCIONES</button>
+                                        <% } %>
+                                    </td>                       
+                                </tr>
+                                <% j = j + 1 %>
+                            <%}%>
+                        <%}%>
+                    </tbody>
+                </table>
+            </div>
+            <dialog id="modalAcciones" class="border border-3 border-primary bg-light p-0 w-100" style="max-width: 500px;">
+                
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white">ACCIONES</h5>
+                    <button type="button" class="btn btn-danger-strong cerrarModalAcciones px-2 py-0">X</button>
+                </div>
+
+                <div class="modal-body p-3">
+
+                <!-- 🔥 GRID RESPONSIVE -->
+                <div class="acciones-grid">
+
+                    <input id="btnLiberar" class="btn btn-primary abrir-modal border border-1 border-black" value="LIBERAR">
+
+                    <input id="btnMover" class="btn btn-primary abrir-modal-mover border border-1 border-black" value="MOVER">
+
+                    <input id="btnRegresar" class="btn btn-secondary d-none abrir-modal-regresar border border-1 border-black" value="REGRESAR">
+
+                    <input id="btnTrasladar" class="btn btn-primary abrir-modal-trasladar border border-1 border-black" value="TRASLADAR">
+
+                    <a id="linkModificar" class="btn btn-primary border border-1 border-black">MODIFICAR</a>
+
+                    <a id="linkCausas" class="btn btn-primary border border-1 border-black">CAUSAS</a>
+
+                    <a id="linkArchivos" class="btn btn-primary border border-1 border-black">ARCHIVOS</a>
+
+                </div>
+
+                </div>
+
+                <div class="modal-footer d-flex justify-content-center p-3">
+                    <button class="btn btn-danger-strong" onclick="modalAcciones.close()">CERRAR</button>
+                </div>
+
+            </dialog>
+
+            <!-- MODAL ACCIONES DETENIDO DISPOSITIVOS GRANDES
+            <dialog id="modalAcciones" class="border border-3 border-primary bg-light p-0">
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white" id="tituloDetenido">ACCIONES</h5>
+                    <button type="button" class="btn btn-danger-strong text-end cerrarModalAcciones px-2 py-0" value="CERRAR">X</button>
+                </div>
+                <div class="modal-body d-flex justify-content-center gap-3 p-3">
+                    
+                        <input id="btnLiberar" class="btn btn-primary mb-2 w3-button abrir-modal border border-1 border-black" title="Liberar detenido" style="width: 150px;" value="LIBERAR">
+            
+                    <input id="btnMover" class="btn btn-primary mb-2 w3-button abrir-modal-mover border border-1 border-black" title="Mover detenido" style="width: 150px;" value="MOVER">
+                    <input id="btnRegresar" class="btn btn-secondary mb-2 w3-button abrir-modal-regresar border border-1 border-black d-none" title="Regresar detenido" style="width: 150px;" value="REGRESAR">
+                    <input id="btnTrasladar" class="btn btn-primary mb-2 w3-button abrir-modal-trasladar border border-1 border-black" title="Trasladar detenido" style="width: 150px; " value="TRASLADAR">
+                </div>
+                <div class="modal-body d-flex justify-content-center gap-3 p-3">
+                    <a id="linkModificar" class="btn btn-primary mb-2 border border-1 border-black" title="Modificar datos del detenido" style="width: 150px; ">MODIFICAR</a>
+                    <a id="linkCausas" class="btn btn-primary mb-2 border border-1 border-black" title="Ver causas del detenido" style="width: 150px; ">CAUSAS</a>
+                    <a id="linkArchivos" class="btn btn-primary mb-2 border border-1 border-black" title="Agregar archivo al detenido" style="width: 150px; ">ARCHIVOS</a>
+                </div>
+                <hr>
+                <div class="modal-footer d-flex justify-content-center p-3">
+                    <button type="button" class="btn btn-danger-strong border border-1 border-black" onclick="modalAcciones.close()">CERRAR</button>
+                </div>
+            </dialog>
+
+            <!-- MODAL ACCIONES DETENIDO DISPOSITIVOS MOVILES 
+            <dialog id="modalAccionesMovil" class="border border-3 border-primary bg-light p-0">
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white" id="tituloDetenido">ACCIONES</h5>
+                    <button type="button" class="btn btn-danger-strong text-end cerrarModalAccionesMoviles px-2 py-0" value="CERRAR">X</button>
+                </div>
+                <div class="modal-body d-flex flex-column gap-3 p-3">
+                        <input id="btnLiberarMovil" class="btn btn-primary mb-2 w3-button abrir-modal border border-1 border-black" title="Liberar detenido" style="width: 150px; " value="LIBERAR">
+                    <input id="btnMoverMovil" class="btn btn-primary mb-2 w3-button abrir-modal-mover border border-1 border-black" title="Mover detenido" style="width: 150px; " value="MOVER">
+                    <input id="btnRegresarMovil" class="btn btn-primary mb-2 w3-button abrir-modal-regresar border border-1 border-black" title="Regresar detenido" style="width: 150px;" value="REGRESAR">
+                    <input id="btnTrasladarMovil" class="btn btn-primary mb-2 w3-button abrir-modal-trasladar border border-1 border-black" title="Trasladar detenido" style="width: 150px; " value="TRASLADAR">
+                    <a id="linkModificarMovil" class="btn btn-primary mb-2 border border-1 border-black" title="Modificar datos del detenido" style="width: 150px; ">MODIFICAR</a>
+                    <a id="linkCausasMovil" class="btn btn-primary mb-2 border border-1 border-black" title="Ver causas del detenido" style="width: 150px; ">CAUSAS</a>
+                    <a id="linkArchivosMovil" class="btn btn-primary mb-2 border border-1 border-black" title="Agregar archivo al detenido" style="width: 150px; " >ARCHIVOS</a>
+                </div>
+                <hr>
+                <div class="modal-footer d-flex justify-content-center p-3">
+                    <button type="button" class="btn btn-danger-strong border border-1 border-black" onclick="modalAccionesMovil.close()">CERRAR</button>
+                </div>
+            </dialog> -->
+
+            <!-- MODAL LIBERAR DETENIDO -->
+           <dialog id="mimodal" class="border border-3 border-primary bg-light p-0"> 
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white">LIBERAR DETENIDO</h5>
+                    <button type="button" class="btn btn-danger-strong text-end px-2 py-0" value="CERRAR" onclick="mimodal.close()" value="CERRAR">X</button>
+                </div>
+                <!-- action se completa con JS -->
+                <form id="formLiberar" class="p-3" method="POST">
+                    <div class="modal-body mb-5 text-black">
+                        <p>¿Está seguro que desea liberar al detenido?</p>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-danger-strong border border-1 border-black" onclick="mimodal.close()">NO</button>
+                        <button class="btn btn-success-strong border border-1 border-black" type="submit">SI</button>
+                    </div>
+                </form>
+            </dialog>
+            <!-- MODAL MOVER DETENIDO -->
+            <dialog id="mimodalMover" class="border border-3 border-primary bg-light p-0">
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white">MOVER DETENIDO</h5>
+                    <button type="button" class="btn btn-danger-strong text-end px-2 py-0 cerrarModal" value="CERRAR">X</button>
+                </div>
+                <div id="datosPersonales" class="text-black p-3 fw-bold fst-italic fs-3">
+                </div>
+                <hr>
+                <!-- action se completa con JS -->
+                <form id="formMover" class="px-3 pb-3" method="POST">
+                    <div class="modal-body mb-3 text-black">
+                        <div>
+                            <label for="nuevoAlojamiento" class="form-label mb-3">Seleccione destino:</label>
+                            <select class="mb-3" id="nuevoAlojamiento" name="nuevoAlojamiento" required>
+                                <option value="" selected disabled>Seleccione una opción</option>
+                                <option value="998">HOSPITAL</option>
+                                <option value="997">SANATORIO</option>
+                                <option value="996">CLINICA</option>
+                                <option value="999">DOMICILIARIA</option>
+                                <option value="50">SERVICIO PENITENCIARIO</option>
+                            </select>
+                            <div class="mb-3" id="divHCS">
+                                <label for="Institucion" class="form-label mb-3">Hospital/Clinica/Sanatorio:</label>
+                                <input type="text" class="form-control" id="Institucion" name="Institucion">
+                            </div>
+                            <div class="mb-3" id="divDireccion">
+                                <label for="direccion" class="form-label mb-3">Dirección:</label>
+                                <input type="text" class="form-control" id="direccion" name="direccion">
+                            </div>
+                            <div class="mb-3" id="divOficio">
+                                <label for="Oficio" class="form-label mb-3">Oficio:</label>
+                                <input type="text" class="form-control" id="Oficio" name="Oficio">
+                            </div>
+                            <div class="mb-3">
+                                <label for="personalCustodio" class="form-label mb-3">Personal Custodio:</label>
+                                <input type="text" class="form-control" id="personalCustodio" name="personalCustodio">
+                            </div>
+                            <div class="mb-3">
+                                <label for="observaciones" class="form-label mb-3">Observaciones:</label>
+                                <textarea class="form-control" id="observaciones" name="observaciones"></textarea>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between gap-md-5 gap-4">
+                        <button type="button" class="btn btn-danger-strong cerrarModal border border-1 border-black">CANCELAR</button>
+                        <button class="btn btn-success-strong border border-1 border-black" type="submit" style="width: 120px;">ACEPTAR</button>
+                    </div>
+                </form>
+            </dialog>
+            <!-- MODAL DETALLE DETENIDO -->
+            <dialog id="mimodalDetalle" class="border border-3 border-primary bg-light p-0">
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white" id="tituloDetenido">INFORMACION DEL DETENIDO</h5>
+                    <button type="button" class="btn btn-danger-strong text-end cerrarModalDetalle px-2 py-0" value="CERRAR">X</button>
+                </div>
+                <h5 class="modal-title text-black text-center fw-bold my-3">DATOS PERSONALES - PERFIL</h5>
+                <div class="row perfil-detalle mx-0">
+                    <div class="col-md-6 col-12 mb-3 text-center">
+                        <div id="datosColumna1" class="text-black">
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-12 mb-3" >
+                        <div id="datosColumna2" class="text-black">
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <div class="row perfil-movimiento mx-0">
+                    <div class="d-flex justify-content-around mb-3 text-black" id="datosColumna3">
+                    </div>
+                </div>
+            </dialog>
+
+            <!-- MODAL REGRESAR DETENIDO -->
+            <dialog id="mimodalRegresar" class="border border-3 border-primary bg-light p-0">
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white">REGRESAR DETENIDO</h5>
+                    <button type="button" class="btn btn-danger-strong text-end cerrarModalRegresar px-2 py-0" value="CERRAR">X</button>
+                </div>
+                <div id="datosPersonalesRegresar" class="text-black">
+                </div>
+                <hr>
+                <!-- action se completa con JS -->
+                <form id="formRegresar" class="px-3 pb-3" method="POST">
+                    <div id="origenAlojamiento"></div>
+                    <div class="modal-body mb-3 text-black">
+                        <div>
+                            <div class="mb-3">
+                                <label for="observaciones" class="form-label mb-3">Observaciones:</label>
+                                <textarea class="form-control" id="observaciones" name="observaciones"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between gap-md-5 gap-4">
+                        <button type="button" class="btn btn-danger-strong cerrarModalRegresar border border-1 border-black">CANCELAR</button>
+                        <button class="btn btn-success-strong border border-1 border-black" type="submit" style="width: 120px;">ACEPTAR</button>
+                    </div>
+                </form>
+            </dialog>
+
+            <!-- MODAL TRASLADAR DETENIDO -->
+            <dialog id="mimodalTrasladar" class="border border-3 border-primary bg-light p-0">
+                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
+                    <h5 class="modal-title text-white">TRASLADO DETENIDO</h5>
+                    <button type="button" class="btn btn-danger-strong text-end cerrarModalTraslado px-2 py-0" value="CERRAR">X</button>
+                </div>
+                <div id="datosPersonales3" class="text-black">
+                </div>
+                <hr>
+                <form id="formTrasladar" class="px-3 pb-3" method="POST">
+                    <div class="mb-3 text-black d-flex justify-content-md-start flex-column">
+                            <label for="Comisaria_destino" class="form-label">Comisaría Destino</label>
+                            <select id="Comisaria_destino_id" name="id_comisaria_destino" class="mb-3" required>
+                                <option value="">Seleccione comisaría</option>
+                                <% for (unidad of unidades) { %>
+                                    <option value="<%= unidad.id_Unidades %>"><%= unidad.Detalle %></option>
+                                <% } %>
+                            </select>
+                            <label for="Movil" class="form-label">Numero Movil:</label>
+                            <input type="text" class="form-control mb-3" id="Movil" name="Movil" required>
+                            <label for="personalCustodio" class="form-label">Personal Custodio:</label>
+                            <input type="text" class="form-control mb-3" id="personalCustodio" name="personalCustodio" required>
+                            <label for="observaciones" class="form-label">Observaciones:</label>
+                            <textarea class="form-control mb-3" id="observaciones" name="observaciones" required></textarea>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between gap-md-5 gap-4">
+                        <button type="button" class="btn btn-danger-strong cerrarModalTraslado border border-1 border-black">CANCELAR</button>
+                        <button class="btn btn-success-strong border border-1 border-black" type="submit" style="width: 120px;">ACEPTAR</button>
+                    </div>
+                </form>
+            </dialog>
+
+            <div class="d-block d-md-none">
+            <% if (detenidos) { %>
+                <% for (let detenido of detenidos) { %>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2 justify-content-between">
+                            <% if (detenido.frente) { %>
+                                <div class="text-center"><a href="/agregar_foto/<%= detenido.id_InternoLegajo%>"><img src="<%= detenido.frente %>" alt="Foto Frente" class="m-2 tamanioImagen3miniatura"></a></div>
+                            <% } else { %>
+                            <div class="text-center"><a href="/agregar_foto/<%= detenido.id_InternoLegajo%>"><img src="img/perfil.ico" alt="" class="m-2" width="80px"></a></div>
+                            <% } %>
+                            <div><p class="mb-2"><%= detenido.APELLIDO %> <%= detenido.NOMBRE %></p></div>
+                            <div></div>
+                        </div>
+                        <p class="mb-1"><strong>DNI:</strong> <%= detenido.DNI %></p>
+                        <p class="mb-1"><strong>Alojamiento:</strong> <%= detenido.detalle_destino %></p>
+                        <p class="mb-1"><strong>Cantidad de Causas:</strong> <%= detenido.cantidad_causas %></p>
+                        
+                    </div>
+                    <hr>
+                    <div class="card-footer text-center">
+                        <% if (detenido.traslado_pendiente > 0) { %>
+                            <span class="badge bg-warning text-dark fs-6 d-flex justify-content-center">Traslado Pendiente a <%= detenido.traslado_destino %></span>
+                        <% } else { %>
+                    <button class="btn btn-outline-danger abrir-modal-opciones-movil"
+                    data-id="<%= detenido.id_InternoLegajo %>"
+                    data-nombre="<%= detenido.NOMBRE %>"
+                    data-apellido="<%= detenido.APELLIDO %>"
+                    data-dni="<%= detenido.DNI %>"
+                    data-alojado="<%= detenido.Unidad_Destino %>"
+                    data-frente="<%= detenido.frente %>"
+                    data-cantidad_causas="<%= detenido.cantidad_causas %>">ACCIONES</button>
+                        <% } %>
+                    </div>   
+                    <div class="card-footer">
+                        
+                        <button class="btn btn-outline abrir-modal-detalle w-100"
+                            data-id="<%= detenido.id_InternoLegajo %>" 
+                            data-nombre="<%= detenido.NOMBRE %>" 
+                            data-apellido="<%= detenido.APELLIDO %>"
+                            data-dni="<%= detenido.DNI %>"
+                            data-alojado="<%= detenido.Unidad_Destino %>"
+                            data-origen="<%= detenido.Unidad_Alojado %>"
+                            data-frente="<%= detenido.frente %>"
+                            data-detdestino="<%= detenido.detalle_destino %>"
+                            data-sexo="<%= detenido.SEXO %>"
+                            data-domicilio="<%= detenido.DOMICILIO %>"
+                            data-fechanacimiento="<%= detenido.FECHA_NACIMIENTO %>"
+                            data-localidad="<%= detenido.LOCALIDAD %>"
+                            data-provincia="<%= detenido.PROVINCIA %>"
+                        >VER DETALLE</button>
+                        
+                    </div>
+                </div>
+                <% } %>
+            <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+  <%- include('partials/_footer') %>

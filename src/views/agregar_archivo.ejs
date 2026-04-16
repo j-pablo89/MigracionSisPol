@@ -1,0 +1,71 @@
+<%- include ('partials/_header2')%> 
+<% if (query && query.error) { %>
+  <script>
+    Swal.fire({
+      icon: 'error',
+      title: 'Oops...',
+      text: '⚠️ El archivo es demasiado grande o tiene un formato no permitido.',
+    });
+  </script>
+<% } %>
+
+<% if (query && query.success) { %>
+  <script>
+    Swal.fire({
+      icon: 'success',
+      title: '¡Éxito!',
+      text: '✅ Archivo subido correctamente.',
+    });
+  </script>
+<% } %>
+
+
+
+<div class="container mainSection mb-5" id="main-container" data-page="archivo_detenido">
+  <% if (typeof errorMessage !== 'undefined') { %>
+    <div class="alert alert-danger">
+      <%= errorMessage %>
+    </div>
+  <% } %>
+  <form class="row g-3 bg-light fw-bold mt-5 border border-5 border-primary " action="/guardar_archivo/<%= detenido.id_InternoLegajo %>" method="post" enctype="multipart/form-data">
+    <div class="modal-header d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
+        <h3 class="fw-bold text-white my-3">AGREGAR ARCHIVO</h3>
+    </div>
+    <div class="mb-5">
+      <h5 class="fw-bold text-black fst-italic">Detenido: <%= detenido.Apellido%>, <%= detenido.Nombre%></h5>
+      <h5 class="fw-bold text-black fst-italic">Dni: <%= detenido.Dni%></h5>
+    </div>
+      <input type="hidden" name="id_Persona" value="<%= detenido.id_Persona %>">
+      <input type="hidden" name="id_InternoLegajo" value="<%= detenido.id_InternoLegajo %>">
+      <input type="hidden" name="login" value="<%= session.username %>">
+      <div class="row ">
+        <div class="col-md-6 mb-3">
+          <input type="file" class="form-control" id="archivo" name="archivo" accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="mostrarVistaPrevia(event, 'preview1')" required>
+        </div>
+        <div class="col-md-6 mb-3 d-flex justify-content-center justify-content-md-start">
+          <button type="submit" class="form-control btn-sispol px-4 w-50 text-white">Agregar</button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <h5 class="fw-bold text-black mt-5 mb-3">Archivos subidos</h5>
+        <div class="d-flex justify-content-start ">
+          <ul class="text-start">
+            <% if (archivosSubidos && archivosSubidos.length > 0) { %>
+              <% archivosSubidos.forEach(function(archivo) { %>
+                <li><%= archivo.nombre %> - <a href="<%= archivo.Source_Archivo  %>" class="linkarchivo" target="_blank"><%= archivo.Titulo %></a></li>
+              <% }); %>
+            <% } else { %>
+              <li>No hay archivos subidos.</li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+      <div class="mb-3 mt-5 d-flex justify-content-around">
+          <a href="/detenidos" class="btn btn-danger-strong border border-1 border-black">Volver</a>
+      </div>
+  </form>
+</div>
+
+
+<%- include ('partials/_footer')%>
+        

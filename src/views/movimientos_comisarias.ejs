@@ -1,0 +1,51 @@
+<%- include('partials/_header2') %>
+
+<div class="container-fluid mainSection" id="main-container" data-page="movimientos_comisarias">
+    <div class="container mt-5 mb-3">
+        <h3 class="text-white text-center text-borderWhite">MOVIMIENTOS COMISARIAS</h3>
+    </div>
+    <div class="table-responsive mt-5" style="overflow-x: auto; height: 400px;"> 
+        <table class="table table-bordered table-striped align-middle tabla-movimientos">
+            <thead class="table-primary">
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-nombre">Apellido y Nombre</th>
+                    <th class="col-doc">Nro Documento</th>
+                    <th class="col-aloj">Detalle Alojamiento</th>
+                    <th class="col-dest">Destino Traslado</th>
+                    <th class="col-fecha">Fecha Movimiento</th>
+                    <th class="col-tipo">Tipo Movimiento</th>
+                    <th class="col-user">Usuario Carga</th>
+                    <th class="col-obs">Observaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (movimientos && movimientos.length > 0) {  %>
+                    <% j = 1 %>
+                  <% movimientos.forEach(movimiento => { %>
+                    <tr>
+                      <td><%= j %></td>
+                      <td><%= movimiento.Apellido %> <%= movimiento.Nombre %></td>
+                      <td><%= movimiento.Dni %></td>
+                      <td><%= movimiento.detalle_alojado %></td>
+                      <td><%= movimiento.detalle_destino %></td>
+                      <td><%= movimiento.Fecha_movimiento %></td>
+                      <td><%= movimiento.Tipo_movimiento %></td>
+                      <td><%= movimiento.Usuario %></td>
+                      <td><%= movimiento.Observaciones %></td>
+                    </tr>
+                    <% j = j + 1%>
+                  <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mt-4">
+        <a href="/movimientos_comisarias/exportar" class="btn btn-success-strong text-center">
+            <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+        </a>
+    </div>
+    
+</div>
+
+<%- include('partials/_footer') %>

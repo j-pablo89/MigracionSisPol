@@ -1,0 +1,59 @@
+<%- include ('partials/_header2')%>
+
+<div class="container mainSection mb-5" id="main-container" data-page="modificar_usuario">
+      <form class="row g-3 bg-light fw-bold mt-5 border border-5 border-primary" action="/actualizar_usuario/<%= usuarios.id_usuario %>" method="POST">
+          <div class="modal-header d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
+            <h3 class="fw-bold text-white my-3">MODIFICAR USUARIO</h3>
+          </div>
+          <h5 class="fw-bold text-black">Datos Personales</h5>
+            <input type="hidden" name="id_usuario" id="id_usuario" value="<%= usuarios.id_usuario %>">
+            <input type="hidden" name="id_Persona" id="id_Persona" value="<%= usuarios.id_Persona%>">
+            <input type="hidden" name="nombre_rol" id="nombre_rol" value="<%= usuarios.nombre_rol %>">
+          <div class="col-md-4"> 
+            <label for="documento" class="form-label">Nro Documento</label>
+            <input type="text" class="form-control" name="Dni" id="Dni" maxlength="8" inputmode="numeric" value="<%= usuarios.Dni%>" pattern="\d{8}" title="El DNI debe contener exactamente 8 números" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+          </div>
+          <div class="clear-fix"></div>
+          <div class="col-md-6">
+            <label for="apellido" class="form-label">Apellido</label>
+            <input type="text" class="form-control" name="Apellido" id="Apellido" value="<%= usuarios.Apellido %>" required>
+          </div>
+          <div class="col-md-6">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" name="Nombre" id="Nombre" value="<%= usuarios.Nombre %>" required>
+          </div>
+          <div class="col-md-6">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" name="Email" id="Email" value="<%= usuarios.Email %>" required>
+          </div>
+          <div class="col-md-6 mb-3">
+              <label for="telefono" class="form-label">Telefono</label>
+              <input type="text" class="form-control" name="Telefono" id="Telefono" value="<%= usuarios.Telefono %>" maxlength="10" required>
+            </div>
+          <h5 class="fw-bold text-black">Datos de Acceso</h5>
+          <div class="col-md-6">
+            <label for="usuario" class="form-label">Usuario</label>
+            <input type="text" class="form-control" id="Usuario" name="Usuario" value="<%= usuarios.Usuario %>" required readonly>
+          </div>
+          <div class="clear-fix"></div>
+          <div class="col-md-6">
+            <label for="contrasenia" class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="Clave" name="Clave" value="<%= usuarios.Dni %>" required readonly>
+          </div>
+          <div class="col-md-6">
+              <label for="fecha_baja" class="form-label">Fecha Expiración</label>
+              <input type="date" class="form-control" name="Fecha_baja" id="Fecha_baja" value="<%= usuarios.Fecha_baja.toISOString().slice(0, 10) %>" required>
+          </div>
+          <div class="clear-fix"></div>
+          <div class="col-6 text-center mb-5 mt-5">
+            <a href="/usuarios" class="btn btn-danger-strong border border-1 border-black">Cancelar</a>
+          </div>
+          <div class="col-6 text-center mb-5 mt-5">
+            <button type="submit" class="btn btn-success-strong border border-1 border-black">Guardar</button>
+            <input type="hidden" name="unidadesData" id="unidadesData">
+          </div>
+        </form>
+</div>
+
+
+<%- include('partials/_footer') %>

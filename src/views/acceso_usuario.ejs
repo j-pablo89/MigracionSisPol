@@ -1,0 +1,139 @@
+<%- include ('partials/_header2')%>
+
+
+  <div id="main-container" data-page="acceso_usuario" class="container mainSection mb-5">
+
+    <form class="row g-3 bg-light fw-bold mt-5 border border-5 border-primary p-0" action="/guardar_acceso"
+      method="POST" id="formAcceso">
+      <div class="d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
+        <h3 class="fw-bold text-white my-3">ACCESO USUARIO</h3>
+
+        <input type="hidden" name="input_nombre_rol" value="<%= usuarios.nombre_rol %>">
+        <input type="hidden" name="input_permiso_principal" value="<%= usuarios.permiso_principal %>">
+        <input type="hidden" name="id_usuario" value="<%= usuarios.id_usuario %>">
+        <input type="hidden" name="id_Persona" value="<%= usuarios.id_Persona %>">
+      </div>
+      <!-- ✅ SOLO UNO -->
+      <div id="hiddenInputsContainer"></div>
+
+      <!-- ============================= -->
+      <!-- ROL -->
+      <!-- ============================= -->
+      <div class="col-12 mb-3">
+        <label class="form-label">Rol del Usuario</label>
+        <select name="id_rol" id="id_rol" class="form-select text-dark" required>
+          <option value="">Seleccione Rol</option>
+          <% for (rol of roles) { %>
+            <option value="<%= rol.id_rol %>" <%=usuarios.id_rol==rol.id_rol ? 'selected' : '' %>>
+              <%= rol.Nombre_rol %>
+            </option>
+            <% } %>
+        </select>
+      </div>
+      <!-- ============================= -->
+      <!-- PERMISO -->
+      <!-- ============================= -->
+      <div class="col-12 mb-4">
+        <label class="form-label">Permiso Principal</label>
+        <select name="permiso_principal" id="permiso_principal" class="form-select" required>
+          <option value="ABM" <%=usuarios.permiso_principal=='ABM' ? 'selected' : '' %>>
+            ABM (Crear / Modificar / Eliminar)
+          </option>
+          <option value="LECTURA" <%=usuarios.permiso_principal=='LECTURA' ? 'selected' : '' %>>
+            Solo Lectura
+          </option>
+        </select>
+      </div>
+      <!-- ============================= -->
+      <!-- SECCIÓN DEPENDENCIAS -->
+      <!-- ============================= -->
+      <div class="col-12">
+        <h5 class="fw-bold text-black text-center">
+          Agregar o quitar Dependencias Policiales
+        </h5>
+      </div>
+      <div class="row container" id="selectorUnidades">
+        <!-- SELECTOR -->
+        <div class="col-12 mb-3">
+          <label class="form-label">Seleccion Dependencia</label>
+          <div class="row gap-3 gap-md-0">
+            <div class="col-md-10 col-9">
+              <select id="inputInterviene" placeholder="Buscar dependencia...">
+                <option value="">Buscar dependencia...</option>
+                <% for (unidad of unidades) { %>
+                  <option value="<%= unidad.id_Unidades %>">
+                    <%= unidad.Detalle %>
+                  </option>
+                <% } %>
+              </select>
+            </div>
+            <div class="col-md-2 col-2 d-flex align-items-center justify-content-end">
+              <button type="button" class="btn btn-secondary border border-1 border-black py-1"
+                id="btnAgregar">+</button>
+            </div>
+          </div>
+        </div>
+        <div id="mensajeRolAutomatico" 
+            class="alert alert-info text-center fw-bold mt-3 d-none">
+          Las dependencias se asignan automáticamente según el rol seleccionado.
+        </div>
+        <!-- TABLA -->
+        <div class="col-12 mb-3">
+          <div class="table-responsive">
+            <table class="table table-hover table-striped table-bordered table-dark" id="tablaPrivilegios">
+              <thead>
+                <tr>
+                  <th style="width: 5%;">ID</th>
+                  <th style="width: 45%;">Detalle</th>
+                  <th style="width: 50%;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% for (dependencia of dependencias) { %>
+                  <tr data-id="<%= dependencia.id_Unidades %>" data-original="true">
+                    <td>
+                      <%= dependencia.id_Unidades %>
+                    </td>
+                    <td>
+                      <%= dependencia.Detalle %>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-danger-strong btn-eliminar">
+                        Eliminar
+                      </button>
+
+                      <button type="button" class="btn btn-sm btn-warning btn-deshacer" style="display: none;">
+                        Deshacer
+                      </button>
+                    </td>
+                  </tr>
+                  <input type="hidden" name="original[]" value="<%= dependencia.id_Unidades %>">
+                  <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================= -->
+      <!-- BOTONES -->
+      <!-- ============================= -->
+
+      <div class="row container">
+        <div class="col-6 text-center mb-5 mt-5">
+          <a href="/usuarios" class="btn btn-danger-strong border border-1 border-black">
+            Cancelar
+          </a>
+        </div>
+        <div class="col-6 text-center mb-5 mt-5">
+          <button type="submit" class="btn btn-success-strong border border-1 border-black">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+
+
+  <%- include('partials/_footer') %>

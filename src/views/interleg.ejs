@@ -1,0 +1,155 @@
+<%- include ('partials/_header2')%>
+
+<div class="container mainSection mb-5" id="main-container" data-page="lista_detenidos_spt">
+
+     <!-- ================= COMISARIA ================= -->
+
+    <div class="text-white my-5 p-4 rounded bg-primary">
+        <div class="my-3">
+            <h2 class="text-center fw-bold fst-italic bg-black mx-0 px-0 py-2">
+                COMISARIA
+            </h2>
+
+            <% if (datosMYSQL.length === 0) { %>
+                <p>No hay resultados.</p>
+            <% } else { %>
+
+            <!-- ALOJADOS -->
+            <% if (estadoCounts.cantidad_estado_1 > 0) { %>
+            <div class="my-5">
+                
+                <h3 class="text-center mb-4 fw-bolder bg-light text-black">ALOJADOS</h3>
+                <div class="row row-cols-1 row-cols-md-4 g-2">
+                    <% datosMYSQL.forEach(persona => { %>
+                    <% if (persona.estadoLegajo == 1) { %>
+                    <a href="/causa_detenido/<%= persona.id_InternoLegajo%>">
+                    <div class="col">
+                        <div class="card h-100 p-2 rounded border border-3 border-white <% if (persona.Unidad_Alojamiento === 50) {%> bg-danger <% } %>">
+                            <img src="<%= persona.fotoUrl %>" class="card-img-top foto-persona" alt="foto">
+                            <div class="card-body text-white">
+                                <h5 class="card-title">
+                                    <%= persona.Apellido %> <%= persona.Nombre %>
+                                </h5>
+                                <p class="card-text">DNI: <%= persona.Dni %></p>
+                                <p class="card-text">ALOJADO: <%= persona.Detalle_Alojamiento %></p>
+                            </div>
+                        </div>
+                    </div>
+                    </a>
+                    <% } %>
+                    <% }) %>
+                </div>
+                
+            </div>
+            <% } %>
+
+
+            <!-- EN LIBERTAD -->
+            <% if (estadoCounts.cantidad_estado_0 > 0) { %>
+            <div class="my-5">
+
+                <h4 class="text-center mb-4 fw-bolder bg-danger">EN LIBERTAD</h4>
+
+                <div class="row row-cols-1 row-cols-md-6 g-2">
+                    <% datosMYSQL.forEach(persona => { %>
+                    <% if (persona.estadoLegajo == 0) { %>
+
+                    <div class="col">
+                        <div class="card h-100 p-2 rounded border border-3 border-danger">
+                            <img src="<%= persona.fotoUrl %>" class="card-img-top foto-persona" alt="foto">
+
+                            <div class="card-body text-white">
+                                <h5 class="card-title">
+                                    <%= persona.Apellido %> <%= persona.Nombre %>
+                                </h5>
+                                <p class="card-text">DNI: <%= persona.Dni %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <% } %>
+                    <% }) %>
+                </div>
+            </div>
+            <% } %>
+
+            <% } %>
+        </div>
+    </div>
+
+     <!-- ================= SERVICIO PENITENCIARIO ================= -->
+      
+    <div class="text-white my-5 p-4 rounded bg-secondary">
+        <div class="my-3">
+            <h2 class="text-center fw-bold fst-italic bg-black mx-0 px-0 py-2">
+                SERVICIO PENITENCIARIO
+            </h2>
+
+            <% if (datosASP.length === 0) { %>
+                <p class="mb-5">No hay resultados.</p>
+            <% } else { %>
+
+            <!-- ALOJADOS -->
+            <div class="my-5">
+                <h3 class="text-center mb-4 fw-bolder bg-light text-black">ALOJADOS</h3>
+
+                <div class="row row-cols-1 row-cols-md-6 g-2">
+                    <% datosASP.forEach(persona => { %>
+                    <% if (persona.fec_liber == '12:00:00 a.m.') { %>
+
+                    <div class="col">
+                        <div class="card h-100 border border-3 border-light">
+                            <img src="<%= persona.fotoUrl %>" class="card-img-top foto-persona" alt="foto">
+
+                            <div class="card-body text-white">
+                                <h5 class="card-title">
+                                    <%= persona.apellido %> <%= persona.nombre %>
+                                </h5>
+                                <p class="card-text">DNI: <%= persona.dni %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <% } %>
+                    <% }) %>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- EN LIBERTAD -->
+            <div class="my-5">
+                <h3 class="text-center mb-4 fw-bolder bg-danger">EN LIBERTAD</h3>
+
+                <div class="row row-cols-1 row-cols-md-6 g-2">
+                    <% datosASP.forEach(persona => { %>
+                    <% if (persona.fec_liber !== '12:00:00 a.m.') { %>
+
+                    <div class="col">
+                        <div class="card h-100 border border-3 border-danger">
+                            <img src="<%= persona.fotoUrl %>" class="card-img-top foto-persona" alt="foto">
+
+                            <div class="card-body text-white">
+                                <h5 class="card-title">
+                                    <%= persona.apellido %> <%= persona.nombre %>
+                                </h5>
+                                <p class="card-text">DNI: <%= persona.dni %></p>
+                                <p class="card-text">Fecha de liberación: <%= persona.fec_liber %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <% } %>
+                    <% }) %>
+                </div>
+            </div>
+
+            <% } %>
+        </div>
+    </div>
+
+
+   
+</div>
+
+<%- include ('partials/_footer')%>

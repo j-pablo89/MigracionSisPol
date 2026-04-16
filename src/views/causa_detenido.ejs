@@ -1,0 +1,310 @@
+<%- include ('partials/_header2')%>
+
+<div id="main-container" class="container mainSection mb-5" data-page="causa_detenido" data-role="<%= nombre_rol || req.session.nombre_rol %>">
+  <div class="bg-light fw-bold mt-5 border border-5 border-primary ">
+
+    <div class="modal-header d-flex justify-content-center align-self-center bg-secondary mb-3">
+        <h3 class="fw-bold text-white my-3">CAUSAS DETENIDO</h3>
+    </div>
+    <div class="mb-5 ps-2">
+      <h5 class="fw-bold text-black fst-italic">Detenido: <%= datos.Apellido%>, <%= datos.Nombre%></h5>
+      <h5 class="fw-bold text-black fst-italic">Dni: <%= datos.Dni%></h5>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 justify-content-md-end px-2"> 
+      <a class="btn btn-danger-strong mb-3 border border-1 border-black" style="width: 130px;" href="/detenidos">VOLVER</a>
+      <button type="button" class="btn btn-success-strong mb-3 border border-1 border-black" data-bs-toggle="modal" data-bs-target="#modalNuevaCausa">NUEVA CAUSA</button>
+    </div>
+    <div class="modal fade ps-2" id="modalNuevaCausa" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <form class="row g-3 modal-content bg-light fw-bold border border-5 border-primary" action="/guardar_causa/<%= datos.id_InternoLegajo %>" method="POST">
+          <div class="modal-header d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
+              <h3 class="fw-bold text-white my-3">AGREGAR CAUSA</h3>
+          </div>
+          <input type="hidden" name="id_InternoLegajo" value="<%= datos.id_InternoLegajo %>">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="Oficio_Numero" class="form-label">Oficio</label>
+              <input type="text" class="form-control" id="Oficio_Numero" title="EJEMPLO: A1234A/2025-A1 o A1234A/2025" placeholder="EJEMPLO: A1234A/2025-AA o A1234A/2025" name="Oficio_Numero" onkeyup="this.value = this.value.toUpperCase()" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Oficio_Fecha" class="form-label">Fecha Oficio</label>
+              <input type="date" class="form-control" id="Oficio_Fecha" name="Oficio_Fecha" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Causa" class="form-label">Causa</label>
+              <input type="text" class="form-control" id="Causa" name="Causa" onkeyup="this.value = this.value.toUpperCase()" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Autoridad_judicial" class="form-label">Autoridad Judicial Interviniente</label>
+              <select id="Autoridad_judicial_id" name="id_autoridad_judicial" required>
+                <option value="">Seleccione autoridad</option>
+                <% for (autoridad of autoridades) { %>
+                  <option value="<%= autoridad.id_AutoridadJudicial %>">
+                    <%= autoridad.descripcion %>
+                  </option>
+                <% } %>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Comisaria_dependiente" class="form-label">Comisaría Dependiente</label>
+              <select id="Comisaria_dependiente_id" name="id_comisaria_dependiente" required>
+                <option value="">Seleccione comisaría</option>
+                <% for (unidad of unidades) { %>
+                  <option value="<%= unidad.id_Unidades %>">
+                    <%= unidad.Detalle %>
+                  </option>
+                <% } %>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Fecha_hecho" class="form-label">Fecha Hecho</label>
+              <input type="date" class="form-control" id="Fecha_hecho" name="Fecha_hecho" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Fecha_Detencion" class="form-label">Fecha Detención</label>
+              <input type="date" class="form-control" id="Fecha_Detencion" name="Fecha_Detencion" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Situacion_procesal" class="form-label">Situación Procesal</label>
+              <select id="Situacion_procesal" name="Situacion_procesal" required>
+                <option value="">Seleccione situación</option>
+                <option value="CONDENADO">CONDENADO</option>
+                <option value="PROCESADO">PROCESADO</option>
+                <option value="PREVENTIVA">PREVENTIVA</option>
+              </select>
+            </div>
+            <div class="form-group mb-3" style="display: none;" id="divFecha">
+              <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                <label for="Cantidad-dias">Días:</label>
+                <input type="number" id="Cantidad-dias" min="0" max="31" class="form-control" style="width: 80px;" required readonly>             
+                <label for="Cantidad-meses">Meses:</label>
+                <input type="number" id="Cantidad-meses" min="0" max="12" class="form-control" style="width: 80px;" required readonly>         
+                <label for="Cantidad-anios">Años:</label>
+                <input type="number" id="Cantidad-anios" class="form-control" style="width: 80px;" required readonly>         
+                <label for="Fecha_cumple_condena">Fecha Cumple Condena:</label>
+                <input type="date" id="Fecha_cumple_condena" name="Fecha_cumple_condena" class="form-control" style="width: 200px">                              
+              </div>    
+              <h4 class="mt-4 text-center">Tiempo</h4>
+              <h6 class="mb-3 text-center" id="Diferencia-total"></h6>   
+            </div>
+            <h5 class="active fw-bold text-black my-4">Datos Víctima</h5>
+            <div class="col-md-6 mb-3">
+              <label for="Apellido_victima" class="form-label">Apellido</label>
+              <input type="text" class="form-control" id="Apellido_victima" name="Apellido_victima" onkeyup="this.value = this.value.toUpperCase()" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="Nombre_victima" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="Nombre_victima" name="Nombre_victima" onkeyup="this.value = this.value.toUpperCase()" required>
+            </div>
+            <div class="col-md-12 mb-3">
+              <label for="Detalle" class="form-label">Descripcion</label>
+              <textarea class="form-control" id="Detalle" name="Detalle" onkeyup="this.value = this.value.toUpperCase()" required></textarea>
+            </div>
+            <div class="col-6 text-center mb-3 mt-5">
+              <a href="/detenidos" class="btn btn-danger-strong border border-1 border-black">Cancelar</a>
+            </div>
+            <div class="col-6 text-center mb-3 mt-5">
+              <button type="submit" class="btn btn-success-strong border border-1 border-black">Guardar</button>
+            </div>
+           </div>
+        </form>
+      </div>
+    </div>
+    <% if (!detenidos.length) {%>
+      <h4 class="fw-bold text-black">SIN CAUSAS ACTIVAS</h4>
+    <%} else {%>
+    <% detenidos.forEach((detenido, index) => { %>
+    <% if (detenido.Estado === 2) { %>
+    <div>
+      <h5 class="fw-bold text-black mx-2">Causa Activa</h5>
+    </div>
+    <div class="card text-bg-primary border border-4 border-black mb-3 mx-2" id="card-<%= index %>" data-can-edit="<%= detenido.canEdit ? 'true' : 'false' %>" data-fecha-alta="<%= detenido.Fecha_alta ? detenido.Fecha_alta : '' %>">
+      <% if (!detenido.canEdit) { %>
+      <div class="alert alert-warning m-3">El periodo de edición de causas expiró (2 minutos). No se pueden modificar los datos.</div>
+      <% } %>
+    <% }else if (detenido.Estado === 0) { %>
+      <div>
+        <h5 class="fw-bold text-danger-strong mx-2">Causa Anulada</h5>
+      </div>
+      <div class="card border border-4 border-black mb-3 bg-danger-strong mx-2" id="card-<%= index %>" data-can-edit="<%= detenido.canEdit ? 'true' : 'false' %>" data-fecha-alta="<%= detenido.Fecha_alta ? detenido.Fecha_alta : '' %>">
+      <% }else if (detenido.Estado === 1) { %>
+        <div>
+           <h5 class="fw-bold text-black mx-2">Causa Cerrada</h5>
+        </div>
+        <div class="card text-bg-terciary border border-4 border-black mb-3 mx-2" id="card-<%= index %>" data-can-edit="<%= detenido.canEdit ? 'true' : 'false' %>" data-fecha-alta="<%= detenido.Fecha_alta ? detenido.Fecha_alta : '' %>">
+          <% } %>
+          <form action="/actualizar_causa/<%= detenido.id_InternoProntuario %>" method="POST" class="m-3 form-actualizar-causa">
+            <!-- Campos ocultos -->
+            <input type="hidden" name="id_InternoLegajo" value="<%= datos.id_InternoLegajo %>">
+            <input type="hidden" name="id_internoprontuario" value="<%= detenido.id_InternoProntuario %>">
+            <input type="hidden" name="id_Persona" value="<%= detenido.id_Persona %>">
+
+            <div class="row px-1">
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Causa</label>
+                  <input type="text" name="Causa" class="form-control " disabled value="<%= detenido.Causa %>" readonly data-original="<%= detenido.Causa %>">
+                  <input type="hidden" name="Causa2" class="form-control " value="<%= detenido.Causa %>">
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Número Oficio</label>
+                  <input type="text" name="Oficio_Numero" class="form-control" disabled value="<%= detenido.Oficio_Numero %>" readonly data-original="<%= detenido.Oficio_Numero %>">
+                  <input type="hidden" name="Oficio_Numero2" class="form-control" value="<%= detenido.Oficio_Numero %>">
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha Oficio</label>
+                  <input type="date" name="Oficio_Fecha" class="form-control" disabled value="<%= detenido.Oficio_Fecha.toISOString().slice(0, 10)%>"  data-original="<%= detenido.Oficio_Fecha.toISOString().slice(0, 10)%>">
+                  <input type="hidden" name="Oficio_Fecha2" class="form-control" value="<%= detenido.Oficio_Fecha.toISOString().slice(0, 10)%>">
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Comisaría Dependiente</label>
+                  <select name="id_comisaria_dependiente" class="tom-comisaria" data-original="<%= detenido.Unidad_Dependencia %>" disabled>
+                    <% unidades.forEach(u => { %>
+                      <option value="<%= u.id_Unidades %>" 
+                        <%= u.id_Unidades == detenido.Unidad_Dependencia ? 'selected' : '' %>>
+                        <%= u.Detalle %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Situacion Procesal</label>
+                  <select name="Situacion_procesal" class="tom-situacion" data-original="<%= detenido.Situacion_procesal %>" disabled>
+                    <option value="CONDENADO" <%= detenido.Situacion_procesal === 'CONDENADO' ? 'selected' : '' %>>CONDENADO</option>
+                    <option value="PROCESADO" <%= detenido.Situacion_procesal === 'PROCESADO' ? 'selected' : '' %>>PROCESADO</option>
+                    <option value="PREVENTIVA" <%= detenido.Situacion_procesal === 'PREVENTIVA' ? 'selected' : '' %>>PREVENTIVA</option>
+                  </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha Cumple Condena</label>
+                    <input type="date" name="Fecha_cumple_condena_disabled1" class="form-control no-max-date" disabled value="<%= detenido.Fecha_cumple_condena.toISOString().slice(0, 10)%>"  data-original="<%= detenido.Fecha_cumple_condena.toISOString().slice(0, 10)%>">
+                    <input type="hidden" name="Fecha_cumple_condena_disabled2" class="form-control no-max-date" value="<%= detenido.Fecha_cumple_condena.toISOString().slice(0, 10)%>" data-original="<%= detenido.Fecha_cumple_condena.toISOString().slice(0, 10)%>">
+                </div>
+                <div class="col-md-12 mb-2">
+                  <label class="form-label">Autoridad Judicial</label>
+                  <select name="id_autoridad_judicial" class="tom-autoridad" data-original="<%= detenido.id_AutoridadJudicial %>" disabled>
+                    <% autoridades.forEach(a => { %>
+                      <option value="<%= a.id_AutoridadJudicial %>" 
+                        <%= a.id_AutoridadJudicial == detenido.id_AutoridadJudicial ? 'selected' : '' %>>
+                        <%= a.descripcion %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+              <div class="form-group mb-3" style="display: none;" id="divFecha-<%= index %>">
+                  <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                    <label for="Cantidad-dias-<%= index %>">Días:</label>
+                    <input type="number" id="Cantidad-dias-<%= index %>" min="0" max="31" class="form-control" style="width: 80px;">
+                    <label for="Cantidad-meses-<%= index %>">Meses:</label>
+                    <input type="number" id="Cantidad-meses-<%= index %>" min="0" max="12" class="form-control" style="width: 80px;">
+                    <label for="Cantidad-anios-<%= index %>">Años:</label>
+                    <input type="number" id="Cantidad-anios-<%= index %>" class="form-control" style="width: 80px;">
+                    <label for="Fecha_cumple_condena-<%= index %>">Fecha Cumple Condena:</label>
+                    <input type="date" id="Fecha_cumple_condena-<%= index %>" name="Fecha_cumple_condena" class="form-control" style="width: 200px;" >
+                  </div>
+                  <h4 class="mt-4 text-center">Tiempo Estimado</h4>
+                  <h6 class="mb-3 text-center" id="Diferencia-total-<%= index %>"></h6>
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha Hecho</label>
+                  <input type="date" name="Fecha_Hecho" class="form-control " disabled value="<%= detenido.Fecha_Hecho.toISOString().slice(0, 10)%>" readonly data-original="<%= detenido.Fecha_Hecho.toISOString().slice(0, 10)%>">
+                  <input type="hidden" name="Fecha_Hecho2" class="form-control " value="<%= detenido.Fecha_Hecho.toISOString().slice(0, 10)%>">
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Fecha Detención</label>
+                  <input type="date" name="Fecha_Detencion" class="form-control " disabled value="<%= detenido.Fecha_Detencion.toISOString().slice(0, 10)%>" readonly data-original="<%= detenido.Fecha_Detencion.toISOString().slice(0, 10)%>">
+                  <input type="hidden" name="Fecha_Detencion2" class="form-control " value="<%= detenido.Fecha_Detencion.toISOString().slice(0, 10)%>">
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="form-label">Victima</label>
+                  <input type="text" name="Victima" class="form-control " disabled value="<%= detenido.Victima%>" readonly data-original="<%= detenido.Victima%>">
+                  <input type="hidden" name="Victima2" class="form-control " value="<%= detenido.Victima%>">
+                </div>
+                <div class="col-md-12 mb-2">
+                  <label for="Detalle" class="form-label">Detalle</label>
+                  <input type="text" name="Detalle" class="form-control" onkeyup="this.value = this.value.toUpperCase()" required disabled value="<%= detenido.Observaciones %>" readonly data-original="<%= detenido.Observaciones %>">
+                  <input type="hidden" name="Detalle2" class="form-control" value="<%= detenido.Observaciones %>" >
+                </div>
+                <% if (detenido.Estado === 0 || detenido.Estado === 2) {%>
+                <div class="col-md-12 mb-2">
+                  <label for="Detalle" class="form-label fw-bold ">Detalle Cierre de Causa</label>
+                  <input class="form-control" type="text" id="detalle-cierre-<%= index %>" name="detalle_cierre" value="<%= detenido.Detalle_Estado%>" readonly disabled>
+                </div>
+                <% }%>
+              </div>
+              <div class="mt-2 d-flex justify-content-center gap-2 flex-wrap justify-content-md-start">
+                <% if (detenido.Estado === 2) { %>
+                <button type="button" class="btn btn-warning border border-1 border-black" onclick="habilitarEdicion('<%= index %>')" id="modificar-<%= index %>" <%= detenido.canEdit ? '' : 'disabled title="Periodo de edición expirado"' %>>Modificar</button>
+                <button type="submit" class="btn btn-success-strong d-none border border-1 border-black" id="actualizar-<%= index %>">Actualizar</button>
+                <button type="button" class="btn btn-secondary d-none border border-1 border-black" onclick="cancelarEdicion('<%= index %>')" id="cancelar-<%= index %>">Cancelar</button>
+                <button type="button" class="btn btn-danger-strong border border-1 border-black" id="eliminar-<%= index %>" onclick="cerrarCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>')">Cerrar Causa</button>
+                <button type="button" class="btn btn-info border border-1 border-black" id="anular-<%= index %>" onclick="anularCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>')">Anular Causa</button>
+                <% } else if (detenido.Estado === 1) { %>
+                <button type="button" class="btn btn-success-strong border border-1 border-black" id="reactivar-<%= index %>" onclick="reabrirCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>', '<%= datos.id_InternoLegajo %>')">Reactivar Causa</button>
+                <% } %>
+              </div>
+          </form>
+        </div>
+        <% }); %>
+        <%}%>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const autoridadSelect = new TomSelect("#Autoridad_judicial_id", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
+
+    const comisariaDepSelect = new TomSelect("#Comisaria_dependiente_id", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
+
+    const situacionSelect = new TomSelect("#Situacion_procesal", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
+
+    document.querySelectorAll(".tom-comisaria").forEach(el => {
+      new TomSelect(el, {
+        create: false,
+        sortField: { field: "text", direction: "asc" }
+      });
+    });
+
+    document.querySelectorAll(".tom-situacion").forEach(el => {
+      new TomSelect(el, {
+        create: false
+      });
+    });
+
+    document.querySelectorAll(".tom-autoridad").forEach(el => {
+      new TomSelect(el, {
+        create: false,
+        sortField: { field: "text", direction: "asc" }
+      });
+    });
+  });
+</script>
+
+<%- include ('partials/_footer')%>

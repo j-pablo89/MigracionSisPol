@@ -1,0 +1,165 @@
+<%- include ('partials/_header2')%> 
+ 
+<div class="container mainSection mb-5" id="main-container" data-page="foto_detenido">
+    
+    <% if (typeof errorMessage !== 'undefined') { %>
+      <div class="alert alert-danger">
+        <%= errorMessage %>
+      </div>
+    <% } %>
+
+    <% if (typeof canEditPhotos !== 'undefined' && !canEditPhotos) { %>
+      <div class="alert alert-warning">
+        El periodo de edición de fotos expiró (2 minutos). No se pueden reemplazar fotografías.
+      </div>
+    <% } %>
+    <form class="g-3 bg-light fw-bold mt-5 border border-5 border-primary px-4 " action="/guardar_foto/<%= detenido.id_InternoLegajo %>" method="post" enctype="multipart/form-data" id="form-fotos" data-can-edit="<%= canEditPhotos ? 'true' : 'false' %>" data-all-photos="<%= detenido.frente && detenido.izquierdo && detenido.derecho && detenido.espalda ? 'true' : 'false' %>">
+      <div class="container mt-5 mb-5">
+        <h3 class="text-center fw-bold text-black">AGREGAR FOTOS DETENIDO: <%= detenido.Apellido%>, <%= detenido.Nombre%></h3>
+      </div>
+      <div class="row">
+        <input type="hidden" name="id_Persona" value="<%= detenido.id_Persona %>">
+        <input type="hidden" name="id_InternoLegajo" value="<%= detenido.id_InternoLegajo %>">
+        <input type="hidden" name="username" value="<%= session.username %>">
+        <div class="col-md-6 mb-3">
+          <label for="fotoFrente" class="form-label text-white">Foto Frente</label>
+          <input title="Cargue foto Frente" type="file" class="form-control" id="fotoFrente" name="frente" data-existing="<%= detenido.frente ? 'true' : 'false' %>" accept="image/png, image/jpeg, image/jpg" onchange="mostrarVistaPrevia(event, 'preview1'); iniciarTemporizadorFoto('Frente')" <%= detenido.frente ? '' : 'required' %> <%= canEditPhotos === false ? 'disabled' : '' %>>
+          <div class="d-flex align-items-center mt-2">
+            <button type="button" class="btn btn-warning btn-sm" id="btnFrente" style="display: none;">Reemplazar</button>
+            <span class="text-muted small ms-2" id="timerFrente"></span>
+          </div>
+          <% if (detenido.frente) { %>
+            <div id="preview1" class="mt-2 text-center"><img src="<%= detenido.frente %>" alt="fotoFrente" width="360px"></div>
+          <% } else { %>
+            <div id="preview1" class="mt-2 text-center"><img src="/img/frente.png" alt="fotoFrente" class="tamanioImagen"></div>
+          <% } %>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="fotoIzquierdo" class="form-label text-white">Foto Lado Izquierdo</label>
+          <input title="Cargue foto perfil izquierdo" type="file" class="form-control" id="fotoIzquierdo" name="izquierdo" data-existing="<%= detenido.izquierdo ? 'true' : 'false' %>" accept="image/png, image/jpeg, image/jpg" onchange="mostrarVistaPrevia(event, 'preview2'); iniciarTemporizadorFoto('Izquierdo')" <%= detenido.izquierdo ? '' : 'required' %> <%= canEditPhotos === false ? 'disabled' : '' %>>
+          <div class="d-flex align-items-center mt-2">
+            <button type="button" class="btn btn-warning btn-sm" id="btnIzquierdo" style="display: none;">Reemplazar</button>
+            <span class="text-muted small ms-2" id="timerIzquierdo"></span>
+          </div>
+          <% if (detenido.izquierdo) { %>
+            <div id="preview2" class="mt-2 text-center"><img src="<%= detenido.izquierdo %>" alt="fotoIzq" width="360px"></div>
+          <% } else { %>
+            <div id="preview2" class="mt-2 text-center"><img src="/img/perfil izq.png" alt="fotoIzq" class="tamanioImagen2"></div>
+          <% } %>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="fotoDerecho" class="form-label text-white">Foto Lado Derecho</label>
+          <input title="Cargue foto perfil derecho" type="file" class="form-control" id="fotoDerecho" name="derecho" data-existing="<%= detenido.derecho ? 'true' : 'false' %>" accept="image/png, image/jpeg, image/jpg" onchange="mostrarVistaPrevia(event, 'preview3'); iniciarTemporizadorFoto('Derecho')" <%= detenido.derecho ? '' : 'required' %> <%= canEditPhotos === false ? 'disabled' : '' %>>
+          <div class="d-flex align-items-center mt-2">
+            <button type="button" class="btn btn-warning btn-sm" id="btnDerecho" style="display: none;">Reemplazar</button>
+            <span class="text-muted small ms-2" id="timerDerecho"></span>
+          </div>
+          <% if (detenido.derecho) { %>
+            <div id="preview3" class="mt-2 text-center"><img src="<%= detenido.derecho %>" alt="fotoDer" width="360px"></div>
+          <% } else { %>
+            <div id="preview3" class="mt-2 text-center"><img src="/img/perfil der.png" alt="fotoDer" class="tamanioImagen2"></div>
+          <% } %>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="fotoEspalda" class="form-label text-white">Foto Espalda</label>
+          <input title="Cargue foto perfil espalda" type="file" class="form-control" id="fotoEspalda" name="espalda" data-existing="<%= detenido.espalda ? 'true' : 'false' %>" accept="image/png, image/jpeg, image/jpg" onchange="mostrarVistaPrevia(event, 'preview4'); iniciarTemporizadorFoto('Espalda')" <%= detenido.espalda ? '' : 'required' %> <%= canEditPhotos === false ? 'disabled' : '' %>>
+          <div class="d-flex align-items-center mt-2">
+            <button type="button" class="btn btn-warning btn-sm" id="btnEspalda" style="display: none;">Reemplazar</button>
+            <span class="text-muted small ms-2" id="timerEspalda"></span>
+          </div>
+          <% if (detenido.espalda) { %>
+            <div id="preview4" class="mt-2 text-center"><img src="<%= detenido.espalda %>" alt="fotoEspalda" width="360px"></div>
+          <% } else { %>
+            <div id="preview4" class="mt-2 text-center"><img src="/img/espalda.png" alt="fotoEspalda" class="tamanioImagen"></div>
+          <% } %>
+        </div>
+        <div class="clear-fix"></div>
+      </div>
+      <div class="mb-3 mt-5 d-flex justify-content-around">
+          <a href="/detenidos" class="btn btn-danger-strong px-4 border border-1 border-black">Cancelar</a>
+          <button type="submit" class="btn btn-success-strong px-4 border border-1 border-black" id="btnGuardar" disabled>Guardar</button>
+      </div>
+    </form>
+</div>
+
+<script>
+  function iniciarTemporizadorFoto(campo, initialRemainingMs = 86400000) {
+    const btn = document.getElementById('btn' + campo);
+    const timer = document.getElementById('timer' + campo);
+    const input = document.getElementById('foto' + campo);
+
+    if (!btn || !timer || !input) return;
+
+    // Evitar múltiples temporizadores
+    if (btn.dataset.timerActivo === 'true') return;
+
+    btn.dataset.timerActivo = 'true';
+    btn.style.display = 'inline-block';
+
+    let restante = Math.max(0, Math.ceil(initialRemainingMs / 1000));
+    if (restante <= 0) {
+      timer.textContent = 'Tiempo finalizado';
+      btn.style.display = 'none';
+      input.disabled = true;
+      return;
+    }
+
+    timer.textContent = `Tiempo restante: ${formatTime(restante)}`;
+
+    const interval = setInterval(() => {
+      restante -= 1;
+      if (restante <= 0) {
+        clearInterval(interval);
+        timer.textContent = 'Tiempo finalizado';
+        btn.style.display = 'none';
+        input.disabled = true;
+        const btnGuardar = document.getElementById('btnGuardar');
+        if (btnGuardar) btnGuardar.disabled = true;
+        return;
+      }
+      timer.textContent = `Tiempo restante: ${formatTime(restante)}`;
+    }, 1000);
+
+    btn.addEventListener('click', () => {
+      input.click();
+    });
+  }
+
+  function formatTime(segundos) {
+    const min = Math.floor(segundos / 60);
+    const sec = segundos % 60;
+    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const canEditPhotos = <%= canEditPhotos ? 'true' : 'false' %>;
+    const serverRemaining = <%= editTimeRemaining || 0 %>;
+
+    if (!canEditPhotos) {
+      document.querySelectorAll('#form-fotos input[type=file]').forEach((input) => (input.disabled = true));
+      document.querySelectorAll('#form-fotos button[id^="btn"]').forEach((button) => {
+        if (button.id !== 'btnGuardar') button.style.display = 'none';
+      });
+      const btnGuardar = document.getElementById('btnGuardar');
+      if (btnGuardar) btnGuardar.disabled = true;
+      return;
+    }
+
+    ['Frente', 'Izquierdo', 'Derecho', 'Espalda'].forEach((campo) => {
+      const input = document.getElementById('foto' + campo);
+      if (!input) return;
+      const existing = input.dataset.existing === 'true';
+
+      if (existing && serverRemaining > 0) {
+        iniciarTemporizadorFoto(campo, serverRemaining);
+      }
+
+      if (input.files.length > 0 && (existing || serverRemaining > 0)) {
+        iniciarTemporizadorFoto(campo, serverRemaining > 0 ? serverRemaining : 86400000);
+      }
+    });
+  });
+</script>
+
+<%- include ('partials/_footer')%>
+        

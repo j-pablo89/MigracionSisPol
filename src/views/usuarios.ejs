@@ -1,0 +1,121 @@
+<%- include('partials/_header2') %>
+
+
+<div id="main-container" class="mainSection" data-page="listar_usuarios">
+    <div class="mainSection mb-5 ">
+        <div class="container mt-5 mb-4">
+            <div id="message-container" 
+                data-success="<%= success_msg || '' %>" 
+                data-error="<%= error_msg || '' %>">
+            </div>
+            <h3 class="text-white text-center text-borderWhite">USUARIOS</h3>
+        </div>
+        <div> 
+            <div class="row mb-3">
+                <div class="col-md-4 col-6 mb-2">
+                     <label class="text-white d-none d-md-block form-label">Buscar:</label>
+                     <label class="text-white d-block d-md-none form-label">Buscar:</label>
+                     <input type="text" id="filtroBusqueda" class="form-control">
+                </div>
+            </div>
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover" id="tablaUsuarios">
+                    <thead>
+                        <tr class="table-primary">
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Perfil</th>
+                            <th scope="col">Permisos</th>
+                            <th scope="col">Apellido</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">DNI</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="centrar-botones">
+                        <% if (usuarios) { %>
+                            <% for (usuario of usuarios) { %>
+                                <%if (usuario.nombre_rol === "ADMINISTRADOR") {%>
+                                <tr class="table-bordo" style="height: 50px;">
+                                    <td class="align-middle"><%= usuario.Usuario%></td>
+                                    <td class="align-middle"><%= usuario.nombre_rol%></td>
+                                    <td class="align-middle"><%= usuario.Permiso%></td>
+                                    <td class="align-middle"><%= usuario.Apellido%></td>
+                                    <td class="align-middle"><%= usuario.Nombre%></td>
+                                    <td class="align-middle"><%= usuario.Dni%></td>
+                                    <td class="align-middle"></td>                       
+                                </tr>
+                                <%} else {%>
+                                <tr>
+                                    <td class="align-middle"><%= usuario.Usuario%></td>
+                                    <td class="align-middle"><%= usuario.nombre_rol%></td>
+                                    <td class="align-middle"><%= usuario.Permiso%></td>
+                                    <td class="align-middle"><%= usuario.Apellido%></td>
+                                    <td class="align-middle"><%= usuario.Nombre%></td>
+                                    <td class="align-middle"><%= usuario.Dni%></td>
+                                    <td class="centrar-td d-flex justify-content-around " style="height: 55px;">
+                                        <form class="formResetClave" action="/usuarios" method="POST" style="display:inline;">
+                                            <input type="hidden" name="id_usuario" value="<%= usuario.id_usuario %>">
+                                            <input type="hidden" name="Dni" value="<%= usuario.Dni %>">
+                                            <button class="btn btn-outline-info btn-sm" type="submit">RESET CLAVE</button>
+                                        </form>
+                                        <a class="btn btn-outline-success d-flex align-items-center btn-sm" href="/modificar_usuario/<%= usuario.id_usuario%>">MODIFICAR</a>
+                                        <a class="btn btn-outline-danger d-flex align-items-center btn-sm" href="/acceso_usuario/<%= usuario.id_usuario%>">ACCESO</a>
+                                    </td>                       
+                                </tr>
+                                <%}%>
+                            <%}%>
+                        <%}%>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-block d-md-none">
+            <% if (usuarios) { %>
+                <% for (let usuario of usuarios) { %>
+                    <%if (usuario.nombre_rol === "ADMINISTRADOR") {%>
+                    <div class="card mb-3 shadow-sm bg-danger">
+                        <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="<%= usuario.Avatar_url %>" alt="" class="rounded me-3" style="width: 40px; height: 40px;">
+                            <h5 class="mb-0"><%= usuario.Apellido %> <%= usuario.Nombre %></h5>
+                        </div>
+                        <p class="mb-1"><strong>Usuario:</strong> <%= usuario.Usuario %></p>
+                        <p class="mb-1"><strong>Tipo perfil:</strong> <%= usuario.nombre_rol %></p>
+                        <div class="clearfix"><br><br></div>
+                        </div>
+                    </div>
+                    <%} else {%>
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <img src="<%= usuario.Avatar_url %>" alt="" class="rounded me-3" style="width: 40px; height: 40px;">
+                                <h5 class="mb-0"><%= usuario.Apellido %> <%= usuario.Nombre %></h5>
+                            </div>
+                            <p class="mb-1"><strong>Usuario:</strong> <%= usuario.Usuario %></p>
+                            <p class="mb-1"><strong>Tipo perfil:</strong> <%= usuario.nombre_rol %></p>
+                            <div class="d-flex justify-content-between mt-3">
+                                <form class="formResetClave" action="/usuarios" method="POST" style="display:inline;">
+                                    <input type="hidden" name="id_usuario" value="<%= usuario.id_usuario %>">
+                                    <input type="hidden" name="Dni" value="<%= usuario.Dni %>">
+                                    <button class="btn btn-outline-info btn-sm" type="submit">RESET CLAVE</button>
+                                </form>
+                                <a class="btn btn-outline-success d-flex align-items-center btn-sm" href="/modificar_usuario/<%= usuario.id_usuario%>">MODIFICAR</a>
+                                <a class="btn btn-outline-danger d-flex align-items-center btn-sm" href="/acceso_usuario/<%= usuario.id_usuario%>">ACCESO</a>
+                            </div>
+                        </div>
+                    </div>
+                    <%}%>
+                <% } %>
+            <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <script>
+     function cargarModalAcceso(id, perfil) {
+        document.getElementById("modal_id_usuario").value = id;
+      }
+  </script>
+
+
+<%- include('partials/_footer') %>

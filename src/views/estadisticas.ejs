@@ -1,0 +1,155 @@
+<%- include('partials/_header2') %>
+
+<div id="main-container" class="container mainSection mb-5" data-page="estadisticas">
+
+  <div class="container-fluid mt-5">
+        <div class="row mt-3">
+          <div class="col col-md-6">
+              <div class="table-responsive">
+                  <table class="table table-hover">
+                      <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">Ingresos en los últimos 6 días</h6>
+                      <thead>
+                        <tr class="table-primary">
+                          <th scope="col">Dependencia</th> 
+                          <th scope="col">Codigo</th>
+                          <th scope="col">Cantidad</th>  
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% if (ingresosUltimos6Dias && ingresosUltimos6Dias.length > 0) {  %>
+                          <% console.log("INGRESOS ULTIMOS 6 DIAS: ", ingresosUltimos6Dias); %>
+                          <% ingresosUltimos6Dias.forEach(ingreso => { %>
+                            <tr>
+                              <td><%= ingreso.detalle_dependencia %></td>
+                              <td><%= ingreso.Unidad_Destino %></td>
+                              <td><%= ingreso.cantidad %></td>
+                            </tr>
+                          <% }); %>
+                        <% } %>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <div class="col col-md-6">
+              <div class="table-responsive">
+                  <table class="table table-hover">
+                      <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">Ingresos en el año <%= new Date().getFullYear() %></h6>
+                      <thead>
+                          <tr class="table-primary">
+                              <th scope="col">Dependencia</th>
+                              <th scope="col">Codigo</th>
+                              <th scope="col">Cantidad</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                      <% if (ingresosAnioActual && ingresosAnioActual.length > 0) {  %>
+                        <% console.log("INGRESOS 2025: ", ingresosAnioActual); %>
+                        <% ingresosAnioActual.forEach(ingreso => { %>
+                          <tr>
+                            <td><%= ingreso.detalle_dependencia %></td>
+                            <td><%= ingreso.Unidad_Destino %></td>
+                            <td><%= ingreso.cantidad %></td>
+                          </tr>
+                        <% }); %>
+                      <% } %>
+                      </tbody>
+                  </table>
+              </div>   
+          </div>
+          <div class="col">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">ALOJADOS TOTAL</h6>
+                    <thead>
+                        <tr class="table-primary">
+                            <th scope="col">Dependencia</th>
+                            <th scope="col">Codigo</th>
+                            <th scope="col">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <% if (ingresosTotales && ingresosTotales.length > 0) {  %>
+                        <% console.log("EGRESOS 2025: ", ingresosTotales); %>
+                        <% ingresosTotales.forEach(ingtotal => { %>
+                          <tr>
+                            <td><%= ingtotal.detalle_dependencia %></td>
+                            <td><%= ingtotal.Unidad_Destino %></td>
+                            <td><%= ingtotal.cantidad %></td>
+                          </tr>
+                        <% }); %>
+                      <% } %>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+        <div class="container-fluid">  
+          <div class="ps-5 alert alert-dismissible alert-dark text-center">
+            <h4 class="text-white fw-bolder mb-3">ESTADÍSTICAS DE INGRESOS</h4>
+            <div class="d-flex justify-content-center align-items-center mb-3">
+              <button id="btnPrev" class="btn btn-outline-light btn-sm me-3">◀</button>
+              <h5 id="anioActual" class="text-white fw-bold mb-0"><%= new Date().getFullYear() %></h5>
+              <button id="btnNext" class="btn btn-outline-light btn-sm ms-3">▶</button>
+            </div>
+            <canvas id="graficoIngresos" width="400" height="200"></canvas>
+          </div>
+        </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('graficoIngresos').getContext('2d');
+  let chart;
+
+  // Datos iniciales (inyectados desde backend)
+  let anioActual = new Date().getFullYear();
+  const labelsInicial = <%- labels %>;
+  const dataInicial = <%- data %>;
+
+  function crearGrafico(labels, data, anio) {
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: `Ingresos por mes (${anio})`,
+          data,
+          backgroundColor: 'rgba(0, 191, 255,0.8)',
+          borderColor: 'rgba(224, 255, 255,1)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  crearGrafico(labelsInicial, dataInicial, anioActual);
+
+  async function cambiarAnio(anio) {
+    try {
+      const res = await fetch(`/api/ingresos/${anio}`);
+      const result = await res.json();
+
+      if (result && result.labels.length > 0) {
+        anioActual = anio;
+        document.getElementById('anioActual').textContent = anio;
+        crearGrafico(result.labels, result.data, anio);
+      } else {
+        alert(`No hay datos disponibles para el año ${anio}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al cargar los datos del año');
+    }
+  }
+
+  document.getElementById('btnPrev').addEventListener('click', () => cambiarAnio(anioActual - 1));
+  document.getElementById('btnNext').addEventListener('click', () => cambiarAnio(anioActual + 1));
+</script>
+
+
+<%- include('partials/_footer') %>

@@ -1,0 +1,28 @@
+<%- include('partials/_header2') %>
+
+
+<div class="container-fluid mainSection" id="main-container" data-page="inicio">
+      <img src="img/policia2.jpg" alt="" class="img-fluid w-100" style="height: 100vh; filter: brightness(0.7); border-radius: 10px; filter: blur(12px); position: absolute; top: 4; left: 0; z-index: -1;">
+    <div class="row mt-5 pt-5 mb-md-5">
+      <div class="col-12">
+        <div class="d-flex align-items-center justify-content-center gap-3 d-none d-md-flex">
+            <p class="text-white fw-bolder text-border display-3">Bienvenido a Sis<span style="color: rgb(0, 119, 255);">Pol</span></p>
+            <img src="img/policia.png" alt="Logo policia Tucuman" style="height: 130px; width: auto;">  
+        </div>
+        <div class="d-flex align-items-center justify-content-center gap-2 d-block d-md-none flex-wrap mb-3">
+            <p class="text-white fw-bolder text-border display-6">Bienvenido a Sis<span style="color: rgb(0, 119, 255);">Pol</span></p>
+            <img src="img/policia.png" alt="Logo policia Tucuman" style="height: 60px; width: auto;">  
+        </div>
+        <div class="d-flex align-items-center justify-content-center gap-3 mt-3">
+          <% if (session.nombre_rol == "ADMINISTRADOR") { %>
+            <p class="text-white fw-bolder text-border">Administrador:</p>
+          <% } else { %>
+            <p class="text-white fw-bolder text-border">Usuario:</p>
+          <% } %>
+            <p class="text-white fw-bolder text-border"><%= session.firstnamesecondname %></p>
+        </div>
+      </div>
+    </div>
+</div>
+
+<%- include('partials/_footer') %>
