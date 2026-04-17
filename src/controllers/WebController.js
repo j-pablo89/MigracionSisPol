@@ -35,6 +35,7 @@ controller.login = (req, res) => {
                 console.log("PASSWORD: ", password);
                 console.log("CONTRASEÑA: ", user.Contrasenia);
                 const passwordIsValid = bcrypt.compareSync(password, user.Contrasenia);
+                const passwordIgualUsuario = bcrypt.compareSync(user.Usuario, user.Contrasenia);
                 if (!passwordIsValid) {
                     var EstadoConexion = "LOGIN FALLIDO";
                     conn.query("INSERT INTO pol_logueo (id_usuario, Tipo, FechaHoraSesion) VALUES (?, ?, NOW())", [user.id_usuario, EstadoConexion], (err) => {
@@ -76,9 +77,10 @@ controller.login = (req, res) => {
                 req.session.username = user.Usuario;
                 req.session.avatar = user.Avatar_url;
                 req.session.Dni = user.Dni;
-
+                req.session.debeCambiarClave = user.debeCambiarClave;
                 req.session.permiso = user.Permiso;
                 req.session.nombre_rol = user.nombre_rol;
+                req.session.forzarCambioClave = passwordIgualUsuario;
 
                 console.log("CONSOLA USERNAME: ", req.session.username);
                 console.log("CONSOLA AVATAR: ", req.session.avatar);
@@ -722,6 +724,7 @@ controller.cambiarClave = async (req, res) => {
     const id = req.params.id;
     const login = req.username;
     const { contrasenia, nuevaContrasenia, confirmaContrasenia } = req.body;
+    console.log("ENTRA AL CONTROLADOR CAMBIO CLAVE  ");
 
     req.getConnection(async (err, conn) => {
         if (err) return res.redirect(`/inicio?error=conexion`);
@@ -731,20 +734,29 @@ controller.cambiarClave = async (req, res) => {
             if (rows.length === 0) {
                 return res.redirect(`/inicio?error=usuario_no_encontrado`);
             }
+            console.log("PASA EL PRIMER IF");
             const usuario = rows[0];
             const coincide = await bcrypt.compare(contrasenia, usuario.Contrasenia);
             if (!coincide) {
                 return res.redirect(`/inicio?error=contrasenia_incorrecta`);
             }
+            console.log("PASA EL SEGUNDO IF");
             if (nuevaContrasenia !== confirmaContrasenia) {
                 return res.redirect(`/inicio?error=no_coinciden`);
             }
+            console.log("PASA EL TERCER IF");
+            if (nuevaContrasenia === usuario.Usuario) {
+                return res.status(400).json({ error: "La clave no puede ser igual al usuario" });
+            }
+            console.log("PASA EL CUARTO IF");
             const claveHash = await bcrypt.hash(nuevaContrasenia, 10);
             await conn.promise().query(`INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'CAMBIO_PASSWORD', ?, ?, ?)`,[id, JSON.stringify(usuario), JSON.stringify({ Contrasenia: claveHash }), login]);
             console.log("HASH: ", claveHash);
             console.log("LOGIN: ", login);
             console.log("id: ", id);
             await conn.promise().query("UPDATE pol_usuarios SET Contrasenia = ?, modifica_autoriza = ?, Fecha_Modifica = NOW() WHERE id_usuario = ?", [claveHash, login, id]);
+            // 🔴 DESACTIVAR OBLIGATORIEDAD
+            req.session.forzarCambioClave = false;
             res.redirect(`/inicio?msg=cambio_clave_ok`);
         } catch (error) {
             console.error(error);
@@ -1331,7 +1343,7 @@ controller.anularCausaDetenido = (req, res) => {
 
 controller.agregarFoto = (req, res) => {
     const id = req.params.id;
-    const login = req.username;
+    let login = username;
     console.log("username: ", login);
     console.log("ID DETENIDO: ", id);
     req.getConnection((err, conn) => {
@@ -1344,7 +1356,10 @@ controller.agregarFoto = (req, res) => {
                 }
 
                 const registro = detenido[0] || {};
-                const fechaAlta = registro.Fecha_alta ? new Date(registro.Fecha_alta).getTime() : null;
+                if (!fechaAlta || isNaN(fechaAlta)) {
+                    canEditPhotos = false;
+                }
+                let fechaAlta = Date.now() - fechaAlta
                 const perfil = req.session && req.session.nombre_rol;
                 const isAdmin = perfil === 'ADMINISTRADOR';
                 const applyTimeRule = !isAdmin; // restringir sólo a usuarios no admin
@@ -1390,7 +1405,7 @@ controller.guardarFotos = (req, res) => {
         }
 
         // 1) Consultar si ya existe registro
-        conn.query("SELECT frente, izquierdo, derecho, espalda FROM pol_internofotos WHERE id_InternoLegajo = ?", [id_InternoLegajo], (err, rows) => {
+        conn.query("SELECT frente, izquierdo, derecho, espalda, Fecha_alta FROM pol_internofotos WHERE id_InternoLegajo = ?", [id_InternoLegajo], (err, rows) => {
                 if (err) {
                     console.error("Error al leer DB:", err);
                     return res.render("agregar_foto", {
@@ -2017,35 +2032,26 @@ controller.estadisticas = (req, res) => {
 };
 
 controller.obtenerNotificaciones = (req, res) => {
-    const id_usuario = req.user.id;
-    req.getConnection((err, conn) => {
-        if (err) return res.status(500).json({ error: "Error conexión" });
-        // 🔹 1. Obtener unidades del usuario
-        conn.query(`SELECT id_Unidades FROM pol_usuariounidades WHERE id_usuario = ? AND Estado = 1`, [id_usuario], (err, unidades) => {
+  const id_usuario = req.user.id;
 
-            if (err) return res.status(500).json({ error: "Error unidades" });
+  req.getConnection((err, conn) => {
+    if (err) return res.status(500).json({ error: "Error conexión" });
 
-            if (!unidades.length) {
-                return res.json({ notificaciones: [], total_no_leidas: 0 });
-            }
+    conn.query(`SELECT n.*, IF(nu.leida IS NULL, 0, nu.leida) AS leida FROM pol_notificaciones n INNER JOIN pol_usuariounidades uu ON uu.id_Unidades = n.Unidad_Destino_Codigo AND uu.id_usuario = ? AND uu.Estado = 1 LEFT JOIN pol_notificaciones_usuarios nu ON n.id_Notificacion = nu.id_notificacion AND nu.id_usuario = ? WHERE n.Estado = 'pendiente' ORDER BY n.Fecha_Creacion DESC`, [id_usuario, id_usuario], (err, notificaciones) => {
 
-            const ids = unidades.map(u => u.id_Unidades);
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error consulta" });
+      }
 
-            // 🔹 2. Traer notificaciones + estado usuario
-            conn.query(`SELECT n.*, IF(nu.leida IS NULL, 0, nu.leida) AS leida FROM pol_notificaciones n LEFT JOIN pol_notificaciones_usuarios nu ON n.id_Notificacion = nu.id_notificacion AND nu.id_usuario = ? WHERE n.id_unidad_destino IN (?) AND n.Estado = 'pendiente' ORDER BY n.Fecha_Creacion DESC`, [id_usuario, ids], (err, notificaciones) => {
-                if (err) {
-                console.error(err);
-                return res.status(500).json({ error: "Error consulta" });
-                }
-                const noLeidas = notificaciones.filter(n => n.leida === 0).length;
+      const noLeidas = notificaciones.filter(n => n.leida === 0).length;
 
-                res.json({
-                notificaciones,
-                total_no_leidas: noLeidas
-                });
-            });
-        });
+      res.json({
+        notificaciones,
+        total_no_leidas: noLeidas
+      });
     });
+  });
 };
 
 controller.responderNotificacion = (req, res) => {
@@ -2076,12 +2082,12 @@ controller.responderNotificacion = (req, res) => {
             }
             const detalle = `Movil: ${notif.Movil}, Personal: ${notif.PersonalCustodio}, Obs: ${notif.Observaciones}`;
             conn.query(`INSERT INTO pol_internomovimiento (id_InternoLegajo, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, 'TRASLADO', ?, ?)`, [
-            notif.id_InternoLegajo, notif.Unidad_Origen_Codigo, notif.Unidad_Destino_Codigo, detalle, login], (err) => {
+            notif.id_InternoLegajo, notif.Unidad_Origen_Codigo, notif.Unidad_Destino_Codigo, JSON.stringify(detalle), login], (err) => {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({ error: "Error traslado" });
                 }
-                conn.query(`UPDATE pol_notificaciones SET Estado = 'aceptada' WHERE id_Notificacion = ?`, [id_Notificacion]);
+                conn.query(`UPDATE pol_notificaciones SET Estado = 'aceptada', Leida = 1 WHERE id_Notificacion = ?`, [id_Notificacion]);
                 return res.json({
                     success: true,
                     message: "Traslado aceptado correctamente"
@@ -2119,8 +2125,7 @@ controller.buscarInterleg = async (req, res) => {
                             datosMYSQL: [],
                         });
                     }
-                    conn.query(
-                        `SELECT SUM(CASE WHEN pol_internolegajo.estado = 0 THEN 1 ELSE 0 END) AS cantidad_estado_0, SUM(CASE WHEN pol_internolegajo.estado = 1 THEN 1 ELSE 0 END) AS cantidad_estado_1 FROM pol_persona INNER JOIN pol_internolegajo USING(id_persona) LEFT JOIN pol_internofotos USING(id_InternoLegajo) WHERE pol_persona.Apellido LIKE ? OR pol_persona.Nombre LIKE ? OR pol_persona.Dni LIKE ?`,
+                    conn.query(`SELECT SUM(CASE WHEN pol_internolegajo.estado = 0 THEN 1 ELSE 0 END) AS cantidad_estado_0, SUM(CASE WHEN pol_internolegajo.estado = 1 THEN 1 ELSE 0 END) AS cantidad_estado_1 FROM pol_persona INNER JOIN pol_internolegajo USING(id_persona) LEFT JOIN pol_internofotos USING(id_InternoLegajo) WHERE pol_persona.Apellido LIKE ? OR pol_persona.Nombre LIKE ? OR pol_persona.Dni LIKE ?`,
                         [`%${q}%`, `%${q}%`, `%${q}%`],
                         (err, estadoCounts) => {
                             if (err) {
@@ -2164,12 +2169,7 @@ controller.consultaDetenido = async (req, res) => {
                 return res.status(500).json({ error: true });
             }
 
-            conn.query(
-                `SELECT pe.Nombre, pe.Apellido, pe.Dni, le.id_InternoLegajo, fo.frente
-                        FROM pol_persona pe
-                        INNER JOIN pol_internolegajo le USING(id_persona)
-                        LEFT JOIN pol_internofotos fo USING(id_InternoLegajo)
-                        WHERE pe.Dni = ? LIMIT 1`,
+            conn.query(`SELECT pe.Nombre, pe.Apellido, pe.Dni, le.id_InternoLegajo, fo.frente FROM pol_persona pe INNER JOIN pol_internolegajo le USING(id_persona) LEFT JOIN pol_internofotos fo USING(id_InternoLegajo) WHERE pe.Dni = ? LIMIT 1`,
                 [dni],
                 (err, results) => {
                     if (err) {

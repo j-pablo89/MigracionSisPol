@@ -20,7 +20,7 @@
       <div class="row">
         <input type="hidden" name="id_Persona" value="<%= detenido.id_Persona %>">
         <input type="hidden" name="id_InternoLegajo" value="<%= detenido.id_InternoLegajo %>">
-        <input type="hidden" name="username" value="<%= session.username %>">
+      
         <div class="col-md-6 mb-3">
           <label for="fotoFrente" class="form-label text-white">Foto Frente</label>
           <input title="Cargue foto Frente" type="file" class="form-control" id="fotoFrente" name="frente" data-existing="<%= detenido.frente ? 'true' : 'false' %>" accept="image/png, image/jpeg, image/jpg" onchange="mostrarVistaPrevia(event, 'preview1'); iniciarTemporizadorFoto('Frente')" <%= detenido.frente ? '' : 'required' %> <%= canEditPhotos === false ? 'disabled' : '' %>>
@@ -83,7 +83,7 @@
 </div>
 
 <script>
-  function iniciarTemporizadorFoto(campo, initialRemainingMs = 86400000) {
+  function iniciarTemporizadorFoto(campo, initialRemainingMs = 864000) {
     const btn = document.getElementById('btn' + campo);
     const timer = document.getElementById('timer' + campo);
     const input = document.getElementById('foto' + campo);
@@ -155,7 +155,7 @@
       }
 
       if (input.files.length > 0 && (existing || serverRemaining > 0)) {
-        iniciarTemporizadorFoto(campo, serverRemaining > 0 ? serverRemaining : 86400000);
+        iniciarTemporizadorFoto(campo, serverRemaining > 0 ? serverRemaining : 864000);
       }
     });
   });

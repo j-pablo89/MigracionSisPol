@@ -65,19 +65,21 @@
                                     <td class="align-middle text-center"><%= detenido.detalle_destino%></td>                                                           
                                     <td class="align-middle text-center"><a href="/causa_detenido/<%= detenido.id_InternoLegajo %>" class="fw-bold fs-5"> <u><%= detenido.cantidad_causas %></u></a></td>
                                     <td class="align-middle text-center">
-                                        <% if (detenido.traslado_pendiente > 0) { %>
-                                            <span class="badge bg-warning text-dark fs-6">Traslado Pendiente a <%= detenido.traslado_destino %></span>
-                                        <% } else { %>
-                                        <button class="btn btn-outline-danger abrir-modal-opciones"
-                                          data-id="<%= detenido.id_InternoLegajo %>"
-                                          data-nombre="<%= detenido.NOMBRE %>"
-                                          data-apellido="<%= detenido.APELLIDO %>"
-                                          data-dni="<%= detenido.DNI %>"
-                                          data-alojado="<%= detenido.Unidad_Destino %>"
-                                          data-origen="<%= detenido.Unidad_Alojado%>"
-                                          data-frente="<%= detenido.frente %>"
-                                          data-cantidad_causas="<%= detenido.cantidad_causas %>"
-                                          data-esadmin="<%= session.nombre_rol === 'ADMINISTRADOR' %>">ACCIONES</button>
+                                        <% if (session.permiso === 'ABM') { %>
+                                            <% if (detenido.traslado_pendiente > 0) { %>
+                                                <span class="badge bg-warning text-dark fs-6">Traslado Pendiente a <%= detenido.traslado_destino %></span>
+                                            <% } else { %>
+                                            <button class="btn btn-outline-danger abrir-modal-opciones"
+                                            data-id="<%= detenido.id_InternoLegajo %>"
+                                            data-nombre="<%= detenido.NOMBRE %>"
+                                            data-apellido="<%= detenido.APELLIDO %>"
+                                            data-dni="<%= detenido.DNI %>"
+                                            data-alojado="<%= detenido.Unidad_Destino %>"
+                                            data-origen="<%= detenido.Unidad_Alojado%>"
+                                            data-frente="<%= detenido.frente %>"
+                                            data-cantidad_causas="<%= detenido.cantidad_causas %>"
+                                            data-esadmin="<%= session.nombre_rol === 'ADMINISTRADOR' %>">ACCIONES</button>
+                                            <% } %>
                                         <% } %>
                                     </td>                       
                                 </tr>
@@ -123,52 +125,7 @@
 
             </dialog>
 
-            <!-- MODAL ACCIONES DETENIDO DISPOSITIVOS GRANDES
-            <dialog id="modalAcciones" class="border border-3 border-primary bg-light p-0">
-                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
-                    <h5 class="modal-title text-white" id="tituloDetenido">ACCIONES</h5>
-                    <button type="button" class="btn btn-danger-strong text-end cerrarModalAcciones px-2 py-0" value="CERRAR">X</button>
-                </div>
-                <div class="modal-body d-flex justify-content-center gap-3 p-3">
-                    
-                        <input id="btnLiberar" class="btn btn-primary mb-2 w3-button abrir-modal border border-1 border-black" title="Liberar detenido" style="width: 150px;" value="LIBERAR">
             
-                    <input id="btnMover" class="btn btn-primary mb-2 w3-button abrir-modal-mover border border-1 border-black" title="Mover detenido" style="width: 150px;" value="MOVER">
-                    <input id="btnRegresar" class="btn btn-secondary mb-2 w3-button abrir-modal-regresar border border-1 border-black d-none" title="Regresar detenido" style="width: 150px;" value="REGRESAR">
-                    <input id="btnTrasladar" class="btn btn-primary mb-2 w3-button abrir-modal-trasladar border border-1 border-black" title="Trasladar detenido" style="width: 150px; " value="TRASLADAR">
-                </div>
-                <div class="modal-body d-flex justify-content-center gap-3 p-3">
-                    <a id="linkModificar" class="btn btn-primary mb-2 border border-1 border-black" title="Modificar datos del detenido" style="width: 150px; ">MODIFICAR</a>
-                    <a id="linkCausas" class="btn btn-primary mb-2 border border-1 border-black" title="Ver causas del detenido" style="width: 150px; ">CAUSAS</a>
-                    <a id="linkArchivos" class="btn btn-primary mb-2 border border-1 border-black" title="Agregar archivo al detenido" style="width: 150px; ">ARCHIVOS</a>
-                </div>
-                <hr>
-                <div class="modal-footer d-flex justify-content-center p-3">
-                    <button type="button" class="btn btn-danger-strong border border-1 border-black" onclick="modalAcciones.close()">CERRAR</button>
-                </div>
-            </dialog>
-
-            <!-- MODAL ACCIONES DETENIDO DISPOSITIVOS MOVILES 
-            <dialog id="modalAccionesMovil" class="border border-3 border-primary bg-light p-0">
-                <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
-                    <h5 class="modal-title text-white" id="tituloDetenido">ACCIONES</h5>
-                    <button type="button" class="btn btn-danger-strong text-end cerrarModalAccionesMoviles px-2 py-0" value="CERRAR">X</button>
-                </div>
-                <div class="modal-body d-flex flex-column gap-3 p-3">
-                        <input id="btnLiberarMovil" class="btn btn-primary mb-2 w3-button abrir-modal border border-1 border-black" title="Liberar detenido" style="width: 150px; " value="LIBERAR">
-                    <input id="btnMoverMovil" class="btn btn-primary mb-2 w3-button abrir-modal-mover border border-1 border-black" title="Mover detenido" style="width: 150px; " value="MOVER">
-                    <input id="btnRegresarMovil" class="btn btn-primary mb-2 w3-button abrir-modal-regresar border border-1 border-black" title="Regresar detenido" style="width: 150px;" value="REGRESAR">
-                    <input id="btnTrasladarMovil" class="btn btn-primary mb-2 w3-button abrir-modal-trasladar border border-1 border-black" title="Trasladar detenido" style="width: 150px; " value="TRASLADAR">
-                    <a id="linkModificarMovil" class="btn btn-primary mb-2 border border-1 border-black" title="Modificar datos del detenido" style="width: 150px; ">MODIFICAR</a>
-                    <a id="linkCausasMovil" class="btn btn-primary mb-2 border border-1 border-black" title="Ver causas del detenido" style="width: 150px; ">CAUSAS</a>
-                    <a id="linkArchivosMovil" class="btn btn-primary mb-2 border border-1 border-black" title="Agregar archivo al detenido" style="width: 150px; " >ARCHIVOS</a>
-                </div>
-                <hr>
-                <div class="modal-footer d-flex justify-content-center p-3">
-                    <button type="button" class="btn btn-danger-strong border border-1 border-black" onclick="modalAccionesMovil.close()">CERRAR</button>
-                </div>
-            </dialog> -->
-
             <!-- MODAL LIBERAR DETENIDO -->
            <dialog id="mimodal" class="border border-3 border-primary bg-light p-0"> 
                 <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
@@ -340,22 +297,23 @@
                         
                     </div>
                     <hr>
+                    <% if (session.permiso === 'ABM') { %>
                     <div class="card-footer text-center">
-                        <% if (detenido.traslado_pendiente > 0) { %>
-                            <span class="badge bg-warning text-dark fs-6 d-flex justify-content-center">Traslado Pendiente a <%= detenido.traslado_destino %></span>
-                        <% } else { %>
-                    <button class="btn btn-outline-danger abrir-modal-opciones-movil"
-                    data-id="<%= detenido.id_InternoLegajo %>"
-                    data-nombre="<%= detenido.NOMBRE %>"
-                    data-apellido="<%= detenido.APELLIDO %>"
-                    data-dni="<%= detenido.DNI %>"
-                    data-alojado="<%= detenido.Unidad_Destino %>"
-                    data-frente="<%= detenido.frente %>"
-                    data-cantidad_causas="<%= detenido.cantidad_causas %>">ACCIONES</button>
+                            <% if (detenido.traslado_pendiente > 0) { %>
+                                <span class="badge bg-warning text-dark fs-6 d-flex justify-content-center">Traslado Pendiente a <%= detenido.traslado_destino %></span>
+                            <% } else { %>
+                                <button class="btn btn-outline-danger abrir-modal-opciones-movil"
+                                data-id="<%= detenido.id_InternoLegajo %>"
+                                data-nombre="<%= detenido.NOMBRE %>"
+                                data-apellido="<%= detenido.APELLIDO %>"
+                                data-dni="<%= detenido.DNI %>"
+                                data-alojado="<%= detenido.Unidad_Destino %>"
+                                data-frente="<%= detenido.frente %>"
+                                data-cantidad_causas="<%= detenido.cantidad_causas %>">ACCIONES</button>
+                            <% } %>
                         <% } %>
                     </div>   
                     <div class="card-footer">
-                        
                         <button class="btn btn-outline abrir-modal-detalle w-100"
                             data-id="<%= detenido.id_InternoLegajo %>" 
                             data-nombre="<%= detenido.NOMBRE %>" 
@@ -371,7 +329,6 @@
                             data-localidad="<%= detenido.LOCALIDAD %>"
                             data-provincia="<%= detenido.PROVINCIA %>"
                         >VER DETALLE</button>
-                        
                     </div>
                 </div>
                 <% } %>

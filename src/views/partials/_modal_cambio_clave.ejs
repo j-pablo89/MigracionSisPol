@@ -4,7 +4,7 @@
       <button type="button" class="btn btn-danger-strong text-end cerrarModalClave px-2 py-0" value="CERRAR">X</button>
     </div>
     <div class="modal-body p-3">
-      <form id="formCambiarClave" method="POST">
+      <form id="formCambiarClave" method="POST" action="/cambiar_clave/<%= session.userId %>" novalidate>
         <div class="mb-3 d-flex justify-content-md-start flex-column">
           <label for="contrasenia" class="form-label">Clave Actual</label>
           <input type="password" class="form-control mb-3" name="contrasenia" id="contrasenia"  required>

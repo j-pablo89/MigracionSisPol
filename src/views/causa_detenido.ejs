@@ -1,6 +1,6 @@
 <%- include ('partials/_header2')%>
 
-<div id="main-container" class="container mainSection mb-5" data-page="causa_detenido" data-role="<%= nombre_rol || req.session.nombre_rol %>">
+<div id="main-container" class="container mainSection mb-5" data-page="causa_detenido" data-role="<%= nombre_rol || session.nombre_rol %>">
   <div class="bg-light fw-bold mt-5 border border-5 border-primary ">
 
     <div class="modal-header d-flex justify-content-center align-self-center bg-secondary mb-3">
@@ -120,7 +120,7 @@
     </div>
     <div class="card text-bg-primary border border-4 border-black mb-3 mx-2" id="card-<%= index %>" data-can-edit="<%= detenido.canEdit ? 'true' : 'false' %>" data-fecha-alta="<%= detenido.Fecha_alta ? detenido.Fecha_alta : '' %>">
       <% if (!detenido.canEdit) { %>
-      <div class="alert alert-warning m-3">El periodo de edición de causas expiró (2 minutos). No se pueden modificar los datos.</div>
+      <div class="alert alert-warning m-3">No se pueden modificar datos.</div>
       <% } %>
     <% }else if (detenido.Estado === 0) { %>
       <div>
@@ -224,7 +224,7 @@
                   <input type="text" name="Detalle" class="form-control" onkeyup="this.value = this.value.toUpperCase()" required disabled value="<%= detenido.Observaciones %>" readonly data-original="<%= detenido.Observaciones %>">
                   <input type="hidden" name="Detalle2" class="form-control" value="<%= detenido.Observaciones %>" >
                 </div>
-                <% if (detenido.Estado === 0 || detenido.Estado === 2) {%>
+                <% if (detenido.Estado === 0 || detenido.Estado === 1) {%>
                 <div class="col-md-12 mb-2">
                   <label for="Detalle" class="form-label fw-bold ">Detalle Cierre de Causa</label>
                   <input class="form-control" type="text" id="detalle-cierre-<%= index %>" name="detalle_cierre" value="<%= detenido.Detalle_Estado%>" readonly disabled>
@@ -232,14 +232,16 @@
                 <% }%>
               </div>
               <div class="mt-2 d-flex justify-content-center gap-2 flex-wrap justify-content-md-start">
-                <% if (detenido.Estado === 2) { %>
-                <button type="button" class="btn btn-warning border border-1 border-black" onclick="habilitarEdicion('<%= index %>')" id="modificar-<%= index %>" <%= detenido.canEdit ? '' : 'disabled title="Periodo de edición expirado"' %>>Modificar</button>
-                <button type="submit" class="btn btn-success-strong d-none border border-1 border-black" id="actualizar-<%= index %>">Actualizar</button>
-                <button type="button" class="btn btn-secondary d-none border border-1 border-black" onclick="cancelarEdicion('<%= index %>')" id="cancelar-<%= index %>">Cancelar</button>
-                <button type="button" class="btn btn-danger-strong border border-1 border-black" id="eliminar-<%= index %>" onclick="cerrarCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>')">Cerrar Causa</button>
-                <button type="button" class="btn btn-info border border-1 border-black" id="anular-<%= index %>" onclick="anularCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>')">Anular Causa</button>
-                <% } else if (detenido.Estado === 1) { %>
-                <button type="button" class="btn btn-success-strong border border-1 border-black" id="reactivar-<%= index %>" onclick="reabrirCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>', '<%= datos.id_InternoLegajo %>')">Reactivar Causa</button>
+                <% if (session.permiso === 'ABM') { %>
+                  <% if (detenido.Estado === 2) { %>
+                    <button type="button" class="btn btn-warning border border-1 border-black" onclick="habilitarEdicion('<%= index %>')" id="modificar-<%= index %>" <%= detenido.canEdit ? '' : 'disabled title="Periodo de edición expirado"' %>>Modificar</button>
+                    <button type="submit" class="btn btn-success-strong d-none border border-1 border-black" id="actualizar-<%= index %>">Actualizar</button>
+                    <button type="button" class="btn btn-secondary d-none border border-1 border-black" onclick="cancelarEdicion('<%= index %>')" id="cancelar-<%= index %>">Cancelar</button>
+                    <button type="button" class="btn btn-danger-strong border border-1 border-black" id="eliminar-<%= index %>" onclick="cerrarCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>')">Cerrar Causa</button>
+                    <button type="button" class="btn btn-info border border-1 border-black" id="anular-<%= index %>" onclick="anularCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>')">Anular Causa</button>
+                  <% } else if (detenido.Estado === 1) { %>
+                    <button type="button" class="btn btn-success-strong border border-1 border-black" id="reactivar-<%= index %>" onclick="reabrirCausa(event, '<%= index %>', '<%= detenido.id_InternoProntuario %>', '<%= datos.id_InternoLegajo %>')">Reactivar Causa</button>
+                  <% } %>
                 <% } %>
               </div>
           </form>

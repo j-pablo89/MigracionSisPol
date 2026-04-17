@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="/css/style-bar.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
   </head>
-  <body class="root fondoImagenPatrones" data-usuario="<%= session.apellido %> - <%= session.dni %>" >
+  <body class="root fondoImagenPatrones" data-usuario="<%= session.apellido %> - <%= session.username %>" data-username="<%= session.username %>" data-userid="<%= session.userId %>">
 
     <!-- 🔥 MARCA DE AGUA -->
   <div id="watermark"></div>
@@ -153,7 +153,7 @@
             </div>
             <div class="nav__items">
               <h3 class="nav__subtitle">ACCESO</h3>
-              <span class="nav__name <% if (session.nombre_rol === "ADMINISTRADOR" ) { %>active text-danger<% } else if (session.nombre_rol === "USUARIO GENERAL") { %>active text-success<% } %>"><%= session.nombre_rol %></span>
+              <span class="nav__name <% if (session.nombre_rol === "ADMINISTRADOR" ) { %>active text-danger<% } else if (session.nombre_rol === "USUARIO GENERAL") { %>active text-success<% } %>">ROL -> <%= session.nombre_rol %></span>
               <% if (session.nombre_rol && session.nombre_rol !== "ADMINISTRADOR" && session.nombre_rol !== "USUARIO GENERAL") { %>
                 <% if (session.unidades && session.unidades.length > 0) { %>
                   <div>

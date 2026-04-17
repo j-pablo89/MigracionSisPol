@@ -32,6 +32,19 @@
             console.error('Anti-back script error', err);
         }
     })();
+  
+</script>
+<script>
+  // 🔴 Variable global
+  window.forzarCambioClaveActivo = <%= session.forzarCambioClave ? 'true' : 'false' %>;
+
+  // 🔴 Abrir modal automáticamente
+  if (window.forzarCambioClaveActivo) {
+    window.addEventListener("load", () => {
+      const modal = document.getElementById("modalCambiarClave");
+      if (modal) modal.showModal();
+    });
+  }
 </script>
 </body>
 </html>
