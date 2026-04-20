@@ -1343,7 +1343,7 @@ controller.anularCausaDetenido = (req, res) => {
 
 controller.agregarFoto = (req, res) => {
     const id = req.params.id;
-    let login = username;
+    const login = req.username;
     console.log("username: ", login);
     console.log("ID DETENIDO: ", id);
     req.getConnection((err, conn) => {
@@ -1356,10 +1356,6 @@ controller.agregarFoto = (req, res) => {
                 }
 
                 const registro = detenido[0] || {};
-                if (!fechaAlta || isNaN(fechaAlta)) {
-                    canEditPhotos = false;
-                }
-                let fechaAlta = Date.now() - fechaAlta
                 const perfil = req.session && req.session.nombre_rol;
                 const isAdmin = perfil === 'ADMINISTRADOR';
                 const applyTimeRule = !isAdmin; // restringir sólo a usuarios no admin
@@ -1367,13 +1363,19 @@ controller.agregarFoto = (req, res) => {
                 let canEditPhotos = true;
                 let editTimeRemaining = 0;
 
+                const LIMITE = 24 * 60 * 60 * 1000; // 24 horas
+
+                const fechaAlta = registro.Fecha_alta ? new Date(registro.Fecha_alta).getTime() : null;
+
                 if (applyTimeRule && fechaAlta) {
                     const diffMs = Date.now() - fechaAlta;
-                    if (diffMs > 120000) {
+                    if (diffMs > LIMITE) {
                         canEditPhotos = false;
                     } else {
-                        editTimeRemaining = 120000 - diffMs;
+                        editTimeRemaining = LIMITE - diffMs;
                     }
+                } else {
+                    editTimeRemaining = LIMITE;
                 }
 
                 res.render("agregar_foto", {
@@ -1405,7 +1407,7 @@ controller.guardarFotos = (req, res) => {
         }
 
         // 1) Consultar si ya existe registro
-        conn.query("SELECT frente, izquierdo, derecho, espalda, Fecha_alta FROM pol_internofotos WHERE id_InternoLegajo = ?", [id_InternoLegajo], (err, rows) => {
+        conn.query("SELECT frente, izquierdo, derecho, espalda FROM pol_internofotos WHERE id_InternoLegajo = ?", [id_InternoLegajo], (err, rows) => {
                 if (err) {
                     console.error("Error al leer DB:", err);
                     return res.render("agregar_foto", {
@@ -1416,12 +1418,16 @@ controller.guardarFotos = (req, res) => {
 
                 const existente = rows[0] || {};
 
+                const perfil = req.session && req.session.nombre_rol;
+                const isAdmin = perfil === 'ADMINISTRADOR';
+                const LIMITE = 24 * 60 * 60 * 1000;
+
                 // Si ya existe foto y ya pasó el periodo de edición, no permitir cambios.
                 if (existente.Fecha_alta) {
                     const diferencia = Date.now() - new Date(existente.Fecha_alta).getTime();
-                    if (diferencia > 120000) {
+                    if (!isAdmin && diferencia > LIMITE) {
                         return res.render("agregar_foto", {
-                            errorMessage: "El periodo de edición de fotos expiró (2 minutos).",
+                            errorMessage: "El periodo de edición de fotos expiró (24 horas).",
                             detenido: { id_InternoLegajo, id_Persona, ...existente },
                         });
                     }
@@ -1470,8 +1476,8 @@ controller.guardarFotos = (req, res) => {
                 // 2) Decidir si es INSERT o UPDATE
                 if (rows.length > 0) {
                     // UPDATE
-                    const fechaAltaGuardar = existente.Fecha_alta || mysqlDateTime;
-                    const updateQuery = `UPDATE pol_internofotos SET frente = ?, izquierdo = ?, derecho = ?, espalda = ?, Alta_autoriza = ?, Fecha_alta = ? WHERE id_InternoLegajo = ?`;
+                    const fechaAltaGuardar = mysqlDateTime;
+                    const updateQuery = `UPDATE pol_internofotos SET frente = ?, izquierdo = ?, derecho = ?, espalda = ?, Alta_autoriza = ? WHERE id_InternoLegajo = ?`;
                     conn.query(
                         updateQuery,
                         [

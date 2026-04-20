@@ -10,7 +10,7 @@
 
     <% if (typeof canEditPhotos !== 'undefined' && !canEditPhotos) { %>
       <div class="alert alert-warning">
-        El periodo de edición de fotos expiró (2 minutos). No se pueden reemplazar fotografías.
+        No se pueden reemplazar fotografías.
       </div>
     <% } %>
     <form class="g-3 bg-light fw-bold mt-5 border border-5 border-primary px-4 " action="/guardar_foto/<%= detenido.id_InternoLegajo %>" method="post" enctype="multipart/form-data" id="form-fotos" data-can-edit="<%= canEditPhotos ? 'true' : 'false' %>" data-all-photos="<%= detenido.frente && detenido.izquierdo && detenido.derecho && detenido.espalda ? 'true' : 'false' %>">
@@ -20,7 +20,7 @@
       <div class="row">
         <input type="hidden" name="id_Persona" value="<%= detenido.id_Persona %>">
         <input type="hidden" name="id_InternoLegajo" value="<%= detenido.id_InternoLegajo %>">
-      
+        <input type="hidden" name="username" value="<%= session.username %>">
         <div class="col-md-6 mb-3">
           <label for="fotoFrente" class="form-label text-white">Foto Frente</label>
           <input title="Cargue foto Frente" type="file" class="form-control" id="fotoFrente" name="frente" data-existing="<%= detenido.frente ? 'true' : 'false' %>" accept="image/png, image/jpeg, image/jpg" onchange="mostrarVistaPrevia(event, 'preview1'); iniciarTemporizadorFoto('Frente')" <%= detenido.frente ? '' : 'required' %> <%= canEditPhotos === false ? 'disabled' : '' %>>
@@ -83,7 +83,7 @@
 </div>
 
 <script>
-  function iniciarTemporizadorFoto(campo, initialRemainingMs = 864000) {
+  function iniciarTemporizadorFoto(campo, initialRemainingMs = 86400000) {
     const btn = document.getElementById('btn' + campo);
     const timer = document.getElementById('timer' + campo);
     const input = document.getElementById('foto' + campo);
@@ -126,9 +126,11 @@
   }
 
   function formatTime(segundos) {
-    const min = Math.floor(segundos / 60);
-    const sec = segundos % 60;
-    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    const d = Math.floor(segundos / 86400);
+    const h = Math.floor((segundos % 86400) / 3600);
+    const m = Math.floor((segundos % 3600) / 60);
+    const s = segundos % 60;
+    return `${d.toString().padStart(2, '0')}:${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -155,7 +157,7 @@
       }
 
       if (input.files.length > 0 && (existing || serverRemaining > 0)) {
-        iniciarTemporizadorFoto(campo, serverRemaining > 0 ? serverRemaining : 864000);
+        iniciarTemporizadorFoto(campo, serverRemaining > 0 ? serverRemaining : 86400000);
       }
     });
   });
