@@ -10,10 +10,11 @@ module.exports = {
       }
     },
     {
-        name: "browser-sync",
-        script: "node_modules/browser-sync/dist/bin.js",
-        args: "start --config bs-config.js",
-        watch: false
+      name: "browser-sync",
+      script: "npm",
+      args: "run bs",
+      interpreter: "cmd.exe",
+      watch: false
     }
   ]
 };

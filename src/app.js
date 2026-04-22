@@ -39,6 +39,15 @@ app.use(session({
     cookie: { secure: false }
 }));
 
+app.get('/ping', (req, res) => {
+
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ timeout: true });
+  }
+
+  res.sendStatus(200);
+});
+
 app.use(flash());
 
 // MIDDLEWARE PARA SESION

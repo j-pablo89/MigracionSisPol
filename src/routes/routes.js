@@ -27,6 +27,7 @@ router.get('/login', (req, res) => {
 router.get('/', (req, res) => {
     res.render('login', { timeout: null });
 });
+
 router.get('/logout', verifyToken, WebController.logout);
 router.get('/error401', (req, res) => {
     const error_msg = req.query.error || '';

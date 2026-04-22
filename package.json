@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "pm2 start ecosystem.config.js",
     "dev:stop": "pm2 delete ecosystem.config.js",
-    "dev:logs": "pm2 logs"
+    "dev:logs": "pm2 logs",
+    "bs": "browser-sync start --config bs-config.js"
   },
   "keywords": [],
   "author": "",

@@ -38,6 +38,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ========================================================= FIN WATERMARK DINÁMICO ===========================================================
 
+
+setInterval(async () => {
+    try {
+      const res = await fetch('/ping', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (res.status === 401) {
+        // 🔥 acá ocurre la magia
+        window.location.href = '/login?timeout=1';
+      }
+
+    } catch (err) {
+      console.error('Ping error', err);
+    }
+  }, 60000);
+
 //
 // SCRIPT QUE ABRE UNA ALERTA AL PRESIONAR REABRIR CAUSA INGRESANDO UN MOTIVO
 window.reabrirCausa = function (
@@ -235,7 +253,7 @@ window.habilitarEdicion = function (index) {
   if (situacionSelect) {
     situacionSelect.addEventListener("change", function () {
       const valor = this.value;
-      const mostrar = valor === "CONDENADO" || valor === "PREVENTIVA";
+      const mostrar = valor === "CONDENADO" || valor === "PREVENTIVA" || valor === "PROCESADO";
       toggleCamposFechaTarjeta(index, mostrar);
     });
   }
@@ -573,6 +591,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
   const confirmaContrasenia = document.getElementById("confirmaContrasenia").value.trim();
 
   if (!contrasenia || !nuevaContrasenia || !confirmaContrasenia) {
+    modalCambiarClave.close();
     await Swal.fire({
       title: "Campos incompletos",
       text: "Debe completar todos los campos.",
@@ -583,6 +602,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
   }
 
   if (nuevaContrasenia === contrasenia) {
+    modalCambiarClave.close();
     await Swal.fire({
       title: "Error",
       text: "La nueva clave no puede ser igual a la actual.",
@@ -593,6 +613,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
   }
 
   if (nuevaContrasenia.length < 8 || nuevaContrasenia.length > 10) {
+    modalCambiarClave.close();
     await Swal.fire({
       title: "Longitud inválida",
       text: "Debe tener entre 8 y 10 caracteres.",
@@ -603,6 +624,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
   }
 
   if (nuevaContrasenia !== confirmaContrasenia) {
+    modalCambiarClave.close();
     await Swal.fire({
       title: "Error",
       text: "Las claves no coinciden.",
@@ -613,6 +635,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
   }
 
   if (nuevaContrasenia === username) {
+    modalCambiarClave.close();
     await Swal.fire({
       title: "Clave inválida",
       text: "La contraseña no puede ser igual al usuario.",
@@ -2730,7 +2753,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
 
     input23?.addEventListener("change", function () {
       const val = this.value;
-      const mostrar = val === "CONDENADO" || val === "PREVENTIVA";
+      const mostrar = val === "CONDENADO" || val === "PREVENTIVA" || val === "PROCESADO";
       document.getElementById("divFecha").style.display = mostrar
         ? "block"
         : "none";
@@ -2740,6 +2763,8 @@ formCambiarClave.addEventListener("submit", async (e) => {
     document.querySelectorAll("input[type='date']").forEach((input) => {
       if (!input.classList.contains("no-max-date")) {
         input.max = hoya;
+      }else{
+        input.min = hoya;
       }
     });
 
@@ -3118,4 +3143,5 @@ formCambiarClave.addEventListener("submit", async (e) => {
       }
     }
   }
+  
 });

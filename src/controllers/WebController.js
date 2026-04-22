@@ -38,7 +38,7 @@ controller.login = (req, res) => {
                 const passwordIgualUsuario = bcrypt.compareSync(user.Usuario, user.Contrasenia);
                 if (!passwordIsValid) {
                     var EstadoConexion = "LOGIN FALLIDO";
-                    conn.query("INSERT INTO pol_logueo (id_usuario, Tipo, FechaHoraSesion) VALUES (?, ?, NOW())", [user.id_usuario, EstadoConexion], (err) => {
+                    conn.query("INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)", [user.id_usuario, EstadoConexion], (err) => {
                             if (err) {
                                 console.error("Error al registrar login fallido:", err);
                             }
@@ -101,7 +101,7 @@ controller.login = (req, res) => {
                             console.log("ROL SESSION", req.session.nombre_rol);
                             console.log("UNIDADES SESSION", req.session.unidades);
                             var EstadoConexion = "LOGIN";
-                            conn.query("INSERT INTO pol_logueo (id_usuario, Tipo, FechaHoraSesion) VALUES (?, ?, NOW())",[user.id_usuario, EstadoConexion], (err, result) => {
+                            conn.query("INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)",[user.id_usuario, EstadoConexion], (err, result) => {
                                     if (err) {
                                         console.error("Error al registrar logueo:", err);
                                     }
@@ -119,7 +119,7 @@ controller.login = (req, res) => {
                     );
                 } else{
                     var EstadoConexion = "LOGIN";
-                    conn.query("INSERT INTO pol_logueo (id_usuario, Tipo, FechaHoraSesion) VALUES (?, ?, NOW())",[user.id_usuario, EstadoConexion], (err, result) => {
+                    conn.query("INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)",[user.id_usuario, EstadoConexion], (err, result) => {
                             if (err) {
                                 console.error("Error al registrar logueo:", err);
                             }
@@ -154,8 +154,7 @@ controller.logout = (req, res) => {
         const EstadoConexion = "LOGOUT MANUAL";
 
         conn.query(
-            "INSERT INTO pol_logueo (id_usuario, Tipo, FechaHoraSesion) VALUES (?, ?, NOW())",
-            [userId, EstadoConexion],
+            "INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)", [userId, EstadoConexion],
             (err) => {
                 if (err) {
                     console.error("Error al registrar logout:", err);
@@ -722,7 +721,7 @@ controller.guardarAcceso = (req, res) => {
 
 controller.cambiarClave = async (req, res) => {
     const id = req.params.id;
-    const login = req.username;
+    const login = req.session.username
     const { contrasenia, nuevaContrasenia, confirmaContrasenia } = req.body;
     console.log("ENTRA AL CONTROLADOR CAMBIO CLAVE  ");
 
@@ -773,7 +772,7 @@ controller.listarDetenidos = (req, res) => {
         const userId = req.session && req.session.userId;
 
         // 🔹 Base SIN ORDER BY
-        const baseSql = `SELECT DISTINCT il.id_InternoLegajo, p.Apellido AS APELLIDO, p.Nombre AS NOMBRE, p.Dni AS DNI, p.sexo AS SEXO, p.Fecha_nacimiento AS FECHA_NACIMIENTO, p.Domicilio AS DOMICILIO, ip.id_InternoProntuario, im.Unidad_Destino, im.Unidad_Alojado, ua.Detalle AS detalle_destino, lo.Nombre AS LOCALIDAD, pr.Nombre AS PROVINCIA, il.Estado, f.frente, im.Detalle, COALESCE(c.cantidad_causas,0) AS cantidad_causas, COALESCE(nt.traslado_pendiente, 0) AS traslado_pendiente, pol_notificaciones.Unidad_Destino AS traslado_destino FROM pol_internolegajo il INNER JOIN pol_persona p ON p.id_Persona = il.id_Persona INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades ua ON ua.id_Unidades = im.Unidad_Destino LEFT JOIN (SELECT * FROM pol_internoprontuario pr WHERE pr.id_InternoProntuario IN (SELECT MAX(id_InternoProntuario) FROM pol_internoprontuario GROUP BY id_InternoLegajo)) ip ON ip.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_internofotos f ON f.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) AS cantidad_causas FROM pol_internoprontuario WHERE Estado != 0 AND Estado != 1 GROUP BY id_InternoLegajo) c ON c.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_localidad lo ON lo.id_localidad = p.id_localidad INNER JOIN pol_provincia pr ON pr.id_provincia = p.id_provincia LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) as traslado_pendiente FROM pol_notificaciones WHERE Tipo_Notificacion = 'TRASLADO' AND Estado = 'pendiente' GROUP BY id_InternoLegajo) nt ON nt.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_notificaciones ON pol_notificaciones.id_InternoLegajo = il.id_InternoLegajo WHERE il.Estado <> 0 AND im.Unidad_Destino != 50`;
+        const baseSql = `SELECT DISTINCT il.id_InternoLegajo, p.Apellido AS APELLIDO, p.Nombre AS NOMBRE, p.Dni AS DNI, p.sexo AS SEXO, p.Fecha_nacimiento AS FECHA_NACIMIENTO, p.Domicilio AS DOMICILIO, ip.id_InternoProntuario, im.Unidad_Destino, im.Unidad_Alojado, ua.Detalle AS detalle_destino, lo.Nombre AS LOCALIDAD, pr.Nombre AS PROVINCIA, il.Estado, f.frente, im.Detalle, COALESCE(c.cantidad_causas,0) AS cantidad_causas, COALESCE(nt.traslado_pendiente, 0) AS traslado_pendiente, pol_notificaciones.Unidad_Destino AS traslado_destino FROM pol_internolegajo il INNER JOIN pol_persona p ON p.id_Persona = il.id_Persona INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades ua ON ua.id_Unidades = im.Unidad_Destino LEFT JOIN (SELECT * FROM pol_internoprontuario pr WHERE pr.id_InternoProntuario IN (SELECT MAX(id_InternoProntuario) FROM pol_internoprontuario GROUP BY id_InternoLegajo)) ip ON ip.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_internofotos f ON f.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) AS cantidad_causas FROM pol_internoprontuario WHERE Estado != 0 AND Estado != 1 GROUP BY id_InternoLegajo) c ON c.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_localidad lo ON lo.id_localidad = p.id_localidad INNER JOIN pol_provincia pr ON pr.id_provincia = p.id_provincia LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) as traslado_pendiente FROM pol_notificaciones WHERE Tipo_Notificacion = 'TRASLADO' AND Estado = 'pendiente' GROUP BY id_InternoLegajo) nt ON nt.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_notificaciones ON pol_notificaciones.id_InternoLegajo = il.id_InternoLegajo WHERE il.Estado <> 0 AND im.Unidad_Destino != 50`;
 
         const orderBy = ` ORDER BY p.Apellido, p.Nombre`;
 
@@ -911,7 +910,7 @@ controller.guardarDetenido = (req, res) => {
                         const Unidad_dependencia = id_comisaria_dependiente;
                         const Victima = Apellido_victima + " " + Nombre_victima;
                         const Fecha_Hecho = mysqlDateTime;
-                        Estado = 1
+                        Estado = 2
                         const datosProntuario = {id_InternoLegajo, Oficio_Numero, Oficio_Fecha, Causa, Victima, Unidad_dependencia, Fecha_Hecho, Fecha_Detencion, Situacion_procesal, Fecha_cumple_condena, id_autoridadjudicial, Alta_autoriza, Estado, Observaciones: Detalle};
                         conn.query("INSERT INTO pol_internoprontuario SET ?", [datosProntuario], (err, resultado) => {
                                 if (err) {
@@ -923,23 +922,24 @@ controller.guardarDetenido = (req, res) => {
                                 Estado = 1;
                                 let usuario = Alta_autoriza;
                                 let DetalleMovimiento = Detalle;
-
-                                conn.query("INSERT INTO pol_internomovimiento (id_InternoLegajo, id_InternoProntuario, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, ?,'INGRESO',?,?)", [id_InternoLegajo, id_InternoProntuario, Unidad_alojado,  Unidad_Destino, JSON.stringify(DetalleMovimiento), usuario ], (err, result) => {
-                                        if (err) {
-                                            console.error("Error al insertar nuevo movimiento", err);
-                                            return resultado.render(500).send("Error al guardar nuevo movimiento");
-                                        }
-                                        res.redirect("/detenidos");
-                                    },
-                                );
-                            },
-                        );
-                    },
-                );
-            },
-        );
+                                    conn.query("INSERT INTO pol_internoprontuario_historial (id_InternoLegajo, id_InternoProntuario, accion, datos_nuevos, usuario_modifica) VALUES (?, ?, ?, ?, ?)", [id_InternoLegajo, id_InternoProntuario, 'CREACION', JSON.stringify(datosProntuario), Alta_autoriza], (err) => {
+                                        conn.query("INSERT INTO pol_internomovimiento (id_InternoLegajo, id_InternoProntuario, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, ?,'INGRESO',?,?)", [id_InternoLegajo, id_InternoProntuario, Unidad_alojado,  Unidad_Destino, JSON.stringify(DetalleMovimiento), usuario ], (err, result) => {
+                                                if (err) {
+                                                    console.error("Error al insertar nuevo movimiento", err);
+                                                    return resultado.render(500).send("Error al guardar nuevo movimiento");
+                                                }
+                                                res.redirect("/detenidos");
+                                            },
+                                        );
+                                    });
+                                },
+                            );
+                        },
+                    );
+                },
+            );
+        });
     });
- });
 };
 
 controller.modificarDetenido = (req, res) => {
@@ -1192,7 +1192,7 @@ controller.guardarCausaDetenido = (req, res) => {
                 }
                 const id_InternoProntuario = resultado.insertId;
 
-                 conn.query("INSERT INTO pol_internoprontuario_historial (id_InternoLegajo, id_InternoProntuario, accion, datos_nuevos, usuario_modifica) VALUES (?, ?, ?, ?, ?)", [id_InternoLegajo, id_InternoProntuario, 'CREACION', JSON.stringify(datosProntuario), Alta_autoriza], (err) => {
+                conn.query("INSERT INTO pol_internoprontuario_historial (id_InternoLegajo, id_InternoProntuario, accion, datos_nuevos, usuario_modifica) VALUES (?, ?, ?, ?, ?)", [id_InternoLegajo, id_InternoProntuario, 'CREACION', JSON.stringify(datosProntuario), Alta_autoriza], (err) => {
                     if (err) {
                         console.error("Error al insertar en el historial", err);
                     }
