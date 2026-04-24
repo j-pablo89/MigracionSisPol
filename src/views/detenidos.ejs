@@ -302,14 +302,16 @@
                             <% if (detenido.traslado_pendiente > 0) { %>
                                 <span class="badge bg-warning text-dark fs-6 d-flex justify-content-center">Traslado Pendiente a <%= detenido.traslado_destino %></span>
                             <% } else { %>
-                                <button class="btn btn-outline-danger abrir-modal-opciones-movil"
+                                <button class="btn btn-outline-danger abrir-modal-opciones"
                                 data-id="<%= detenido.id_InternoLegajo %>"
                                 data-nombre="<%= detenido.NOMBRE %>"
                                 data-apellido="<%= detenido.APELLIDO %>"
                                 data-dni="<%= detenido.DNI %>"
                                 data-alojado="<%= detenido.Unidad_Destino %>"
+                                data-origen="<%= detenido.Unidad_Alojado%>"
                                 data-frente="<%= detenido.frente %>"
-                                data-cantidad_causas="<%= detenido.cantidad_causas %>">ACCIONES</button>
+                                data-cantidad_causas="<%= detenido.cantidad_causas %>"
+                                data-esadmin="<%= session.nombre_rol === 'ADMINISTRADOR' %>">ACCIONES</button>
                             <% } %>
                         <% } %>
                     </div>   

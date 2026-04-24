@@ -56,7 +56,6 @@ setInterval(async () => {
     }
   }, 60000);
 
-//
 // SCRIPT QUE ABRE UNA ALERTA AL PRESIONAR REABRIR CAUSA INGRESANDO UN MOTIVO
 window.reabrirCausa = function (
   event,
@@ -233,7 +232,8 @@ window.habilitarEdicion = function (index) {
     if (
       !campo.name?.startsWith("id_InternoLegajo") &&
       !campo.name?.startsWith("id_internoprontuario") &&
-      !campo.name?.startsWith("id_Persona")
+      !campo.name?.startsWith("id_Persona") &&
+      !campo.name?.startsWith("Fecha_cumple_condena_disabled1")
     ) {
       campo.removeAttribute("readonly");
       campo.removeAttribute("disabled");
@@ -249,12 +249,22 @@ window.habilitarEdicion = function (index) {
   document.getElementById(`actualizar-${index}`).classList.remove("d-none");
   document.getElementById(`cancelar-${index}`).classList.remove("d-none");
   // 🔹 Evento situación procesal (ahora con select)
+  function cambiarEstadoCampoFecha(index, mostrar) {
+    const inputFecha = document.getElementById(`Fecha_cumple_condena-${index}`);
+    if (!inputFecha) return;
+
+    console.log("ENTRA EN FUNCION");
+
+    inputFecha.disabled = !mostrar;
+    inputFecha.readOnly = !mostrar;
+  }
+
   const situacionSelect = card.querySelector(".tom-situacion");
   if (situacionSelect) {
     situacionSelect.addEventListener("change", function () {
       const valor = this.value;
-      const mostrar = valor === "CONDENADO" || valor === "PREVENTIVA" || valor === "PROCESADO";
-      toggleCamposFechaTarjeta(index, mostrar);
+      const mostrar = valor === "CONDENADO" || valor === "PREVENTIVA";
+      cambiarEstadoCampoFecha(index, mostrar);
     });
   }
   function diffFechasIntegrado(fecha1, fecha2) {
@@ -270,15 +280,6 @@ window.habilitarEdicion = function (index) {
       meses: diffMeses,
       dias: diffDiasRestantes,
     };
-  }
-  function mostrarDiferenciaTiempoTarjeta(index, fechaBase, fechaCumple) {
-    const diff = diffFechasIntegrado(fechaBase, fechaCumple);
-    document.getElementById(`Diferencia-total-${index}`).textContent =
-      `${diff.anios} años, ${diff.meses} meses y ${diff.dias} días`;
-
-    document.getElementById(`Cantidad-dias-${index}`).value = diff.dias;
-    document.getElementById(`Cantidad-meses-${index}`).value = diff.meses;
-    document.getElementById(`Cantidad-anios-${index}`).value = diff.anios;
   }
   function actualizarFechaDesdeCamposTarjeta(index) {
     const dias =
@@ -302,9 +303,9 @@ window.habilitarEdicion = function (index) {
       }
     });
   // Evento cambio en campos de días/meses/años -> actualiza fecha y diferencia
-  document.getElementById(`Cantidad-dias-${index}`).addEventListener("change", () => actualizarFechaDesdeCamposTarjeta(index));
-  document.getElementById(`Cantidad-meses-${index}`).addEventListener("change", () => actualizarFechaDesdeCamposTarjeta(index));
-  document.getElementById(`Cantidad-anios-${index}`).addEventListener("change", () => actualizarFechaDesdeCamposTarjeta(index));
+  // document.getElementById(`Cantidad-dias-${index}`).addEventListener("change", () => actualizarFechaDesdeCamposTarjeta(index));
+  // document.getElementById(`Cantidad-meses-${index}`).addEventListener("change", () => actualizarFechaDesdeCamposTarjeta(index));
+  // document.getElementById(`Cantidad-anios-${index}`).addEventListener("change", () => actualizarFechaDesdeCamposTarjeta(index));
 };
 // INHABILITA LOS CAMPOS DE UNA CAUSA Y OCULTA BOTONES DE ACTUALIZACION
 window.cancelarEdicion = function (index) {
@@ -349,9 +350,7 @@ window.cancelarEdicion = function (index) {
 // ========================================================= MENU RESPONSIVO =============================================================
 
 document.addEventListener("DOMContentLoaded", async function () {
-  const pageType = document
-    .getElementById("main-container")
-    .getAttribute("data-page");
+  const pageType = document.getElementById("main-container").getAttribute("data-page");
 
   const Mostrarmenu = (headerToggle, navbarId) => {
     const toggleBtn = document.getElementById(headerToggle);
@@ -718,6 +717,12 @@ formCambiarClave.addEventListener("submit", async (e) => {
       causa_anulada: {
         titulo: "Causa anulada",
         texto: "La causa fue anulada correctamente.",
+        icono: "success",
+      },
+
+      causa_actualizada: {
+        titulo: "Causa actualizada",
+        texto: "La causa fue actualizada correctamente.",
         icono: "success",
       },
 
@@ -2727,6 +2732,64 @@ formCambiarClave.addEventListener("submit", async (e) => {
 
   if (pageType === "causa_detenido") {
     console.log("Script SweetAlert actualizar cargado");
+
+    // Seleccion de situacion procesal y calculo de fecha de cumplimiento de condena ///////
+    // LLAMO AL ELEMENTO DE SITUACIÓN PROCESAL PARA MOSTRAR U OCULTAR CAMPOS DE FECHA
+    const input23 = document.getElementById("Situacion_procesal");
+    input23?.addEventListener("change", function () {
+      const val = this.value;
+      const mostrar = val === "CONDENADO" || val === "PREVENTIVA";
+      document.getElementById("divFecha").style.display = mostrar ? "block" : "none";
+    });
+    // LLAMO AL ELEMENTO DE FECHA DE CUMPLIMIENTO DE CONDENA PARA CALCULAR LA DIFERENCIA DE TIEMPO
+    document.getElementById("Fecha_cumple_condena").addEventListener("change", function () {
+        console.log("INGRESAA AL EVENTO DE CAMBIO DE FECHA");
+        let fechaBase = new Date();
+        fechaBase.setFullYear(fechaBase.getFullYear());
+        fechaBase.setMonth(fechaBase.getMonth());
+        fechaBase.setDate(fechaBase.getDate());
+
+        let fechaCumpleCondena = new Date(this.value);
+        console.log(fechaBase, fechaCumpleCondena);
+        if (
+          !isNaN(fechaBase.getTime()) &&
+          !isNaN(fechaCumpleCondena.getTime())
+        ) {
+          mostrarDiferenciaTiempo(fechaBase, fechaCumpleCondena);
+        }
+      });
+
+    // LLAMO A LOS ELEMENTOS DE CANTIDAD DE TIEMPO PARA CALCULAR LA FECHA DE CUMPLIMIENTO DE CONDENA
+    document.getElementById("Cantidad-dias").addEventListener("change", actualizarFechaDesdeCampos);
+    document.getElementById("Cantidad-meses").addEventListener("change", actualizarFechaDesdeCampos);
+    document.getElementById("Cantidad-anios").addEventListener("change", actualizarFechaDesdeCampos);
+
+    // FUNCION PARA CALCULAR LA FECHA DE CUMPLIMIENTO DE CONDENA A PARTIR DE LOS CAMPOS DE CANTIDAD DE TIEMPO
+    function actualizarFechaDesdeCampos() {
+      console.log("INGRESA AL EVENTO DE CAMBIO DE CANTIDAD");
+      let dias = parseInt(document.getElementById("Cantidad-dias").value) || 0;
+      let meses = parseInt(document.getElementById("Cantidad-meses").value) || 0;
+      let anios = parseInt(document.getElementById("Cantidad-anios").value) || 0;
+      let fechaBase = new Date();
+
+      fechaBase.setFullYear(fechaBase.getFullYear() + anios);
+      fechaBase.setMonth(fechaBase.getMonth() + meses);
+      fechaBase.setDate(fechaBase.getDate() + dias);
+      document.getElementById("Fecha_cumple_condena").valueAsDate = fechaBase;
+      mostrarDiferenciaTiempo(new Date(), fechaBase);
+    }
+    // FUNCION PARA CALCULAR LA DIFERENCIA DE TIEMPO ENTRE DOS FECHAS Y MOSTRARLA EN EL HTML
+    function mostrarDiferenciaTiempo(fechaBase, fechaCumpleCondena) {
+      let diff = diffFechasIntegrado(fechaBase, fechaCumpleCondena);
+
+      document.getElementById("Diferencia-total").textContent = `${diff.anios} años, ${diff.meses} meses y ${diff.dias} días`;
+      document.getElementById("Cantidad-dias").value = diff.dias;
+      document.getElementById("Cantidad-meses").value = diff.meses;
+      document.getElementById("Cantidad-anios").value = diff.anios;
+    }
+
+    
+    
     document.querySelectorAll(".form-actualizar-causa").forEach((form) => {
       form.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -2749,16 +2812,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
 
     // ================= SITUACIÓN PROCESAL =================
 
-    const input23 = document.getElementById("Situacion_procesal");
-
-    input23?.addEventListener("change", function () {
-      const val = this.value;
-      const mostrar = val === "CONDENADO" || val === "PREVENTIVA" || val === "PROCESADO";
-      document.getElementById("divFecha").style.display = mostrar
-        ? "block"
-        : "none";
-    });
-
+    
     const hoya = new Date().toISOString().split("T")[0];
     document.querySelectorAll("input[type='date']").forEach((input) => {
       if (!input.classList.contains("no-max-date")) {
@@ -2829,49 +2883,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
       return { anios: diffAnios, meses: diffMeses, dias: diffDiasRestantes };
     }
 
-    function mostrarDiferenciaTiempo(fechaBase, fechaCumpleCondena) {
-      let diff = diffFechasIntegrado(fechaBase, fechaCumpleCondena);
-
-      document.getElementById("Diferencia-total").textContent =
-        `${diff.anios} años, ${diff.meses} meses y ${diff.dias} días`;
-
-      document.getElementById("Cantidad-dias").value = diff.dias;
-      document.getElementById("Cantidad-meses").value = diff.meses;
-      document.getElementById("Cantidad-anios").value = diff.anios;
-    }
-
-    // 🔹 Eventos de cambio en fecha y campos de cantidad
-    document.getElementById("Fecha_cumple_condena").addEventListener("change", function () {
-        console.log("INGRESAA AL EVENTO DE CAMBIO DE FECHA");
-        let fechaBase = new Date();
-        fechaBase.setFullYear(fechaBase.getFullYear());
-        fechaBase.setMonth(fechaBase.getMonth());
-        fechaBase.setDate(fechaBase.getDate());
-
-        let fechaCumpleCondena = new Date(this.value);
-        console.log(fechaBase, fechaCumpleCondena);
-        if (
-          !isNaN(fechaBase.getTime()) &&
-          !isNaN(fechaCumpleCondena.getTime())
-        ) {
-          mostrarDiferenciaTiempo(fechaBase, fechaCumpleCondena);
-        }
-      });
-    document.getElementById("Cantidad-dias").addEventListener("change", actualizarFechaDesdeCampos);
-    document.getElementById("Cantidad-meses").addEventListener("change", actualizarFechaDesdeCampos);
-    document.getElementById("Cantidad-anios").addEventListener("change", actualizarFechaDesdeCampos);
-
-    function actualizarFechaDesdeCampos() {
-      let dias = parseInt(document.getElementById("Cantidad-dias").value) || 0;
-      let meses = parseInt(document.getElementById("Cantidad-meses").value) || 0;
-      let anios = parseInt(document.getElementById("Cantidad-anios").value) || 0;
-      let fechaBase = new Date();
-      fechaBase.setFullYear(fechaBase.getFullYear() + anios);
-      fechaBase.setMonth(fechaBase.getMonth() + meses);
-      fechaBase.setDate(fechaBase.getDate() + dias);
-      document.getElementById("Fecha_cumple_condena").valueAsDate = fechaBase;
-      mostrarDiferenciaTiempo(new Date(), fechaBase);
-    }
+    
 
     // 🔹 Función para mostrar u ocultar campos de fecha (recibe ID)
     function toggleCamposFecha(mostrar, idDiv) {

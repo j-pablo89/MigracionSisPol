@@ -32,7 +32,7 @@
   color: rgba(143, 143, 143, 0.2);
   transform: rotate(-30deg);
   white-space: nowrap;
-  user-select: none;
+
   font-weight: bold;
 }
 

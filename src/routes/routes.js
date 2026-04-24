@@ -4,7 +4,6 @@ const WebController = require('../controllers/WebController');
 const verifyToken = require('../middlewares/authMiddleware');
 const { uploadWithErrorHandler } = require('../middlewares/upload');
 const { uploadFilesWithErrorHandler } = require('../middlewares/uploadfiles');
-
 // ******************* CONTROL DE USUARIOS *************************
 router.get('/inicio', verifyToken, WebController.inicio);
 router.get('/api/ingresos/:anio', WebController.getIngresosPorAnio);
@@ -27,7 +26,6 @@ router.get('/login', (req, res) => {
 router.get('/', (req, res) => {
     res.render('login', { timeout: null });
 });
-
 router.get('/logout', verifyToken, WebController.logout);
 router.get('/error401', (req, res) => {
     const error_msg = req.query.error || '';

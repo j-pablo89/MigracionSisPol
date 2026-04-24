@@ -1,5 +1,5 @@
 const axios = require("axios");
-const RUTA_FOTOS = "http://localhost:3000/Sispenal/fotos/";
+const RUTA_FOTOS = "http://localhost:5000/Sispenal/fotos/";
 
 async function buscarASP(q) {
     const URL_ASP = "http://10.0.0.10/sispoljson.asp";
@@ -16,6 +16,4 @@ async function buscarASP(q) {
             : null
     }));
 }
-
-
 module.exports = { buscarASP };

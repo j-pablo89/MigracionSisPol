@@ -13,6 +13,18 @@
     <link rel="stylesheet" href="/css/style-bar.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
   </head>
+  <% if (typeof timeout !== 'undefined' && timeout) { %>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sesión finalizada',
+        text: 'La sesión se cerró por inactividad.',
+        confirmButtonText: 'Aceptar'
+      });
+    });
+  </script>
+  <% } %>
   <body class="root fondoImagenPatrones" data-usuario="<%= session.apellido %> - <%= session.username %>" data-username="<%= session.username %>" data-userid="<%= session.userId %>">
 
     <!-- 🔥 MARCA DE AGUA -->

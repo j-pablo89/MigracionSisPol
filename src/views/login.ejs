@@ -9,19 +9,6 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="shortcut icon" href="/img/logo_policial.png">
 </head>
-<script src="sweetalert2.all.min.js"></script>
-<% if (typeof timeout !== 'undefined' && timeout) { %>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Sesión finalizada',
-      text: 'La sesión se cerró por inactividad.',
-      confirmButtonText: 'Aceptar'
-    });
-  });
-</script>
-<% } %>
 <body class="fondoimagen root">
     <header>
         <div>
