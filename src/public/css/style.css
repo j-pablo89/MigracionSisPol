@@ -275,6 +275,10 @@ dialog::backdrop
     color: #ffffff;
 }
 
+.bg-bordo{
+    background-color: rgb(176, 0, 32);
+}
+
 .bg-danger-strong{
     background-color: rgb(160, 0, 0);
 }

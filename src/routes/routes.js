@@ -17,7 +17,7 @@ router.post('/usuarios', verifyToken, WebController.limpiarClave);
 router.get('/modificar_usuario/:id', WebController.modificarUsuario);
 router.post('/actualizar_usuario/:id',verifyToken, WebController.actualizarUsuario);
 router.get('/usuarios_conectados',verifyToken, WebController.conexionUsuarios);
-router.get('/estadisticas',verifyToken, WebController.estadisticas);
+// router.get('/estadisticas',verifyToken, WebController.estadisticas);
 router.post('/login', WebController.login);
 router.get('/login', (req, res) => {
     const timeout = req.query.timeout || null;

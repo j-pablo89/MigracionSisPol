@@ -23,13 +23,12 @@
         </div>
         <div class="col-md-6">
           <label for="Sexo_nombre" class="form-label">Genero</label>
-          <select id="Sexo_nombre" name="Sexo" required>
-            <option value="">Seleccione género</option>
-            <option value="MASCULINO">MASCULINO</option>
-            <option value="FEMENINO">FEMENINO</option>
-            <option value="TRANS MASCULINO">TRANS MASCULINO</option>
-            <option value="TRANS FEMENINO">TRANS FEMENINO</option>
-            <option value="NO BINARIO">NO BINARIO</option>
+          <select id="Sexo_nombre" name="Sexo" data-original="<%= detenidos.Sexo %>" required>
+            <option value="MASCULINO" <%= detenidos.Sexo === 'MASCULINO' ? 'selected' : '' %>>MASCULINO</option>
+            <option value="FEMENINO" <%= detenidos.Sexo === 'FEMENINO' ? 'selected' : '' %>>FEMENINO</option>
+            <option value="TRANS MASCULINO" <%= detenidos.Sexo === 'TRANS MASCULINO' ? 'selected' : '' %>>TRANS MASCULINO</option>
+            <option value="TRANS FEMENINO" <%= detenidos.Sexo === 'TRANS FEMENINO' ? 'selected' : '' %>>TRANS FEMENINO</option>
+            <option value="NO BINARIO" <%= detenidos.Sexo === 'NO BINARIO' ? 'selected' : '' %>>NO BINARIO</option>
           </select>
         </div>
         <div class="col-md-6">  
@@ -42,30 +41,31 @@
         </div>
         <div class="col-md-6">
           <label for="Provincia_nombre" class="form-label">Provincia</label>
-          <select id="Provincia_id" name="id_provincia" placeholder="Seleccione provincia" required>
-            <option value="">Seleccione provincia</option>
-            <% for (prov of provincia){%>
-              <option value="<%= prov.id_provincia %>"><%= prov.Nombre %></option>
-            <%}%>
+          <select id="Provincia_id" name="id_provincia" placeholder="Seleccione provincia" data-original="<%= detenidos.Provincia %>" required>
+            <% provincia.forEach(prov => { %>
+          <option value="<%= prov.id_provincia %>" 
+            <%= prov.id_provincia == detenidos.id_provincia ? 'selected' : '' %>>
+            <%= prov.Nombre %>
+          </option>
+            <%})%>
           </select>
         </div>
         <div class="col-md-6">
          <label for="Localidad_nombre" class="form-label">Localidad</label>
-          <select id="Localidad_id" aria-label="Default select example" name="id_localidad" placeholder="Seleccione localidad" required>
-            <option value="">Seleccione localidad</option>
-            <% for (loc of localidades){%>
-              <option value="<%= loc.id_localidad %>" data-provincia="<%= loc.id_provincia %>">
-                <%= loc.nombre %>
-              </option>  
-            <%}%>
+          <select id="Localidad_id" aria-label="Default select example" name="id_localidad" placeholder="Seleccione localidad" data-original="<%= detenidos.Localidad %>" required>
+            <% localidades.forEach(loc => { %>
+            <option value="<%= loc.id_localidad %>" 
+              <%= loc.id_localidad == detenidos.id_localidad ? 'selected' : '' %>>
+              <%= loc.nombre %>
+            </option>
+            <%})%>
           </select>
         </div>
         <div class="col-md-6">
           <label for="Personal_fuerza" class="form-label">Personal Fuerza</label>
-          <select class="form-select" aria-label="Default select example" name="Personal_fuerza" id="Personal_fuerza" required>
-            <option value="<%= detenidos.Personal_Fuerza %>" selected><%= detenidos.Personal_Fuerza %></option>
-            <option value="1">SI</option>
-            <option value="2">NO</option>
+          <select class="form-select" aria-label="Default select example" name="Personal_fuerza" id="Personal_fuerza" data-original="<%= detenidos.Personal_Fuerza %>" required>
+            <option value="SI" <%= detenidos.Personal_Fuerza === 'SI' ? 'selected' : '' %>>SI</option>
+            <option value="NO" <%= detenidos.Personal_Fuerza === 'NO' ? 'selected' : '' %>>NO</option>
           </select>
         </div>
         <div class="col-6 text-center mb-3 mt-5">

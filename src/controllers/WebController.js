@@ -178,7 +178,45 @@ controller.logout = (req, res) => {
 
 controller.inicio = (req, res) => {
     req.getConnection((err, conn) => {
-        return res.render("inicio");
+        if (err) return res.json(err); // <--- return aquí para salir si error en conexión
+
+        conn.query("SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = YEAR(CURDATE()) GROUP BY MONTH(Fecha_alta) ORDER BY mes",
+            (err, resultado) => {
+                if (err) {
+                    return res.json(err); // <--- return aquí para no continuar si error en query
+                }
+
+                const labels = resultado.map((row) => `MES ${row.mes}`);
+                const data = resultado.map((row) => row.cantidad);
+                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND TIMESTAMPDIFF(DAY, im.Fecha_movimiento, NOW()) <= 6 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosUltimos6Dias) => {
+                        if (err) {
+                            return res.json(err);
+                        }
+                        let anioactual = new Date().getFullYear();
+                        conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND YEAR(im.Fecha_movimiento) = YEAR(CURDATE()) GROUP BY im.Unidad_Destino, u.Detalle",
+                            (err, ingresosAnioActual) => {
+                                if (err) {
+                                    return res.json(err);
+                                }
+                                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosTotales) => {
+                                        if (err) {
+                                            return res.json(err);
+                                        }
+                                        return res.render("inicio", {
+                                            labels: JSON.stringify(labels),
+                                            data: JSON.stringify(data),
+                                            ingresosUltimos6Dias,
+                                            ingresosAnioActual,
+                                            ingresosTotales,
+                                        });
+                                    },
+                                );
+                            },
+                        );
+                    },
+                );
+            },
+        );
     });
 };
 
@@ -873,7 +911,7 @@ controller.nuevoDetenido = (req, res) => {
 controller.guardarDetenido = (req, res) => {
     const Alta_autoriza = req.session.username;
     const login = Alta_autoriza;
-    const { Nombre, Apellido, Dni, Sexo, Fecha_nacimiento, Domicilio, Personal_fuerza, Oficio_Numero, Oficio_Fecha, Causa, Fecha_cumple_condena, Apellido_victima, Nombre_victima, Situacion_procesal, id_localidad, id_provincia, id_autoridad_judicial, id_comisaria_dependiente, id_comisaria_alojamiento, Detalle, Fecha_Detencion,} = req.body;
+    let { Nombre, Apellido, Dni, Sexo, Fecha_nacimiento, Domicilio, Personal_fuerza, Oficio_Numero, Oficio_Fecha, Causa, Fecha_cumple_condena, Apellido_victima, Nombre_victima, Situacion_procesal, id_localidad, id_provincia, id_autoridad_judicial, id_comisaria_dependiente, id_comisaria_alojamiento, Detalle, Fecha_Detencion,} = req.body;
     console.log("REQ", req.body);
     const now = new Date();
     const mysqlDateTime = now.toISOString().slice(0, 19).replace("T", " ");
@@ -882,7 +920,7 @@ controller.guardarDetenido = (req, res) => {
             console.error("Error de conexion: ", err);
             return res.status(500).send("Error al conectar con la base de datos!");
         }
-        conn.query("SELECT * FROM pol_persona WHERE Dni = ?", [Dni], (err, results) => {
+        conn.query("SELECT * FROM pol_persona pp INNER JOIN pol_internolegajo il USING(id_persona) WHERE pp.Dni = ?", [Dni], (err, results) => {
         if (results.length > 0) {
             return res.redirect('/detenidos?error=existe');
         }
@@ -901,13 +939,13 @@ controller.guardarDetenido = (req, res) => {
                             console.error("Error al insertar nuevo detenido", err);
                             return resultado.render(500).send("Error al guardar nuevo detenido");
                         }
-                        const id_InternoLegajo = resultado.insertId;
-                        const id_autoridadjudicial = id_autoridad_judicial;
-                        const Unidad_alojado = id_comisaria_alojamiento;
-                        const Unidad_Destino = id_comisaria_alojamiento;
-                        const Unidad_dependencia = id_comisaria_dependiente;
-                        const Victima = Apellido_victima + " " + Nombre_victima;
-                        const Fecha_Hecho = mysqlDateTime;
+                        let id_InternoLegajo = resultado.insertId;
+                        let id_autoridadjudicial = id_autoridad_judicial;
+                        let Unidad_alojado = id_comisaria_alojamiento;
+                        let Unidad_Destino = id_comisaria_alojamiento;
+                        let Unidad_dependencia = id_comisaria_dependiente;
+                        let Victima = Apellido_victima + " " + Nombre_victima;
+                        let Fecha_Hecho = mysqlDateTime;
                         Fecha_cumple_condena = Fecha_cumple_condena || null;
                         Estado = 2
                         const datosProntuario = {id_InternoLegajo, Oficio_Numero, Oficio_Fecha, Causa, Victima, Unidad_dependencia, Fecha_Hecho, Fecha_Detencion, Situacion_procesal, Fecha_cumple_condena, id_autoridadjudicial, Alta_autoriza, Estado, Observaciones: Detalle};
@@ -932,7 +970,7 @@ controller.guardarDetenido = (req, res) => {
                                                     console.error("Error al insertar nuevo movimiento", err);
                                                     return resultado.render(500).send("Error al guardar nuevo movimiento");
                                                 }
-                                                res.redirect("/detenidos");
+                                                res.redirect("/detenidos?msg=detenido_registrado");
                                             },
                                         );
                                     });
@@ -1965,49 +2003,49 @@ controller.conexionUsuarios = (req, res) => {
     });
 };
 
-controller.estadisticas = (req, res) => {
-    req.getConnection((err, conn) => {
-        if (err) return res.json(err); // <--- return aquí para salir si error en conexión
+// controller.estadisticas = (req, res) => {
+//     req.getConnection((err, conn) => {
+//         if (err) return res.json(err); // <--- return aquí para salir si error en conexión
 
-        conn.query("SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = YEAR(CURDATE()) GROUP BY MONTH(Fecha_alta) ORDER BY mes",
-            (err, resultado) => {
-                if (err) {
-                    return res.json(err); // <--- return aquí para no continuar si error en query
-                }
+//         conn.query("SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = YEAR(CURDATE()) GROUP BY MONTH(Fecha_alta) ORDER BY mes",
+//             (err, resultado) => {
+//                 if (err) {
+//                     return res.json(err); // <--- return aquí para no continuar si error en query
+//                 }
 
-                const labels = resultado.map((row) => `MES ${row.mes}`);
-                const data = resultado.map((row) => row.cantidad);
-                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND TIMESTAMPDIFF(DAY, im.Fecha_movimiento, NOW()) <= 6 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosUltimos6Dias) => {
-                        if (err) {
-                            return res.json(err);
-                        }
-                        let anioactual = new Date().getFullYear();
-                        conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND YEAR(im.Fecha_movimiento) = YEAR(CURDATE()) GROUP BY im.Unidad_Destino, u.Detalle",
-                            (err, ingresosAnioActual) => {
-                                if (err) {
-                                    return res.json(err);
-                                }
-                                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosTotales) => {
-                                        if (err) {
-                                            return res.json(err);
-                                        }
-                                        return res.render("estadisticas", {
-                                            labels: JSON.stringify(labels),
-                                            data: JSON.stringify(data),
-                                            ingresosUltimos6Dias,
-                                            ingresosAnioActual,
-                                            ingresosTotales,
-                                        });
-                                    },
-                                );
-                            },
-                        );
-                    },
-                );
-            },
-        );
-    });
-};
+//                 const labels = resultado.map((row) => `MES ${row.mes}`);
+//                 const data = resultado.map((row) => row.cantidad);
+//                 conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND TIMESTAMPDIFF(DAY, im.Fecha_movimiento, NOW()) <= 6 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosUltimos6Dias) => {
+//                         if (err) {
+//                             return res.json(err);
+//                         }
+//                         let anioactual = new Date().getFullYear();
+//                         conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND YEAR(im.Fecha_movimiento) = YEAR(CURDATE()) GROUP BY im.Unidad_Destino, u.Detalle",
+//                             (err, ingresosAnioActual) => {
+//                                 if (err) {
+//                                     return res.json(err);
+//                                 }
+//                                 conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosTotales) => {
+//                                         if (err) {
+//                                             return res.json(err);
+//                                         }
+//                                         return res.render("estadisticas", {
+//                                             labels: JSON.stringify(labels),
+//                                             data: JSON.stringify(data),
+//                                             ingresosUltimos6Dias,
+//                                             ingresosAnioActual,
+//                                             ingresosTotales,
+//                                         });
+//                                     },
+//                                 );
+//                             },
+//                         );
+//                     },
+//                 );
+//             },
+//         );
+//     });
+// };
 
 controller.obtenerNotificaciones = (req, res) => {
   const id_usuario = req.user.id;
