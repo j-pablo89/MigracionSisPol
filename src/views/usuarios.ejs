@@ -31,40 +31,54 @@
                             <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="centrar-botones">
-                        <% if (usuarios) { %>
-                            <% for (usuario of usuarios) { %>
-                                <%if (usuario.nombre_rol === "ADMINISTRADOR") {%>
-                                <tr class="table-bordo" style="height: 50px;">
-                                    <td class="align-middle"><%= usuario.Usuario%></td>
-                                    <td class="align-middle"><%= usuario.nombre_rol%></td>
-                                    <td class="align-middle"><%= usuario.Permiso%></td>
-                                    <td class="align-middle"><%= usuario.Apellido%></td>
-                                    <td class="align-middle"><%= usuario.Nombre%></td>
-                                    <td class="align-middle"><%= usuario.Dni%></td>
-                                    <td class="align-middle"></td>                       
-                                </tr>
-                                <%} else {%>
-                                <tr>
-                                    <td class="align-middle"><%= usuario.Usuario%></td>
-                                    <td class="align-middle"><%= usuario.nombre_rol%></td>
-                                    <td class="align-middle"><%= usuario.Permiso%></td>
-                                    <td class="align-middle"><%= usuario.Apellido%></td>
-                                    <td class="align-middle"><%= usuario.Nombre%></td>
-                                    <td class="align-middle"><%= usuario.Dni%></td>
-                                    <td class="centrar-td d-flex justify-content-around " style="height: 55px;">
-                                        <form class="formResetClave" action="/usuarios" method="POST" style="display:inline;">
-                                            <input type="hidden" name="id_usuario" value="<%= usuario.id_usuario %>">
-                                            <input type="hidden" name="Dni" value="<%= usuario.Dni %>">
-                                            <button class="btn btn-outline-info btn-sm" type="submit">RESET CLAVE</button>
-                                        </form>
-                                        <a class="btn btn-outline-success d-flex align-items-center btn-sm" href="/modificar_usuario/<%= usuario.id_usuario%>">MODIFICAR</a>
-                                        <a class="btn btn-outline-danger d-flex align-items-center btn-sm" href="/acceso_usuario/<%= usuario.id_usuario%>">ACCESO</a>
-                                    </td>                       
-                                </tr>
-                                <%}%>
-                            <%}%>
-                        <%}%>
+                   <tbody class="centrar-botones">
+                    <% if (usuarios && usuarios.length > 0) { %>
+                    <% usuarios.forEach(usuario => { %>
+                        <%
+                        const rol = usuario.nombre_rol;
+                        const rolViewer = session.nombre_rol;
+                        const esAdmin = rol === 'ADMINISTRADOR';
+                        const esSuperAdmin = rol === 'SUPERADMIN';
+                        const esUsuarioComun = ['USUARIO', 'USUARIO GENERAL', 'SIN PERFIL'].includes(rol);
+                        const claseFila = (esSuperAdmin || esAdmin) ? 'table-bordo' : '';
+                        let mostrarBotones = false;
+                        if (rolViewer === 'SUPERADMIN') {
+                            mostrarBotones = !esSuperAdmin;
+                        } else if (rolViewer === 'ADMINISTRADOR') {
+                            mostrarBotones = esUsuarioComun;
+                        }
+                        %>
+                        <tr class="<%= claseFila %>" style="height: 50px;">
+                        <td class="align-middle"><%= usuario.Usuario %></td>
+                        <td class="align-middle"><%= usuario.nombre_rol %></td>
+                        <td class="align-middle"><%= usuario.Permiso %></td>
+                        <td class="align-middle"><%= usuario.Apellido %></td>
+                        <td class="align-middle"><%= usuario.Nombre %></td>
+                        <td class="align-middle"><%= usuario.Dni %></td>
+                        <td class="centrar-td d-flex justify-content-around" style="height: 55px;">
+                            <% if (mostrarBotones) { %>
+                            <form class="formResetClave" action="/usuarios" method="POST">
+                                <input type="hidden" name="id_usuario" value="<%= usuario.id_usuario %>">
+                                <input type="hidden" name="Dni" value="<%= usuario.Dni %>">
+                                <button class="btn btn-outline-info btn-sm">RESET CLAVE</button>
+                            </form>
+                            <a class="btn btn-outline-success btn-sm"
+                                href="/modificar_usuario/<%= usuario.id_usuario %>">
+                                MODIFICAR
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm"
+                                href="/acceso_usuario/<%= usuario.id_usuario %>">
+                                ACCESO
+                            </a>
+                            <% } %>
+                        </td>
+                        </tr>
+                    <% }) %>
+                    <% } else { %>
+                    <tr>
+                        <td colspan="7" class="text-center">No hay usuarios</td>
+                    </tr>
+                    <% } %>
                     </tbody>
                 </table>
             </div>

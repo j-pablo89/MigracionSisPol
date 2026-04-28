@@ -4,6 +4,8 @@ const WebController = require('../controllers/WebController');
 const verifyToken = require('../middlewares/authMiddleware');
 const { uploadWithErrorHandler } = require('../middlewares/upload');
 const { uploadFilesWithErrorHandler } = require('../middlewares/uploadfiles');
+const { checkRole } = require('../middlewares/authRoles');
+const { puedeModificarUsuario } = require('../middlewares/puedeModificarUsuario');
 // ******************* CONTROL DE USUARIOS *************************
 router.get('/inicio', verifyToken, WebController.inicio);
 router.get('/api/ingresos/:anio', WebController.getIngresosPorAnio);
@@ -14,7 +16,7 @@ router.post('/guardar_usuario', verifyToken, WebController.guardarUsuario);
 router.get('/acceso_usuario/:id', verifyToken, WebController.accesoUsuario);
 router.post('/guardar_acceso', verifyToken, WebController.guardarAcceso);
 router.post('/usuarios', verifyToken, WebController.limpiarClave);
-router.get('/modificar_usuario/:id', WebController.modificarUsuario);
+router.get('/modificar_usuario/:id', verifyToken, WebController.modificarUsuario);
 router.post('/actualizar_usuario/:id',verifyToken, WebController.actualizarUsuario);
 router.get('/usuarios_conectados',verifyToken, WebController.conexionUsuarios);
 // router.get('/estadisticas',verifyToken, WebController.estadisticas);

@@ -4,7 +4,14 @@
     <div class="container mt-5 mb-3">
         <h3 class="text-white text-center text-borderWhite">MOVIMIENTOS COMISARIAS</h3>
     </div>
-    <div class="table-responsive mt-5" style="overflow-x: auto; height: 400px;"> 
+    <div class="mb-3">
+        <div class="col-md-4 col-6 mb-2">
+            <label class="text-white d-none d-md-block form-label">Buscar:</label>
+            <label class="text-white d-block d-md-none form-label">Buscar:</label>
+            <input type="text" id="filtroBusqueda" class="form-control">
+        </div>
+    </div>
+    <div class="table-responsive mt-5" style="overflow-x: auto; height: 400px;" id="tablaMovimientos"> 
         <table class="table table-bordered table-striped align-middle tabla-movimientos">
             <thead class="table-primary">
                 <tr>

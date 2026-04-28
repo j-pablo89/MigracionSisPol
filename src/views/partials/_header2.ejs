@@ -87,7 +87,7 @@
                 <span class="nav__name">Inicio</span>
                 
               </a>
-              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO' ) ? 'disabled' : '' %>">
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO' && session.nombre_rol !== 'SUPERADMIN') ? 'disabled' : '' %>">
                 <a href="#" class="nav__link">
                   <i class="bx bx-user nav__icon"></i>
                   <span class="nav__name">Perfil</span>
@@ -102,7 +102,7 @@
                 </div>
               
               </div>
-              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO') ? 'disabled' : '' %>">
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO' && session.nombre_rol !== 'SUPERADMIN') ? 'disabled' : '' %>">
               <a href="#" class="nav__link" id="notificacionesContainer" style="cursor: pointer; position: relative;">
                 <i class="bx bx-bell nav__icon" id="bellIcon"></i>
                 <span class="nav__name ">Notificaciones</span>
@@ -112,7 +112,7 @@
             </div>
             <div class="nav__items">
               <h3 class="nav__subtitle">Menu</h3>
-              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO') ? 'disabled' : '' %>">
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'USUARIO GENERAL' && session.nombre_rol !== 'USUARIO' && session.nombre_rol !== 'SUPERADMIN') ? 'disabled' : '' %>">
                 <a href="#" class="nav__link">
                   <i class="bx bxs-face-mask nav__icon"></i>
                   <span class="nav__name">Detenidos</span>
@@ -130,7 +130,7 @@
                 </div>
               </div>
 
-              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR') ? 'd-none' : '' %>">
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'SUPERADMIN') ? 'd-none' : '' %>">
                 <a href="#" class="nav__link">
                   <i class="bx bxs-user-detail nav__icon"></i>
                   <span class="nav__name">Usuarios</span>
@@ -146,7 +146,7 @@
                 </div>
               </div>
 
-              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR') ? 'd-none' : '' %>">
+              <div class="nav__dropdown <%= (session && session.nombre_rol && session.nombre_rol !== 'ADMINISTRADOR' && session.nombre_rol !== 'SUPERADMIN') ? 'd-none' : '' %>">
                 <a href="#" class="nav__link">
                   <i class="bx bx-user nav__icon"></i>
                   <span class="nav__name">Auditor</span>
@@ -165,8 +165,8 @@
             </div>
             <div class="nav__items">
               <h3 class="nav__subtitle">ACCESO</h3>
-              <span class="nav__name <% if (session.nombre_rol === "ADMINISTRADOR" ) { %>active text-danger<% } else if (session.nombre_rol === "USUARIO GENERAL") { %>active text-success<% } %>">ROL -> <%= session.nombre_rol %></span>
-              <% if (session.nombre_rol && session.nombre_rol !== "ADMINISTRADOR" && session.nombre_rol !== "USUARIO GENERAL") { %>
+              <span class="nav__name <% if (session.nombre_rol === "ADMINISTRADOR" || session.nombre_rol === "SUPERADMIN") { %>active text-danger<% } else if (session.nombre_rol === "USUARIO GENERAL") { %>active text-success<% } %>">ROL -> <%= session.nombre_rol %></span>
+              <% if (session.nombre_rol && session.nombre_rol !== "ADMINISTRADOR" && session.nombre_rol !== "USUARIO GENERAL" && session.nombre_rol !== "SUPERADMIN") { %>
                 <% if (session.unidades && session.unidades.length > 0) { %>
                   <div>
                       <h5 class="nav__name">Unidades Habilitadas</h5>

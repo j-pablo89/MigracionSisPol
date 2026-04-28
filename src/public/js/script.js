@@ -2837,5 +2837,32 @@ formCambiarClave.addEventListener("submit", async (e) => {
       }
     }
   }
+
+  if (pageType === "movimientos_comisarias"){
+    //FILTRO PARA BUSQUEDA TABLA
+    document.getElementById("filtroBusqueda").addEventListener("keyup", function () {
+        const filtro = this.value.toLowerCase().trim();
+        // Tabla (desktop)
+        const filas = document.querySelectorAll("#tablaMovimientos tbody tr");
+        filas.forEach((fila) => {
+          const apellido = fila.cells[1].textContent.toLowerCase();
+          const dni = fila.cells[2].textContent.toLowerCase();
+          const alojamiento = fila.cells[3].textContent.toLowerCase();
+          const destino = fila.cells[4].textContent.toLowerCase();
+          const tipo = fila.cells[6].textContent.toLowerCase();
+          const usuario = fila.cells[7].textContent.toLowerCase();
+
+          fila.style.display =
+            apellido.includes(filtro) ||
+            dni.includes(filtro) ||
+            alojamiento.includes(filtro) ||
+            destino.includes(filtro) ||
+            tipo.includes(filtro) ||
+            usuario.includes(filtro)
+              ? ""
+              : "none";
+        });
+      });
+  }
   
 });

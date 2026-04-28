@@ -226,13 +226,7 @@ controller.getIngresosPorAnio = (req, res) => {
     req.getConnection((err, conn) => {
         if (err) return res.status(500).json({ error: "Error de conexión" });
 
-        const sql = `
-            SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad
-            FROM pol_internolegajo
-            WHERE YEAR(Fecha_alta) = ?
-            GROUP BY MONTH(Fecha_alta)
-            ORDER BY mes
-        `;
+        const sql = `SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = ? GROUP BY MONTH(Fecha_alta) ORDER BY mes`;
 
         conn.query(sql, [anio], (err, resultado) => {
             if (err) return res.status(500).json({ error: "Error en la consulta" });
@@ -268,6 +262,7 @@ controller.listarUsuarios = (req, res) => {
                 if (err) {
                     res.json(err);
                 }
+                console.log("USUARIOS: ", usuarios);
                 conn.query(
                     "SELECT * FROM pol_unidades WHERE id_Unidades >= 90",
                     (err, unidades) => {
@@ -312,33 +307,37 @@ controller.limpiarClave = (req, res) => {
                 return res.status(500).send("Error al encriptar");
             }
             // 1️⃣ Obtener usuario actual
-            conn.query(
-                "SELECT * FROM pol_usuarios WHERE id_usuario = ?",
-                [id_usuario],
+            conn.query("SELECT * FROM pol_usuarios WHERE id_usuario = ?", [id_usuario],
                 (err, rows) => {
                     if (err) {
                         console.error(err);
                         return res.status(500).send("Error al obtener usuario");
                     }
                     const usuarioActual = rows[0];
-                    // 2️⃣ Guardar historial
-                    conn.query(
-                        `INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'CAMBIO_PASSWORD', ?, ?, ?)`,
-                        [
-                            id_usuario,
-                            JSON.stringify({ Contrasenia: usuarioActual.Contrasenia }),
-                            JSON.stringify({ Contrasenia: hashedPassword }),
-                            login,
-                        ],
-                        (err) => {
-                            if (err) {
-                                console.error(err);
-                                return res.status(500).send("Error al guardar historial");
-                            }
-                            req.flash("success_msg", "Clave reestablecida con éxito.");
-                            res.redirect("/usuarios");
-                        },
-                    );
+
+                    conn.query(`UPDATE pol_usuarios SET Contrasenia = ?, debeCambiarClave = 1 WHERE id_usuario = ?`, [hashedPassword, id_usuario], (err) => {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).send("Error al actualizar clave");
+                        }
+                        // 2️⃣ Guardar historial
+                        conn.query(`INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'RESET_PASSWORD', ?, ?, ?)`,
+                            [
+                                id_usuario,
+                                JSON.stringify({ Contrasenia: usuarioActual.Contrasenia }),
+                                JSON.stringify({ Contrasenia: hashedPassword }),
+                                login,
+                            ],
+                            (err) => {
+                                if (err) {
+                                    console.error(err);
+                                    return res.status(500).send("Error al guardar historial");
+                                }
+                                req.flash("success_msg", "Clave reestablecida con éxito.");
+                                res.redirect("/usuarios");
+                            },
+                        );
+                    });
                 },
             );
         });
@@ -791,7 +790,7 @@ controller.cambiarClave = async (req, res) => {
             console.log("HASH: ", claveHash);
             console.log("LOGIN: ", login);
             console.log("id: ", id);
-            await conn.promise().query("UPDATE pol_usuarios SET Contrasenia = ?, modifica_autoriza = ?, Fecha_Modifica = NOW() WHERE id_usuario = ?", [claveHash, login, id]);
+            await conn.promise().query("UPDATE pol_usuarios SET Contrasenia = ?, Modifica_autoriza = ?, debeCambiarClave = 0 WHERE id_usuario = ?", [claveHash, login, id]);
             // 🔴 DESACTIVAR OBLIGATORIEDAD
             req.session.forzarCambioClave = false;
             res.redirect(`/inicio?msg=cambio_clave_ok`);
@@ -827,7 +826,7 @@ controller.listarDetenidos = (req, res) => {
         };
 
         // 🔹 ADMIN y GENERAL → ven todo
-        if (perfil === "ADMINISTRADOR" || perfil === "USUARIO GENERAL") {
+        if (perfil === "ADMINISTRADOR" || perfil === "USUARIO GENERAL" || perfil == "SUPERADMIN") {
             const sql = baseSql + orderBy;
 
             conn.query(sql, (err, detenidos) => {

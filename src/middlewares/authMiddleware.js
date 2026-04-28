@@ -34,9 +34,7 @@ const verifyToken = (req, res, next) => {
     if (nowMillis - lastActivity > INACTIVITY_TIMEOUT) {
       const userId = req.session.userId;
       if (userId) {
-        pool.query(
-          'INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)',
-          [userId, 'LOGOUT INACTIVIDAD'],
+        pool.query('INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)', [userId, 'LOGOUT INACTIVIDAD'],
           () => {
             req.session.destroy(() => {
               res.clearCookie('token');
