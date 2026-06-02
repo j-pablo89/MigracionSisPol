@@ -4,7 +4,27 @@ module.exports = {
       name: "backend",
       script: "src/app.js",
       watch: ["src"],
-      ignore_watch: ["node_modules"],
+      ignore_watch: [
+        "node_modules",
+        "src/public/archivos",
+        "src\\public\\archivos",
+        "src/public/fotos",        // 👈 agregá esto
+        "src\\public\\fotos",      // 👈 y esto (Windows)
+        "src/public/uploads",
+        "src\\public\\uploads",
+        "logs",
+        "*.log"
+      ],
+      watch_options: {
+        ignored: [
+          "**/public/archivos/**",
+          "**/public/fotos/**",    // 👈 y esto
+          "**/public/uploads/**",
+          "**/*.log"
+        ],
+        persistent: true,
+        ignoreInitial: true
+      },
       env: {
         NODE_ENV: "development"
       }

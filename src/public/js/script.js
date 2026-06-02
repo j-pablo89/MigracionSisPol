@@ -2771,56 +2771,68 @@ formCambiarClave.addEventListener("submit", async (e) => {
       // =========================
       // 🚀 SUBMIT
       // =========================
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
+      // Reemplazá el bloque de submit por este:
+      form.addEventListener("submit", async function (e) {
+          e.preventDefault();
 
-        const errores = [];
+          const errores = [];
+          const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+          const maxSize = 5 * 1024 * 1024;
 
-        campos.forEach((c) => {
-          const input = form.querySelector(`input[name="${c.name}"]`);
+          for (const c of campos) {
+              const input = form.querySelector(`input[name="${c.name}"]`);
+              const tieneExistente = input?.dataset.existing === 'true';
 
-          if (!input || !input.files || input.files.length === 0) {
-            errores.push(`Falta la imagen: ${c.label}`);
-          } else {
-            const file = input.files[0];
+              // Si no tiene foto existente en DB, es obligatoria
+              if (!tieneExistente) {
+                  if (!input || !input.files || input.files.length === 0) {
+                      errores.push(`Falta la imagen: ${c.label}`);
+                      continue;
+                  }
+              }
 
-            if (!allowedTypes.includes(file.type)) {
-              errores.push(`${c.label}: formato no permitido (${file.type})`);
-            }
-
-            if (file.size > maxSize) {
-              errores.push(`${c.label}: supera 5MB`);
-            }
+              // Si subió una foto nueva, validar formato y tamaño
+              if (input?.files?.length > 0) {
+                  const file = input.files[0];
+                  if (!allowedTypes.includes(file.type)) {
+                      errores.push(`${c.label}: formato no permitido (${file.type})`);
+                  }
+                  if (file.size > maxSize) {
+                      errores.push(`${c.label}: supera 5MB`);
+                  }
+              }
           }
-        });
 
-        // ❌ Si hay errores
-        if (errores.length) {
-          btnGuardar.disabled = true;
+          if (errores.length) {
+              Swal.fire({ icon: "error", title: "Error en las fotos", html: errores.map(e => `<div>${e}</div>`).join("") });
+              return;
+          }
 
-          Swal.fire({
-            icon: "error",
-            title: "Error en las fotos",
-            html: errores.map((e) => `<div>${e}</div>`).join(""),
+          const result = await Swal.fire({
+              title: "Confirmar subida",
+              text: "¿Querés guardar los cambios en las fotos?",
+              icon: "question",
+              showCancelButton: true,
+              confirmButtonText: "Sí, guardar",
+              cancelButtonText: "Cancelar",
+              confirmButtonColor: "#28a745",
+              cancelButtonColor: "#d33",
+              reverseButtons: false,
           });
 
-          return;
-        }
-
-        // ✅ Confirmación
-        Swal.fire({
-          title: "Confirmar subida",
-          text: "¿Querés guardar las 4 fotos del detenido?",
-          icon: "question",
-          showCancelButton: true,
-          confirmButtonText: "Sí, guardar",
-          cancelButtonText: "Cancelar",
-          reverseButtons: true,
-        }).then((result) => {
           if (result.isConfirmed) {
-            form.submit();
+              // Comprimir solo las fotos nuevas antes de enviar
+              for (const c of campos) {
+                  const input = form.querySelector(`input[name="${c.name}"]`);
+                  if (input?.files?.length > 0) {
+                      const compressed = await comprimirImagen(input.files[0]);
+                      const dt = new DataTransfer();
+                      dt.items.add(compressed);
+                      input.files = dt.files;
+                  }
+              }
+              form.submit();
           }
-        });
       });
 
       // =========================

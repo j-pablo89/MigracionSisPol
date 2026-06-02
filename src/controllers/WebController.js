@@ -16,6 +16,7 @@ const EstadoVar = {
     ACTIVO: 2,
     MODIFICADO: 3,
 };
+const PEPPER = process.env.SECRET_PEPPER;
 
 //________________________________________________________________________________________________________________________________________________________
 
@@ -29,13 +30,13 @@ controller.login = (req, res) => {
         conn.query("SELECT id_usuario, Usuario, Contrasenia, Email, Telefono, Nombre, Apellido, Dni, Avatar_url, permiso_principal AS Permiso, nombre_rol FROM pol_usuarios INNER JOIN pol_persona USING(id_Persona) INNER JOIN pol_usuarioperfiles USING(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE Usuario = ? AND pol_usuarios.Estado = 1",[username],(err, users) => {
                 if (err || users.length === 0) {
                     return res.redirect("/error401?error_msg=Credenciales%20inválidas");
-                }
+                } 
                 const user = users[0];
                 // Verificar la contraseña
-                console.log("PASSWORD: ", password);
+                console.log("PASSWORD: ", password + PEPPER);
                 console.log("CONTRASEÑA: ", user.Contrasenia);
-                const passwordIsValid = bcrypt.compareSync(password, user.Contrasenia);
-                const passwordIgualUsuario = bcrypt.compareSync(user.Usuario, user.Contrasenia);
+                const passwordIsValid = bcrypt.compareSync(password + PEPPER, user.Contrasenia );
+                const passwordIgualUsuario = bcrypt.compareSync(user.Usuario + PEPPER, user.Contrasenia );
                 if (!passwordIsValid) {
                     var EstadoConexion = "LOGIN FALLIDO";
                     conn.query("INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)", [user.id_usuario, EstadoConexion], (err) => {
@@ -301,7 +302,7 @@ controller.limpiarClave = (req, res) => {
             console.error(err);
             return res.status(500).send("Error de conexión");
         }
-        bcrypt.hash(Dni, 10, (err, hashedPassword) => {
+        bcrypt.hash(Dni + PEPPER, 10, (err, hashedPassword) => {
             if (err) {
                 console.error(err);
                 return res.status(500).send("Error al encriptar");
@@ -377,7 +378,8 @@ controller.verificarUsuario = (req, res) => {
 controller.guardarUsuario = async (req, res) => {
     const login = req.session.username;
     const { Dni, Apellido, Nombre, Email, Telefono, Usuario, Clave, Fecha_baja } = req.body;
-    const claveHash = await bcrypt.hash(Clave, 10);
+    const PEPPER = process.env.SECRET_PEPPER;
+    const claveHash = await bcrypt.hash(Clave + PEPPER, 10);
     let Alta_autoriza = login;
     const now = new Date();
     const mysqlDateTime = now.toISOString().slice(0, 19).replace("T", " ");
@@ -772,7 +774,7 @@ controller.cambiarClave = async (req, res) => {
             }
             console.log("PASA EL PRIMER IF");
             const usuario = rows[0];
-            const coincide = await bcrypt.compare(contrasenia, usuario.Contrasenia);
+            const coincide = await bcrypt.compare(contrasenia + PEPPER, usuario.Contrasenia);
             if (!coincide) {
                 return res.redirect(`/inicio?error=contrasenia_incorrecta`);
             }
@@ -785,7 +787,7 @@ controller.cambiarClave = async (req, res) => {
                 return res.status(400).json({ error: "La clave no puede ser igual al usuario" });
             }
             console.log("PASA EL CUARTO IF");
-            const claveHash = await bcrypt.hash(nuevaContrasenia, 10);
+            const claveHash = await bcrypt.hash(nuevaContrasenia + PEPPER, 10);
             await conn.promise().query(`INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'CAMBIO_PASSWORD', ?, ?, ?)`,[id, JSON.stringify(usuario), JSON.stringify({ Contrasenia: claveHash }), login]);
             console.log("HASH: ", claveHash);
             console.log("LOGIN: ", login);
@@ -1433,10 +1435,8 @@ controller.agregarFoto = (req, res) => {
 
 controller.guardarFotos = (req, res) => {
     const files = req.files;
-    const { id_InternoLegajo, id_Persona, username } = req.body;
+    const { id_InternoLegajo, id_Persona } = req.body;
     const login = req.session.username;
-    console.log("username: ", login);
-    console.log("ID DETENIDO: ", id_InternoLegajo, id_Persona);
     const now = new Date();
     const mysqlDateTime = now.toISOString().slice(0, 19).replace("T", " ");
 
@@ -1446,131 +1446,111 @@ controller.guardarFotos = (req, res) => {
             return res.render("agregar_foto", {
                 errorMessage: "Error de conexión a la base de datos.",
                 detenido: { id_InternoLegajo, id_Persona },
+                canEditPhotos: true,
+                editTimeRemaining: 0,
             });
         }
 
-        // 1) Consultar si ya existe registro
-        conn.query("SELECT frente, izquierdo, derecho, espalda FROM pol_internofotos WHERE id_InternoLegajo = ?", [id_InternoLegajo], (err, rows) => {
+        conn.query("SELECT frente, izquierdo, derecho, espalda, Fecha_alta FROM pol_internofotos WHERE id_InternoLegajo = ?",
+            [id_InternoLegajo],
+            (err, rows) => {
                 if (err) {
                     console.error("Error al leer DB:", err);
                     return res.render("agregar_foto", {
                         errorMessage: "Error al leer la base de datos.",
                         detenido: { id_InternoLegajo, id_Persona },
+                        canEditPhotos: true,
+                        editTimeRemaining: 0,
                     });
                 }
 
                 const existente = rows[0] || {};
-
-                const perfil = req.session && req.session.nombre_rol;
-                const isAdmin = perfil === 'ADMINISTRADOR';
+                const isAdmin = req.session?.nombre_rol === 'ADMINISTRADOR' || req.session?.nombre_rol === 'SUPERADMIN';
                 const LIMITE = 24 * 60 * 60 * 1000;
+                const tieneRegistro = rows.length > 0;
 
-                // Si ya existe foto y ya pasó el periodo de edición, no permitir cambios.
-                if (existente.Fecha_alta) {
-                    const diferencia = Date.now() - new Date(existente.Fecha_alta).getTime();
-                    if (!isAdmin && diferencia > LIMITE) {
+                // --- Verificar tiempo de edición ---
+                if (tieneRegistro && existente.Fecha_alta && !isAdmin) {
+                    const diffMs = Date.now() - new Date(existente.Fecha_alta).getTime();
+                    if (diffMs > LIMITE) {
                         return res.render("agregar_foto", {
                             errorMessage: "El periodo de edición de fotos expiró (24 horas).",
                             detenido: { id_InternoLegajo, id_Persona, ...existente },
+                            canEditPhotos: false,
+                            editTimeRemaining: 0,
                         });
                     }
                 }
 
-                // Validar: si no hay foto en DB ni archivo nuevo → error
-                if (!existente.frente && !files?.frente) {
+                // --- Validar que haya al menos 1 foto nueva ---
+                const hayFotoNueva = files?.frente || files?.izquierdo || files?.derecho || files?.espalda;
+                if (!hayFotoNueva) {
                     return res.render("agregar_foto", {
-                        errorMessage: "Falta foto frente",
+                        errorMessage: "Debe subir al menos una foto.",
                         detenido: { id_InternoLegajo, id_Persona, ...existente },
-                    });
-                }
-                if (!existente.izquierdo && !files?.izquierdo) {
-                    return res.render("agregar_foto", {
-                        errorMessage: "Falta foto izquierdo",
-                        detenido: { id_InternoLegajo, id_Persona },
-                    });
-                }
-                if (!existente.derecho && !files?.derecho) {
-                    return res.render("agregar_foto", {
-                        errorMessage: "Falta foto derecho",
-                        detenido: { id_InternoLegajo, id_Persona },
-                    });
-                }
-                if (!existente.espalda && !files?.espalda) {
-                    return res.render("agregar_foto", {
-                        errorMessage: "Falta foto espalda",
-                        detenido: { id_InternoLegajo, id_Persona },
+                        canEditPhotos: true,
+                        editTimeRemaining: existente.Fecha_alta
+                            ? Math.max(0, LIMITE - (Date.now() - new Date(existente.Fecha_alta).getTime()))
+                            : LIMITE,
                     });
                 }
 
-                // Definir rutas: si hay nueva foto, usarla; si no, mantener la existente
-                const rutaFrente = files?.frente
-                    ? "/fotos/" + files.frente[0].filename
-                    : existente.frente;
-                const rutaIzquierdo = files?.izquierdo
-                    ? "/fotos/" + files.izquierdo[0].filename
-                    : existente.izquierdo;
-                const rutaDerecho = files?.derecho
-                    ? "/fotos/" + files.derecho[0].filename
-                    : existente.derecho;
-                const rutaEspalda = files?.espalda
-                    ? "/fotos/" + files.espalda[0].filename
-                    : existente.espalda;
+                // --- Validar fotos obligatorias en primer INSERT ---
+                if (!tieneRegistro) {
+                    const faltantes = ['frente','izquierdo','derecho','espalda'].filter(k => !files?.[k]);
+                    if (faltantes.length) {
+                        return res.render("agregar_foto", {
+                            errorMessage: `Faltan fotos: ${faltantes.join(', ')}`,
+                            detenido: { id_InternoLegajo, id_Persona },
+                            canEditPhotos: true,
+                            editTimeRemaining: LIMITE,
+                        });
+                    }
+                }
 
-                // 2) Decidir si es INSERT o UPDATE
-                if (rows.length > 0) {
-                    // UPDATE
-                    const fechaAltaGuardar = mysqlDateTime;
+                // --- Construir rutas (nueva foto o mantener existente) ---
+                const rutaFrente    = files?.frente     ? "/fotos/" + files.frente[0].filename     : existente.frente;
+                const rutaIzquierdo = files?.izquierdo  ? "/fotos/" + files.izquierdo[0].filename  : existente.izquierdo;
+                const rutaDerecho   = files?.derecho    ? "/fotos/" + files.derecho[0].filename    : existente.derecho;
+                const rutaEspalda   = files?.espalda    ? "/fotos/" + files.espalda[0].filename    : existente.espalda;
+
+                if (tieneRegistro) {
+                    // ✅ UPDATE - query y params alineados
+                    // Solo actualiza Fecha_alta si se reemplaza alguna foto
                     const updateQuery = `UPDATE pol_internofotos SET frente = ?, izquierdo = ?, derecho = ?, espalda = ?, Alta_autoriza = ? WHERE id_InternoLegajo = ?`;
-                    conn.query(
-                        updateQuery,
-                        [
-                            rutaFrente,
-                            rutaIzquierdo,
-                            rutaDerecho,
-                            rutaEspalda,
-                            login,
-                            fechaAltaGuardar,
-                            id_InternoLegajo,
-                        ],
-                        (err, result) => {
+                    conn.query(updateQuery, [rutaFrente, rutaIzquierdo, rutaDerecho, rutaEspalda, login, id_InternoLegajo],
+                        (err) => {
                             if (err) {
                                 console.error("Error al actualizar en DB:", err);
                                 return res.render("agregar_foto", {
                                     errorMessage: "Error al actualizar en la base de datos.",
                                     detenido: { id_InternoLegajo, id_Persona },
+                                    canEditPhotos: true,
+                                    editTimeRemaining: 0,
                                 });
                             }
                             res.redirect("/detenidos?subido=1");
-                        },
+                        }
                     );
                 } else {
                     // INSERT
-                    const insertQuery = `INSERT INTO pol_internofotos (id_InternoLegajo, frente, izquierdo, derecho, espalda, Alta_autoriza, Fecha_alta)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`;
-                    conn.query(
-                        insertQuery,
-                        [
-                            id_InternoLegajo,
-                            rutaFrente,
-                            rutaIzquierdo,
-                            rutaDerecho,
-                            rutaEspalda,
-                            login,
-                            mysqlDateTime,
-                        ],
-                        (err, result) => {
+                    const insertQuery = `INSERT INTO pol_internofotos (id_InternoLegajo, frente, izquierdo, derecho, espalda, Alta_autoriza) VALUES (?, ?, ?, ?, ?, ?)`;
+                    conn.query(insertQuery, [id_InternoLegajo, rutaFrente, rutaIzquierdo, rutaDerecho, rutaEspalda, login],
+                        (err) => {
                             if (err) {
                                 console.error("Error al insertar en DB:", err);
                                 return res.render("agregar_foto", {
                                     errorMessage: "Error al insertar en la base de datos.",
                                     detenido: { id_InternoLegajo, id_Persona },
+                                    canEditPhotos: true,
+                                    editTimeRemaining: 0,
                                 });
                             }
                             res.redirect("/detenidos?subido=1");
-                        },
+                        }
                     );
                 }
-            },
+            }
         );
     });
 };
@@ -1640,7 +1620,7 @@ controller.guardarArchivo = (req, res) => {
             return res.redirect(`/agregar_archivo/${internoId}?error=1`);
         }
 
-        const insertQuery = `INSERT INTO pol_internoarchivo (id_InternoLegajo, Tipo, Source_Archivo, Titulo, Alta_autoriza, Fecha_alta) VALUES (?, 'DOCUMENTO', ?, ?, ?, ?)`;
+        const insertQuery = `INSERT INTO pol_internoarchivo (id_InternoLegajo, Tipo, Source_Archivo, Titulo, Alta_autoriza) VALUES (?, 'DOCUMENTO', ?, ?, ?)`;
         conn.query(
             insertQuery,
             [
@@ -1648,7 +1628,6 @@ controller.guardarArchivo = (req, res) => {
                 archivoPath,
                 archivo1,
                 login,
-                mysqlDateTime,
             ],
             (err, result) => {
                 if (err) {
@@ -1692,12 +1671,11 @@ controller.liberarDetenido = (req, res) => {
                             console.error("Error al liberar detenido:", err);
                             return res.redirect(`/detenidos?error=1`);
                         }
-                        const updateQuery = "INSERT INTO pol_internomovimiento (id_InternoLegajo, id_InternoProntuario, Unidad_Destino, Unidad_Alojado, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, ?, 'EGRESO', ?, ?)";
+                        const updateQuery = "INSERT INTO pol_internomovimiento (id_InternoLegajo, id_InternoProntuario, Unidad_Alojado, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, ?, 'EGRESO', ?, ?)";
                         conn.query(updateQuery,
                             [
                                 id,
                                 id_InternoProntuario,
-                                Unidad_Destino,
                                 Unidad_Alojado,
                                 JSON.stringify(motivo),
                                 login
@@ -1921,7 +1899,7 @@ controller.exportarMovimientosComisarias = (req, res) => {
                         { header: "Destino", key: "destino", width: 25 },
                         { header: "Fecha Movimiento", key: "fecha_mov", width: 20 },
                         { header: "Tipo Movimiento", key: "tipo", width: 18 },
-                        { header: "Usuario Alta", key: "alta_user", width: 20 },
+                        { header: "Usuario Carga", key: "alta_user", width: 20 },
                         { header: "Observaciones", key: "obs", width: 30 },
                     ];
 
