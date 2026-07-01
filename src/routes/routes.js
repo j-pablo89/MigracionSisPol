@@ -30,7 +30,7 @@ router.get('/', (req, res) => {
 });
 router.get('/logout', verifyToken, WebController.logout);
 router.get('/error401', (req, res) => {
-    const error_msg = req.query.error || '';
+    const error_msg = req.query.error_msg || '';
     res.render('error401', { error_msg });
 });
 // ******************* CONTROL DE DETENIDOS ***************************

@@ -32,16 +32,16 @@
 <body class="fondoImagenPatrones container-fluid text-center">
     <% if (typeof error_msg !== 'undefined' && error_msg !== '') { %>
     <div>
-        <h1 class="text-white">Error 401</h1>
-        <p class="text-white">Acceso no autorizado</p>
-        <p class="text-white">Acceda nuevamente con su usuario y contraseña</p>
+        <div class="alert alert-danger">
+            <h1 class="text-white">Error 401</h1>
+            <p class="text-white"><%= error_msg %></p>
+        </div>
         <a href="/login" class="btn btn-primary">Volver al inicio</a>
     </div>
     <% } else { %>
-        <div class="alert alert-danger">
-            <h1 class="text-white">Error 401</h1>
-            <p class="text-white"><%= error_msg || 'Usuario y/o contraseña inválidos' %></p>
-        </div>
+        <h1 class="text-white">Error 401</h1>
+        <p class="text-white">Acceso no autorizado</p>
+        <p class="text-white">Acceda nuevamente con su usuario y contraseña</p>
         <a href="/login" class="btn btn-primary">Volver al inicio</a>
     <% } %>
 </body>

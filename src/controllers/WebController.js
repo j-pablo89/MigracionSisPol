@@ -27,11 +27,31 @@ controller.login = (req, res) => {
     console.log("USUARIO: ", username);
     console.log("PASS: ", password);
     req.getConnection((err, conn) => {
-        conn.query("SELECT id_usuario, Usuario, Contrasenia, Email, Telefono, Nombre, Apellido, Dni, Avatar_url, permiso_principal AS Permiso, nombre_rol FROM pol_usuarios INNER JOIN pol_persona USING(id_Persona) INNER JOIN pol_usuarioperfiles USING(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE Usuario = ? AND pol_usuarios.Estado = 1",[username],(err, users) => {
+        conn.query("SELECT id_usuario, Usuario, Contrasenia, Email, Telefono, Nombre, Apellido, Dni, Avatar_url, Fecha_baja, permiso_principal AS Permiso, nombre_rol FROM pol_usuarios INNER JOIN pol_persona USING(id_Persona) INNER JOIN pol_usuarioperfiles USING(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE Usuario = ? AND pol_usuarios.Estado = 1",[username],(err, users) => {
                 if (err || users.length === 0) {
                     return res.redirect("/error401?error_msg=Credenciales%20inválidas");
                 } 
                 const user = users[0];
+                // Verificar si la cuenta está vencida
+                if (user.Fecha_baja) {
+                    const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0);
+                    const fechaBaja = new Date(user.Fecha_baja);
+                    fechaBaja.setHours(0, 0, 0, 0);
+                    if (fechaBaja <= hoy) {
+                        const EstadoConexion = "CUENTA VENCIDA";
+                        conn.query(
+                            "INSERT INTO pol_logueo (id_usuario, Tipo) VALUES (?, ?)",[user.id_usuario, EstadoConexion], (err) => {
+                                if (err) {
+                                    console.error("Error al registrar cuenta vencida:", err);
+                                }
+                                return res.redirect("/error401?error_msg=Su%20cuenta%20ha%20vencido.%20Contacte%20a%20un%20administrador%20para%20restablecerla."
+                                );
+                            }
+                        );
+                        return;
+                    }
+                }
                 // Verificar la contraseña
                 console.log("PASSWORD: ", password + PEPPER);
                 console.log("CONTRASEÑA: ", user.Contrasenia);
@@ -50,6 +70,7 @@ controller.login = (req, res) => {
 
                     return; // importante para cortar ejecución
                 }
+                
                 // Crear el token JWT
                 const token = jwt.sign(
                     {
@@ -258,7 +279,7 @@ controller.getIngresosPorAnio = (req, res) => {
 controller.listarUsuarios = (req, res) => {
     req.getConnection((err, conn) => {
         conn.query(
-            "SELECT id_usuario, pol_persona.id_Persona, Usuario, Email, Apellido, Nombre, Dni, Avatar_url, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) LEFT JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE pol_usuarios.Estado != 0",
+            "SELECT id_usuario, pol_persona.id_Persona, Usuario, Email, Apellido, Nombre, Dni, Avatar_url, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) LEFT JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE pol_usuarios.Estado != 0 ORDER BY nombre_rol = 'SUPERADMIN' DESC",
             (err, usuarios) => {
                 if (err) {
                     res.json(err);
@@ -383,6 +404,9 @@ controller.guardarUsuario = async (req, res) => {
     let Alta_autoriza = login;
     const now = new Date();
     const mysqlDateTime = now.toISOString().slice(0, 19).replace("T", " ");
+    function obtenerIniciales(nombre, apellido) {
+        return `${nombre?.trim()[0] || ""}${apellido?.trim()[0] || ""}`.toUpperCase();
+    }
     req.getConnection(async (err, conn) => {
         if (err) {
             console.error("Error de conexion: ", err);
@@ -402,8 +426,11 @@ controller.guardarUsuario = async (req, res) => {
                 let Contrasenia = claveHash;
                 let Estado = null;
                 Estado = 1;
-                const seed = Math.random().toString(36).substring(7);
-                const Avatar_url = `https://api.dicebear.com/9.x/identicon/svg?seed=${seed}`;
+                const seed = obtenerIniciales(Nombre, Apellido);
+                let color = "347a9d";
+                //const seed = Math.random().toString(36).substring(7);
+                //const seed = Nombre;
+                const Avatar_url = `https://api.dicebear.com/10.x/initials/svg?seed=${seed}?borderRadius=50?backgroundColor=${color}?backgroundColorAngle=270`;
                 const usuarioData = {id_Persona, Usuario, Contrasenia, Email, Telefono, Estado, Fecha_baja, Alta_autoriza, Avatar_url };
                 conn.query("INSERT INTO pol_usuarios SET  ?", usuarioData, async (err, resultado) => {
                         if (err) {
@@ -427,7 +454,7 @@ controller.guardarUsuario = async (req, res) => {
 
                         const id_rol = 4;
                         const permiso_principal = "SIN PERMISOS";
-                        const perfilData = {id_usuario, id_Persona, Estado, Alta_autoriza, id_rol, permiso_principal};
+                        const perfilData = {id_usuario, Estado, Alta_autoriza, id_rol, permiso_principal};
                         conn.query("INSERT INTO pol_usuarioperfiles SET ?", perfilData, (err, resultado) => {
                                 if (err) {
                                     console.error("Error al insertar perfil", err);
@@ -474,6 +501,7 @@ controller.modificarUsuario = (req, res) => {
 };
 
 controller.actualizarUsuario = (req, res) => {
+    
     const id = req.params.id;
     const login = req.session.username;
     const {id_Persona, Dni, Apellido, Nombre, Email, Telefono, Usuario, Fecha_baja, } = req.body;
@@ -668,11 +696,11 @@ controller.guardarAcceso = (req, res) => {
                                 function insertarOReactivar() {
                                     if (nuevas.length === 0) return actualizarPerfil();
 
-                                    const valores = nuevas.map((idUnidad) => [ idUsuario, id_Persona, idUnidad, login, 1,new Date()]);
+                                    const valores = nuevas.map((idUnidad) => [ idUsuario, idUnidad, login, 1,new Date()]);
 
                                     console.log("VALORES A INSERTAR:", valores);
 
-                                    conn.query(`INSERT INTO pol_usuariounidades (id_usuario, id_Persona, id_Unidades, Alta_Autoriza, Estado, Fecha_alta) VALUES ? ON DUPLICATE KEY UPDATE 
+                                    conn.query(`INSERT INTO pol_usuariounidades (id_usuario, id_Unidades, Estado, Alta_Autoriza, Fecha_alta) VALUES ? ON DUPLICATE KEY UPDATE 
                                     Estado = 1, Modifica_autoriza = VALUES(Alta_Autoriza)`, [valores], (err) => {
                                             if (err)
                                                 return conn.rollback(() =>
@@ -690,7 +718,6 @@ controller.guardarAcceso = (req, res) => {
                         // 2️⃣ Insertar / Reactivar unidades finales
                         const valores = nuevas.map((idUnidad) => [
                             idUsuario,
-                            id_Persona,
                             idUnidad,
                             login,
                             1,
@@ -701,13 +728,21 @@ controller.guardarAcceso = (req, res) => {
 
                         if (valores.length === 0) return actualizarPerfil();
 
-                        conn.query(`INSERT INTO pol_usuariounidades (id_usuario, id_Persona, id_Unidades, Alta_Autoriza, Estado, Fecha_alta) VALUES ? ON DUPLICATE KEY UPDATE Estado = 1, Modifica_autoriza = VALUES(Alta_Autoriza)`, [valores], (err) => {
-                                if (err)
-                                    return conn.rollback(() =>
-                                        res.status(500).send("Error insertando unidades"),
-                                    );
+                        conn.query(`INSERT INTO pol_usuariounidades (id_usuario, id_Unidades, Estado, Alta_Autoriza, Fecha_alta) VALUES ? ON DUPLICATE KEY UPDATE Estado = 1, Modifica_autoriza = VALUES(Alta_Autoriza)`, [valores], (err, result) => {
+                                if (err) {
+                                    console.error("=================================");
+                                    console.error("ERROR MYSQL:");
+                                    console.error(err);
+                                    console.error("=================================");
+
+                                    return conn.rollback(() => {
+                                        res.status(500).send(err.sqlMessage);
+                                    });
+                                }
+
+                                console.log(result);
                                 actualizarPerfil();
-                            },
+                            }
                         );
                     }
                 },
@@ -809,9 +844,8 @@ controller.listarDetenidos = (req, res) => {
 
         const perfil = req.session && req.session.nombre_rol;
         const userId = req.session && req.session.userId;
-
-        // 🔹 Base SIN ORDER BY
-        const baseSql = `SELECT DISTINCT il.id_InternoLegajo, p.Apellido AS APELLIDO, p.Nombre AS NOMBRE, p.Dni AS DNI, p.sexo AS SEXO, p.Fecha_nacimiento AS FECHA_NACIMIENTO, p.Domicilio AS DOMICILIO, ip.id_InternoProntuario, im.Unidad_Destino, im.Unidad_Alojado, ua.Detalle AS detalle_destino, lo.Nombre AS LOCALIDAD, pr.Nombre AS PROVINCIA, il.Estado, f.frente, im.Detalle, COALESCE(c.cantidad_causas,0) AS cantidad_causas, COALESCE(nt.traslado_pendiente, 0) AS traslado_pendiente, pol_notificaciones.Unidad_Destino AS traslado_destino FROM pol_internolegajo il INNER JOIN pol_persona p ON p.id_Persona = il.id_Persona INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades ua ON ua.id_Unidades = im.Unidad_Destino LEFT JOIN (SELECT * FROM pol_internoprontuario pr WHERE pr.id_InternoProntuario IN (SELECT MAX(id_InternoProntuario) FROM pol_internoprontuario GROUP BY id_InternoLegajo)) ip ON ip.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_internofotos f ON f.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) AS cantidad_causas FROM pol_internoprontuario WHERE Estado != 0 AND Estado != 1 GROUP BY id_InternoLegajo) c ON c.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_localidad lo ON lo.id_localidad = p.id_localidad INNER JOIN pol_provincia pr ON pr.id_provincia = p.id_provincia LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) as traslado_pendiente FROM pol_notificaciones WHERE Tipo_Notificacion = 'TRASLADO' AND Estado = 'pendiente' GROUP BY id_InternoLegajo) nt ON nt.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_notificaciones ON pol_notificaciones.id_InternoLegajo = il.id_InternoLegajo WHERE il.Estado <> 0 AND im.Unidad_Destino != 50`;
+        
+        const baseSql = `SELECT DISTINCT il.id_InternoLegajo, p.Apellido AS APELLIDO, p.Nombre AS NOMBRE, p.Dni AS DNI, p.sexo AS SEXO, p.Fecha_nacimiento AS FECHA_NACIMIENTO, p.Domicilio AS DOMICILIO, ip.id_InternoProntuario, im.Unidad_Destino, im.Unidad_Alojado, ua.Detalle AS detalle_destino, ual.Detalle AS detalle_alojado, lo.Nombre AS LOCALIDAD, pr.Nombre AS PROVINCIA, il.Estado, f.frente, im.Detalle, COALESCE(c.cantidad_causas,0) AS cantidad_causas, COALESCE(nt.traslado_pendiente, 0) AS traslado_pendiente, pol_notificaciones.Unidad_Destino AS traslado_destino FROM pol_internolegajo il INNER JOIN pol_persona p ON p.id_Persona = il.id_Persona LEFT JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_unidades ua ON ua.id_Unidades = im.Unidad_Destino LEFT JOIN pol_unidades ual ON ual.id_Unidades = im.Unidad_Alojado LEFT JOIN (SELECT * FROM pol_internoprontuario pr WHERE pr.id_InternoProntuario IN (SELECT MAX(id_InternoProntuario) FROM pol_internoprontuario GROUP BY id_InternoLegajo)) ip ON ip.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_internofotos f ON f.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) AS cantidad_causas FROM pol_internoprontuario WHERE Estado != 0 AND Estado != 1 GROUP BY id_InternoLegajo) c ON c.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_localidad lo ON lo.id_localidad = p.id_localidad LEFT JOIN pol_provincia pr ON pr.id_provincia = p.id_provincia LEFT JOIN (SELECT id_InternoLegajo, COUNT(*) as traslado_pendiente FROM pol_notificaciones WHERE Tipo_Notificacion = 'TRASLADO' AND Estado = 'pendiente' GROUP BY id_InternoLegajo) nt ON nt.id_InternoLegajo = il.id_InternoLegajo LEFT JOIN pol_notificaciones ON pol_notificaciones.id_InternoLegajo = il.id_InternoLegajo WHERE il.Estado <> 0 AND (im.Unidad_Destino != 50 OR im.Unidad_Destino IS NULL)`;
 
         const orderBy = ` ORDER BY p.Apellido, p.Nombre`;
 
@@ -1979,50 +2013,6 @@ controller.conexionUsuarios = (req, res) => {
         );
     });
 };
-
-// controller.estadisticas = (req, res) => {
-//     req.getConnection((err, conn) => {
-//         if (err) return res.json(err); // <--- return aquí para salir si error en conexión
-
-//         conn.query("SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = YEAR(CURDATE()) GROUP BY MONTH(Fecha_alta) ORDER BY mes",
-//             (err, resultado) => {
-//                 if (err) {
-//                     return res.json(err); // <--- return aquí para no continuar si error en query
-//                 }
-
-//                 const labels = resultado.map((row) => `MES ${row.mes}`);
-//                 const data = resultado.map((row) => row.cantidad);
-//                 conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND TIMESTAMPDIFF(DAY, im.Fecha_movimiento, NOW()) <= 6 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosUltimos6Dias) => {
-//                         if (err) {
-//                             return res.json(err);
-//                         }
-//                         let anioactual = new Date().getFullYear();
-//                         conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND YEAR(im.Fecha_movimiento) = YEAR(CURDATE()) GROUP BY im.Unidad_Destino, u.Detalle",
-//                             (err, ingresosAnioActual) => {
-//                                 if (err) {
-//                                     return res.json(err);
-//                                 }
-//                                 conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosTotales) => {
-//                                         if (err) {
-//                                             return res.json(err);
-//                                         }
-//                                         return res.render("estadisticas", {
-//                                             labels: JSON.stringify(labels),
-//                                             data: JSON.stringify(data),
-//                                             ingresosUltimos6Dias,
-//                                             ingresosAnioActual,
-//                                             ingresosTotales,
-//                                         });
-//                                     },
-//                                 );
-//                             },
-//                         );
-//                     },
-//                 );
-//             },
-//         );
-//     });
-// };
 
 controller.obtenerNotificaciones = (req, res) => {
   const id_usuario = req.user.id;

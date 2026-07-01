@@ -22,6 +22,7 @@
                 <table class="table table-hover" id="tablaUsuarios">
                     <thead>
                         <tr class="table-primary">
+                            <th scope="col">ID</th>
                             <th scope="col">Usuario</th>
                             <th scope="col">Perfil</th>
                             <th scope="col">Permisos</th>
@@ -33,6 +34,7 @@
                     </thead>
                    <tbody class="centrar-botones">
                     <% if (usuarios && usuarios.length > 0) { %>
+                    <% let j = 1;%>
                     <% usuarios.forEach(usuario => { %>
                         <%
                         const rol = usuario.nombre_rol;
@@ -40,7 +42,7 @@
                         const esAdmin = rol === 'ADMINISTRADOR';
                         const esSuperAdmin = rol === 'SUPERADMIN';
                         const esUsuarioComun = ['USUARIO', 'USUARIO GENERAL', 'SIN PERFIL'].includes(rol);
-                        const claseFila = (esSuperAdmin || esAdmin) ? 'table-bordo' : '';
+                        const claseFila =  esSuperAdmin ? 'table-superadmin' : esAdmin ? 'table-bordo' : '';
                         let mostrarBotones = false;
                         if (rolViewer === 'SUPERADMIN') {
                             mostrarBotones = !esSuperAdmin;
@@ -49,6 +51,7 @@
                         }
                         %>
                         <tr class="<%= claseFila %>" style="height: 50px;">
+                        <td class="align-middle"><%= j++ %></td>
                         <td class="align-middle"><%= usuario.Usuario %></td>
                         <td class="align-middle"><%= usuario.nombre_rol %></td>
                         <td class="align-middle"><%= usuario.Permiso %></td>

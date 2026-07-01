@@ -275,6 +275,14 @@ dialog::backdrop
     color: #ffffff;
 }
 
+.table-superadmin {
+    --bs-table-bg: #0B3D91;
+    --bs-table-striped-bg: #0a357e;
+    --bs-table-hover-bg: #092d6b;
+    --bs-table-border-color: #0a357e;
+    color: #ffffff;
+}
+
 .bg-bordo{
     background-color: rgb(176, 0, 32);
 }

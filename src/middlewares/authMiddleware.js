@@ -19,7 +19,7 @@ const verifyToken = (req, res, next) => {
     const nowSeconds = Math.floor(nowMillis / 1000);
     const timeLeft = decoded.exp - nowSeconds;
     
-    const INACTIVITY_TIMEOUT = 1 * 60 * 1000;
+    const INACTIVITY_TIMEOUT = 10 * 60 * 1000;
     if (!req.session.lastActivity) {
       req.session.lastActivity = nowMillis;
     }

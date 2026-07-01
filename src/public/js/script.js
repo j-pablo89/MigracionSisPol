@@ -34,7 +34,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".watermark-text").length,
   );
 });
-
+function obtenerIniciales(nombre) {
+                    return nombre
+                        .trim()
+                        .split(/\s+/)
+                        .map(p => p[0].toUpperCase())
+                        .join('');
+                }
 
 // ========================================================= FIN WATERMARK DINÁMICO ===========================================================
 
@@ -1122,6 +1128,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
       if (textoRol === "ADMINISTRADOR") {
         opcionLectura.style.display = "none";
         selectPermiso.value = "ABM";
+        selectPermiso.setAttribute('readonly');
       } else {
         opcionLectura.style.display = "block";
       }
