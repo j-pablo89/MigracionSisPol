@@ -7,11 +7,13 @@
       method="POST" id="formAcceso">
       <div class="d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
         <h3 class="fw-bold text-white my-3">ACCESO USUARIO</h3>
-
         <input type="hidden" name="input_nombre_rol" value="<%= usuarios.nombre_rol %>">
         <input type="hidden" name="input_permiso_principal" value="<%= usuarios.permiso_principal %>">
         <input type="hidden" name="id_usuario" value="<%= usuarios.id_usuario %>">
         <input type="hidden" name="id_Persona" value="<%= usuarios.id_Persona %>">
+      </div>
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-danger-strong" id="btnDesactivar" data-usuario-id="<%= usuarios.id_usuario %>">Desactivar Usuario</button>
       </div>
       <!-- ✅ SOLO UNO -->
       <div id="hiddenInputsContainer"></div>

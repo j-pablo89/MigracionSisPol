@@ -587,101 +587,188 @@ document.querySelectorAll(".cerrarModalClave").forEach((btn) => {
   });
 });
 
-// 🔹 Submit del formulario
+// ============================================================ SISTEMA DE CAMBIO DE CLAVE ============================================================
+
+const contrasenia = document.getElementById("contrasenia");
+const nuevaContrasenia = document.getElementById("nuevaContrasenia");
+const confirmaContrasenia = document.getElementById("confirmaContrasenia");
+
+const contador = document.getElementById("contadorClave");
+const mensajeClave = document.getElementById("mensajeClave");
+const mensajeCoincide = document.getElementById("mensajeCoincide");
+const barra = document.getElementById("barraClave");
+
+function validarClave() {
+
+    const claveNueva = nuevaContrasenia.value.trim();
+    const claveConfirmacion = confirmaContrasenia.value.trim();
+    contador.textContent = `${claveNueva.length} / 10 caracteres`;
+    barra.style.width = `${claveNueva.length * 10}%`;
+
+    if (claveNueva.length < 8) {
+        mensajeClave.innerHTML = "❌ Debe tener entre 8 y 10 caracteres";
+        mensajeClave.className = "text-danger";
+        barra.className = "progress-bar bg-danger";
+    } else if (claveNueva.length === 10) {
+        mensajeClave.innerHTML = "⚠ Alcanzó el máximo permitido (10 caracteres)";
+        mensajeClave.className = "text-warning";
+    } else {
+        mensajeClave.innerHTML = "✔ Longitud correcta";
+        mensajeClave.className = "text-success";
+        barra.className = "progress-bar bg-success";
+    }
+
+    if (claveConfirmacion.length > 0) {
+        if (claveNueva === claveConfirmacion) {
+            mensajeCoincide.innerHTML = "✔ Las claves coinciden";
+            mensajeCoincide.className = "text-success";
+            confirmaContrasenia.classList.remove("is-invalid");
+            confirmaContrasenia.classList.add("is-valid");
+        } else {
+            mensajeCoincide.innerHTML = "❌ Las claves no coinciden";
+            mensajeCoincide.className = "text-danger";
+            confirmaContrasenia.classList.remove("is-valid");
+            confirmaContrasenia.classList.add("is-invalid");
+        }
+    } else {
+        mensajeCoincide.innerHTML = "";
+        confirmaContrasenia.classList.remove("is-valid");
+        confirmaContrasenia.classList.remove("is-invalid");
+    }
+}
+
+nuevaContrasenia.addEventListener("input", validarClave);
+confirmaContrasenia.addEventListener("input", validarClave);
+
 formCambiarClave.addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  const contrasenia = document.getElementById("contrasenia").value.trim();
-  const nuevaContrasenia = document.getElementById("nuevaContrasenia").value.trim();
-  const confirmaContrasenia = document.getElementById("confirmaContrasenia").value.trim();
+    e.preventDefault();
 
-  if (!contrasenia || !nuevaContrasenia || !confirmaContrasenia) {
+    const claveActual = contrasenia.value.trim();
+    const claveNueva = nuevaContrasenia.value.trim();
+    const claveConfirmacion = confirmaContrasenia.value.trim();
+
+    if (!claveActual || !claveNueva || !claveConfirmacion) {
+
+        modalCambiarClave.close();
+
+        await Swal.fire({
+            title: "Campos incompletos",
+            text: "Debe completar todos los campos.",
+            icon: "warning"
+        });
+
+        modalCambiarClave.showModal();
+        return;
+    }
+
+    if (claveNueva === claveActual) {
+
+        modalCambiarClave.close();
+
+        await Swal.fire({
+            title: "Error",
+            text: "La nueva clave no puede ser igual a la actual.",
+            icon: "error"
+        });
+
+        modalCambiarClave.showModal();
+        return;
+    }
+
+    if (claveNueva.length < 8 || claveNueva.length > 10) {
+
+        modalCambiarClave.close();
+
+        await Swal.fire({
+            title: "Longitud inválida",
+            text: "La contraseña debe tener entre 8 y 10 caracteres.",
+            icon: "warning"
+        });
+
+        modalCambiarClave.showModal();
+        return;
+    }
+
+    if (claveNueva !== claveConfirmacion) {
+
+        modalCambiarClave.close();
+
+        await Swal.fire({
+            title: "Error",
+            text: "Las claves no coinciden.",
+            icon: "error"
+        });
+
+        modalCambiarClave.showModal();
+        return;
+    }
+
+    if (claveNueva === username) {
+
+        modalCambiarClave.close();
+
+        await Swal.fire({
+            title: "Clave inválida",
+            text: "La contraseña no puede ser igual al usuario.",
+            icon: "error"
+        });
+
+        modalCambiarClave.showModal();
+        return;
+    }
+
     modalCambiarClave.close();
-    await Swal.fire({
-      title: "Campos incompletos",
-      text: "Debe completar todos los campos.",
-      icon: "warning",
+
+    const confirmacion = await Swal.fire({
+        title: "¿Confirmar cambio?",
+        text: "¿Desea cambiar la contraseña?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cambiar",
+        cancelButtonText: "Cancelar"
     });
-    modalCambiarClave.showModal();
-    return;
-  }
 
-  if (nuevaContrasenia === contrasenia) {
-    modalCambiarClave.close();
-    await Swal.fire({
-      title: "Error",
-      text: "La nueva clave no puede ser igual a la actual.",
-      icon: "error",
-    });
-    modalCambiarClave.showModal();
-    return;
-  }
+    if (!confirmacion.isConfirmed) {
+        modalCambiarClave.showModal();
+        return;
+    }
 
-  if (nuevaContrasenia.length < 8 || nuevaContrasenia.length > 10) {
-    modalCambiarClave.close();
-    await Swal.fire({
-      title: "Longitud inválida",
-      text: "Debe tener entre 8 y 10 caracteres.",
-      icon: "warning",
-    });
-    modalCambiarClave.showModal();
-    return;
-  }
-
-  if (nuevaContrasenia !== confirmaContrasenia) {
-    modalCambiarClave.close();
-    await Swal.fire({
-      title: "Error",
-      text: "Las claves no coinciden.",
-      icon: "error",
-    });
-    modalCambiarClave.showModal();
-    return;
-  }
-
-  if (nuevaContrasenia === username) {
-    modalCambiarClave.close();
-    await Swal.fire({
-      title: "Clave inválida",
-      text: "La contraseña no puede ser igual al usuario.",
-      icon: "error",
-    });
-    modalCambiarClave.showModal();
-    return;
-  }
-
-  modalCambiarClave.close();
-
-  const confirmacion = await Swal.fire({
-    title: "¿Confirmar cambio?",
-    text: "¿Desea cambiar la contraseña?",
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Sí, cambiar",
-    cancelButtonText: "Cancelar",
-  });
-
-    // 🔥 SI CANCELA → REABRIR
-  if (!confirmacion.isConfirmed) {
-    modalCambiarClave.showModal();
-    return;
-  }
-
-  if (confirmacion.isConfirmed) {
-    // 🔥 ACA ESTÁ LA CLAVE
     formCambiarClave.action = `/cambiar_clave/${userId}`;
-
-    console.log("ACTION FINAL:", formCambiarClave.action);
-
     formCambiarClave.submit();
-  }
+
 });
 
-// ============================================================ FIN SISTEMA =========================================================
+function alternarPassword(inputId, botonId){
 
-  // ============================================================ FIN SISTEMA DE CAMBIO DE CLAVE =========================================================
+    const input = document.getElementById(inputId);
+    const icono = document.querySelector(`#${botonId} i`);
 
-  // ============================================================ ALERTAS GENERALES CON SWEET ALERTS =========================================================
+    if(input.type === "password"){
+
+        input.type = "text";
+
+        icono.classList.remove("bi-eye-slash");
+        icono.classList.add("bi-eye");
+
+    }else{
+
+        input.type = "password";
+
+        icono.classList.remove("bi-eye");
+        icono.classList.add("bi-eye-slash");
+
+    }
+
+}
+
+document.getElementById("btnVerActual").addEventListener("click", () => alternarPassword("contrasenia","btnVerActual"));
+document.getElementById("btnVerNueva").addEventListener("click", () => alternarPassword("nuevaContrasenia","btnVerNueva"));
+document.getElementById("btnVerConfirmacion").addEventListener("click", () => alternarPassword("confirmaContrasenia","btnVerConfirmacion"));
+
+// ============================================================ FIN SISTEMA DE CAMBIO DE CLAVE ============================================================
+
+// ============================================================ ALERTAS GENERALES CON SWEET ALERTS =========================================================
 
   const alertDiv = document.querySelector(".alert.alert-danger");
 
@@ -832,9 +919,7 @@ formCambiarClave.addEventListener("submit", async (e) => {
   window.history.replaceState({}, document.title, window.location.pathname);
 
   // =============================================================== FIN ALERTAS GENERALES CON SWEET ALERTS =========================================================
-
   //************************************* PAGETYPE *****************************************
-
   //*********************************************************************************************************  */
 
   if (pageType === "inicio") {
@@ -895,17 +980,15 @@ formCambiarClave.addEventListener("submit", async (e) => {
     }
 
     //FILTRO PARA BUSQUEDA TABLA
-    document
-      .getElementById("filtroBusqueda")
-      .addEventListener("keyup", function () {
+    document.getElementById("filtroBusqueda").addEventListener("keyup", function () {
         const filtro = this.value.toLowerCase().trim();
 
         // Tabla (desktop)
         const filas = document.querySelectorAll("#tablaUsuarios tbody tr");
         filas.forEach((fila) => {
-          const apellido = fila.cells[1].textContent.toLowerCase();
-          const nombre = fila.cells[2].textContent.toLowerCase();
-          const dni = fila.cells[3].textContent.toLowerCase();
+          const apellido = fila.cells[4].textContent.toLowerCase();
+          const nombre = fila.cells[5].textContent.toLowerCase();
+          const dni = fila.cells[6].textContent.toLowerCase();
 
           fila.style.display =
             nombre.includes(filtro) ||
@@ -1383,6 +1466,55 @@ formCambiarClave.addEventListener("submit", async (e) => {
             form.submit();
           }
         });
+      });
+    }
+
+    // DESACTIVAR USUARIO
+    const btnDesactivar = document.getElementById("btnDesactivar");
+    if (btnDesactivar) {
+      btnDesactivar.addEventListener("click", async function (e) {
+        e.preventDefault();
+
+        const confirmacion = await Swal.fire({
+          title: "¿Desactivar usuario?",
+          text: "El usuario no podrá iniciar sesión hasta que sea reactivado.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Sí, desactivar",
+          cancelButtonText: "Cancelar",
+        });
+
+        if (!confirmacion.isConfirmed) return;
+
+        const usuarioId = btnDesactivar.dataset.usuarioId;
+
+        try {
+          const response = await fetch(`/desactivar_usuario/${usuarioId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "No se pudo desactivar el usuario.");
+          }
+
+          await Swal.fire({
+            icon: "success",
+            title: "Usuario desactivado",
+            text: "El usuario fue desactivado correctamente.",
+          });
+
+          window.location.href = "/usuarios";
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "No se pudo desactivar el usuario.",
+          });
+        }
       });
     }
   }

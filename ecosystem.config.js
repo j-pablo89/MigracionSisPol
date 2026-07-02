@@ -8,8 +8,8 @@ module.exports = {
         "node_modules",
         "src/public/archivos",
         "src\\public\\archivos",
-        "src/public/fotos",        // 👈 agregá esto
-        "src\\public\\fotos",      // 👈 y esto (Windows)
+        "src/public/fotos",        
+        "src\\public\\fotos",      
         "src/public/uploads",
         "src\\public\\uploads",
         "logs",
@@ -18,7 +18,7 @@ module.exports = {
       watch_options: {
         ignored: [
           "**/public/archivos/**",
-          "**/public/fotos/**",    // 👈 y esto
+          "**/public/fotos/**",    
           "**/public/uploads/**",
           "**/*.log"
         ],

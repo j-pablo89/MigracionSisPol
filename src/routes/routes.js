@@ -15,6 +15,7 @@ router.get('/agregar_usuario', verifyToken, WebController.nuevoUsuario);
 router.post('/guardar_usuario', verifyToken, WebController.guardarUsuario);
 router.get('/acceso_usuario/:id', verifyToken, WebController.accesoUsuario);
 router.post('/guardar_acceso', verifyToken, WebController.guardarAcceso);
+router.post('/desactivar_usuario/:id', verifyToken, WebController.desactivarUsuario);
 router.post('/usuarios', verifyToken, WebController.limpiarClave);
 router.get('/modificar_usuario/:id', verifyToken, WebController.modificarUsuario);
 router.post('/actualizar_usuario/:id',verifyToken, WebController.actualizarUsuario);

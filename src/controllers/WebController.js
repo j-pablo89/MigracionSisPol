@@ -430,7 +430,7 @@ controller.guardarUsuario = async (req, res) => {
                 let color = "347a9d";
                 //const seed = Math.random().toString(36).substring(7);
                 //const seed = Nombre;
-                const Avatar_url = `https://api.dicebear.com/10.x/initials/svg?seed=${seed}?borderRadius=50?backgroundColor=${color}?backgroundColorAngle=270`;
+                const Avatar_url = `https://api.dicebear.com/10.x/initials/svg?seed=${seed}&borderRadius=50&backgroundColor=${color}&backgroundColorAngle=270`;
                 const usuarioData = {id_Persona, Usuario, Contrasenia, Email, Telefono, Estado, Fecha_baja, Alta_autoriza, Avatar_url };
                 conn.query("INSERT INTO pol_usuarios SET  ?", usuarioData, async (err, resultado) => {
                         if (err) {
@@ -789,6 +789,53 @@ controller.guardarAcceso = (req, res) => {
                     },
                 );
             }
+        });
+    });
+};
+
+controller.desactivarUsuario = (req, res) => {
+    const id = req.params.id;
+    const login = req.session.username;
+
+    req.getConnection((err, conn) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error de conexión");
+        }
+
+        conn.query("SELECT * FROM pol_usuarios WHERE id_usuario = ?", [id], (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error al buscar el usuario");
+            }
+
+            if (rows.length === 0) {
+                return res.status(404).send("Usuario no encontrado");
+            }
+
+            const usuarioActual = rows[0];
+
+            conn.query("UPDATE pol_usuarios SET Estado = 0 WHERE id_usuario = ?", [id], (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send("Error al desactivar el usuario");
+                }
+
+                const datosAnteriores = JSON.stringify({ Estado: usuarioActual.Estado });
+                const datosNuevos = JSON.stringify({ Estado: 0 });
+
+                conn.query(
+                    `INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'DESACTIVAR_USUARIO', ?, ?, ?)`,
+                    [id, datosAnteriores, datosNuevos, login],
+                    (err) => {
+                        if (err) {
+                            console.error("Error guardando historial:", err);
+                            // no bloqueamos la desactivación por un fallo en historial
+                        }
+                        return res.status(200).send("Usuario desactivado");
+                    },
+                );
+            });
         });
     });
 };

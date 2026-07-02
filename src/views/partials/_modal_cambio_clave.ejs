@@ -7,11 +7,26 @@
       <form id="formCambiarClave" method="POST" action="/cambiar_clave/<%= session.userId %>" novalidate>
         <div class="mb-3 d-flex justify-content-md-start flex-column">
           <label for="contrasenia" class="form-label">Clave Actual</label>
-          <input type="password" class="form-control mb-3" name="contrasenia" id="contrasenia"  required>
+          <div class="input-group mb-3">
+            <input type="password" class="form-control mb-3" name="contrasenia" id="contrasenia"  required>
+            <button class="btn text-black" type="button" id="btnVerActual"><i class="bi bi-eye-slash"></i></button>
+          </div>
           <label for="nuevaContrasenia" class="form-label">Nueva Clave</label>
-          <input type="password" class="form-control mb-3" name="nuevaContrasenia" id="nuevaContrasenia" title="La clave debe tener 8 caracteres como minimo y 10 caracteres como maximo"  maxlength="10" minlength="8" required>
+          <div class="input-group mb-3">
+            <input type="password" class="form-control mb-3" name="nuevaContrasenia" id="nuevaContrasenia" title="La clave debe tener 8 caracteres como minimo y 10 caracteres como maximo"  maxlength="10" minlength="8" required>
+            <button class="btn text-black" type="button" id="btnVerNueva"><i class="bi bi-eye-slash"></i></button>
+          </div>
+          <small id="contadorClave" class="text-muted">0 / 10 caracteres</small>
+          <small id="mensajeClave" class="d-block mt-1"></small>
+          <div class="progress mt-2 mb-3" style="height:6px;">
+              <div id="barraClave" class="progress-bar" style="width:0%"></div>
+          </div>
           <label for="confirmaContrasenia" class="form-label">Confirma Clave</label>
-          <input type="password" class="form-control mb-3" name="confirmaContrasenia" id="confirmaContrasenia" title="La clave debe tener 8 caracteres como minimo y 10 caracteres como maximo"  maxlength="10" minlength="8" required>
+          <div class="input-group mb-3">
+            <input type="password" class="form-control mb-3" name="confirmaContrasenia" id="confirmaContrasenia" title="La clave debe tener 8 caracteres como minimo y 10 caracteres como maximo"  maxlength="10" minlength="8" required>
+            <button class="btn text-black" type="button" id="btnVerConfirmacion"><i class="bi bi-eye-slash"></i></button>
+          </div>
+          <small id="mensajeCoincide" class="d-block mt-1"></small>
         </div>
         <div class="modal-footer d-flex justify-content-between gap-md-5 gap-4">
           <button class="btn btn-success-strong border border-1 border-black aceptarCambioClave " type="submit" style="width: 120px;">ACEPTAR</button>
