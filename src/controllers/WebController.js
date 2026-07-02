@@ -279,7 +279,23 @@ controller.getIngresosPorAnio = (req, res) => {
 controller.listarUsuarios = (req, res) => {
     req.getConnection((err, conn) => {
         conn.query(
-            "SELECT id_usuario, pol_persona.id_Persona, Usuario, Email, Apellido, Nombre, Dni, Avatar_url, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) LEFT JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE pol_usuarios.Estado != 0 ORDER BY nombre_rol = 'SUPERADMIN' DESC",
+            `SELECT id_usuario, pol_persona.id_Persona, Usuario, Email, Apellido, Nombre, Dni, Avatar_url,
+             COALESCE(permiso_principal, 'SIN PERMISOS') AS Permiso,
+             COALESCE(nombre_rol, 'SIN PERFIL') AS nombre_rol,
+             pol_usuarios.Estado
+             FROM pol_persona
+             INNER JOIN pol_usuarios USING(id_persona)
+             LEFT JOIN pol_usuarioperfiles USING(id_usuario)
+             LEFT JOIN pol_roles USING(id_rol)
+             ORDER BY pol_usuarios.Estado DESC,
+               CASE
+                 WHEN nombre_rol = 'SUPERADMIN' THEN 1
+                 WHEN nombre_rol = 'ADMINISTRADOR' THEN 2
+                 WHEN nombre_rol = 'USUARIO GENERAL' THEN 3
+                 WHEN nombre_rol = 'USUARIO' THEN 4
+                 ELSE 5
+               END,
+               Apellido, Nombre`,
             (err, usuarios) => {
                 if (err) {
                     res.json(err);
@@ -460,7 +476,7 @@ controller.guardarUsuario = async (req, res) => {
                                     console.error("Error al insertar perfil", err);
                                     return resultado.status(500).send("Error al guardar nuevo perfil");
                                 }
-                                res.redirect("/usuarios");
+                                res.redirect(`/acceso_usuario/${id_usuario}`);
                             },
                         );
                     },
@@ -824,15 +840,79 @@ controller.desactivarUsuario = (req, res) => {
                 const datosAnteriores = JSON.stringify({ Estado: usuarioActual.Estado });
                 const datosNuevos = JSON.stringify({ Estado: 0 });
 
+                conn.query("SELECT id_rol FROM pol_roles WHERE Nombre_rol = ? LIMIT 1", ['SIN PERFIL'], (err, rowsRol) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send("Error al obtener rol SIN PERFIL");
+                    }
+
+                    const idRolSinPerfil = rowsRol.length > 0 ? rowsRol[0].id_rol : null;
+
+                    conn.query(
+                        "UPDATE pol_usuarioperfiles SET id_rol = ?, permiso_principal = ? WHERE id_usuario = ?",
+                        [idRolSinPerfil, 'SIN PERMISOS', id],
+                        (err) => {
+                            if (err) {
+                                console.error('Error al actualizar perfil al desactivar:', err);
+                                // seguimos con la desactivación incluso si falla este update
+                            }
+
+                            conn.query(
+                                `INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'DESACTIVAR_USUARIO', ?, ?, ?)`,
+                                [id, datosAnteriores, datosNuevos, login],
+                                (err) => {
+                                    if (err) {
+                                        console.error("Error guardando historial:", err);
+                                        // no bloqueamos la desactivación por un fallo en historial
+                                    }
+                                    return res.status(200).send("Usuario desactivado");
+                                },
+                            );
+                        },
+                    );
+                });
+            });
+        });
+    });
+};
+
+controller.reactivarUsuario = (req, res) => {
+    const id = req.params.id;
+    const login = req.session.username;
+
+    req.getConnection((err, conn) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error de conexión");
+        }
+
+        conn.query("SELECT * FROM pol_usuarios WHERE id_usuario = ?", [id], (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error al buscar el usuario");
+            }
+
+            if (rows.length === 0) {
+                return res.status(404).send("Usuario no encontrado");
+            }
+
+            conn.query("UPDATE pol_usuarios SET Estado = 1 WHERE id_usuario = ?", [id], (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send("Error al reactivar el usuario");
+                }
+
+                const datosAnteriores = JSON.stringify({ Estado: rows[0].Estado });
+                const datosNuevos = JSON.stringify({ Estado: 1 });
+
                 conn.query(
-                    `INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'DESACTIVAR_USUARIO', ?, ?, ?)`,
+                    `INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'REACTIVAR_USUARIO', ?, ?, ?)`,
                     [id, datosAnteriores, datosNuevos, login],
                     (err) => {
                         if (err) {
                             console.error("Error guardando historial:", err);
-                            // no bloqueamos la desactivación por un fallo en historial
                         }
-                        return res.status(200).send("Usuario desactivado");
+                        return res.redirect('/usuarios');
                     },
                 );
             });

@@ -988,7 +988,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         filas.forEach((fila) => {
           const apellido = fila.cells[4].textContent.toLowerCase();
           const nombre = fila.cells[5].textContent.toLowerCase();
-          const dni = fila.cells[6].textContent.toLowerCase();
+          const dni = fila.cells[1].textContent.toLowerCase();
 
           fila.style.display =
             nombre.includes(filtro) ||
