@@ -978,35 +978,27 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         text: error,
       });
     }
-
     //FILTRO PARA BUSQUEDA TABLA
     document.getElementById("filtroBusqueda").addEventListener("keyup", function () {
         const filtro = this.value.toLowerCase().trim();
-
         // Tabla (desktop)
         const filas = document.querySelectorAll("#tablaUsuarios tbody tr");
         filas.forEach((fila) => {
           const apellido = fila.cells[4].textContent.toLowerCase();
           const nombre = fila.cells[5].textContent.toLowerCase();
           const dni = fila.cells[1].textContent.toLowerCase();
+          const permisos = fila.cells[3].textContent.toLowerCase();
 
-          fila.style.display =
-            nombre.includes(filtro) ||
-            apellido.includes(filtro) ||
-            dni.includes(filtro)
-              ? ""
-              : "none";
-        });
+          fila.style.display = nombre.includes(filtro) || apellido.includes(filtro) || dni.includes(filtro) || permisos.includes(filtro) ? "" : "none";});
         // Tarjetas (mobile)
         const cards = document.querySelectorAll(".d-block.d-md-none .card");
         cards.forEach((card) => {
-          const nombre =
-            card.querySelector("p.mb-2")?.textContent.toLowerCase() || "";
-          const dni =
-            card.querySelector("p:nth-of-type(2)")?.textContent.toLowerCase() ||
-            "";
-
-          if (nombre.includes(filtro) || dni.includes(filtro)) {
+          const apellido = card.querySelector("p.mb-2")?.textContent.toLowerCase() || "";
+          const nombre = card.querySelector("p.mb-2")?.textContent.toLowerCase() || "";
+          const dni = card.querySelector("p:nth-of-type(2)")?.textContent.toLowerCase() || "";
+          const permisos = card.querySelector("p:nth-of-type(3)")?.textContent.toLowerCase() || "";
+          
+          if (nombre.includes(filtro) || apellido.includes(filtro) || dni.includes(filtro) || permisos.includes(filtro)) {
             card.style.display = "";
           } else {
             card.style.display = "none";

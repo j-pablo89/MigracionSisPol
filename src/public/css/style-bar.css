@@ -254,7 +254,7 @@ img {
     padding: 0 3rem 0 6rem;
   }
   .header__container {
-    height: calc(var(--header-height) + 0.5rem);
+    height: calc(var(--header-height) + 1rem);
   }
   .header__search {
     width: 300px;
@@ -280,7 +280,7 @@ img {
     row-gap: 1.7rem;
   }
   .nav__icon {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
   .nav__logo-name, .nav__name, .nav__subtitle, .nav__dropdown-icon {
     opacity: 0;

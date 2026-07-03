@@ -18,10 +18,12 @@ const EstadoVar = {
 };
 const PEPPER = process.env.SECRET_PEPPER;
 
-//________________________________________________________________________________________________________________________________________________________
+//________________________________________________________________________________________________________________________________________________________//
 
 /******************************************************** CONTROLADORES PARA GESTION USUARIOS ***********************************************************/
-//________________________________________________________________________________________________________________________________________________________
+
+//________________________________________________________________________________________________________________________________________________________//
+
 controller.login = (req, res) => {
     const { username, password } = req.body;
     console.log("USUARIO: ", username);
@@ -278,24 +280,7 @@ controller.getIngresosPorAnio = (req, res) => {
 
 controller.listarUsuarios = (req, res) => {
     req.getConnection((err, conn) => {
-        conn.query(
-            `SELECT id_usuario, pol_persona.id_Persona, Usuario, Email, Apellido, Nombre, Dni, Avatar_url,
-             COALESCE(permiso_principal, 'SIN PERMISOS') AS Permiso,
-             COALESCE(nombre_rol, 'SIN PERFIL') AS nombre_rol,
-             pol_usuarios.Estado
-             FROM pol_persona
-             INNER JOIN pol_usuarios USING(id_persona)
-             LEFT JOIN pol_usuarioperfiles USING(id_usuario)
-             LEFT JOIN pol_roles USING(id_rol)
-             ORDER BY pol_usuarios.Estado DESC,
-               CASE
-                 WHEN nombre_rol = 'SUPERADMIN' THEN 1
-                 WHEN nombre_rol = 'ADMINISTRADOR' THEN 2
-                 WHEN nombre_rol = 'USUARIO GENERAL' THEN 3
-                 WHEN nombre_rol = 'USUARIO' THEN 4
-                 ELSE 5
-               END,
-               Apellido, Nombre`,
+        conn.query(`SELECT id_usuario, pol_persona.id_Persona, Usuario, Email, Apellido, Nombre, Dni, Avatar_url, COALESCE(permiso_principal, 'SIN PERMISOS') AS Permiso, COALESCE(nombre_rol, 'SIN PERFIL') AS nombre_rol, pol_usuarios.Estado FROM pol_persona INNER JOIN pol_usuarios USING(id_persona) LEFT JOIN pol_usuarioperfiles USING(id_usuario) LEFT JOIN pol_roles USING(id_rol) ORDER BY pol_usuarios.Estado DESC, CASE WHEN nombre_rol = 'SUPERADMIN' THEN 1 WHEN nombre_rol = 'ADMINISTRADOR' THEN 2 WHEN nombre_rol = 'USUARIO GENERAL' THEN 3 WHEN nombre_rol = 'USUARIO' THEN 4 ELSE 5 END, Apellido, Nombre`,
             (err, usuarios) => {
                 if (err) {
                     res.json(err);
@@ -414,7 +399,7 @@ controller.verificarUsuario = (req, res) => {
 
 controller.guardarUsuario = async (req, res) => {
     const login = req.session.username;
-    const { Dni, Apellido, Nombre, Email, Telefono, Usuario, Clave, Fecha_baja } = req.body;
+    const { Dni, Apellido, Nombre, Email, Telefono, Usuario, Clave, Fecha_baja, Ubicacion, Funcion } = req.body;
     const PEPPER = process.env.SECRET_PEPPER;
     const claveHash = await bcrypt.hash(Clave + PEPPER, 10);
     let Alta_autoriza = login;
@@ -447,7 +432,7 @@ controller.guardarUsuario = async (req, res) => {
                 //const seed = Math.random().toString(36).substring(7);
                 //const seed = Nombre;
                 const Avatar_url = `https://api.dicebear.com/10.x/initials/svg?seed=${seed}&borderRadius=50&backgroundColor=${color}&backgroundColorAngle=270`;
-                const usuarioData = {id_Persona, Usuario, Contrasenia, Email, Telefono, Estado, Fecha_baja, Alta_autoriza, Avatar_url };
+                const usuarioData = {id_Persona, Usuario, Contrasenia, Email, Telefono, Ubicacion, Funcion, Estado, Fecha_baja, Alta_autoriza, Avatar_url };
                 conn.query("INSERT INTO pol_usuarios SET  ?", usuarioData, async (err, resultado) => {
                         if (err) {
                             console.error("Error al insertar nuevo usuario", err);
@@ -517,10 +502,9 @@ controller.modificarUsuario = (req, res) => {
 };
 
 controller.actualizarUsuario = (req, res) => {
-    
     const id = req.params.id;
     const login = req.session.username;
-    const {id_Persona, Dni, Apellido, Nombre, Email, Telefono, Usuario, Fecha_baja, } = req.body;
+    const {id_Persona, Dni, Apellido, Nombre, Email, Telefono, Usuario, Fecha_baja, Ubicacion, Funcion } = req.body;
     let Modifica_autoriza = login;
     let Alta_autoriza = login;
     const now = new Date();
@@ -539,14 +523,11 @@ controller.actualizarUsuario = (req, res) => {
                 function formatearFecha(fecha) {
                     return fecha ? fecha.toISOString().slice(0, 10) : null;
                 }
-
                 const usuarioActual = rows[0];
-
                 usuarioActual.Fecha_Baja = formatearFecha(usuarioActual.Fecha_Baja);
                 usuarioActual.Fecha_alta = formatearFecha(usuarioActual.Fecha_alta);
                 const id_persona = usuarioActual.id_Persona;
-                const datosActualizados = {Dni,Apellido, Nombre, Usuario, Email, Fecha_baja, Telefono};
-
+                const datosActualizados = {Dni,Apellido, Nombre, Usuario, Email, Fecha_baja, Telefono, Ubicacion, Funcion};
                 // 2️⃣ Guardar historial
                 conn.query(`INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'ACTUALIZACION', ?, ?, ?)`,
                     [
@@ -560,7 +541,7 @@ controller.actualizarUsuario = (req, res) => {
                             console.error("Error al guardar historial:", err);
                             return res.status(500).send("Error al guardar historial");
                         }
-                        const datosPersonales = {Dni, Apellido, Nombre,Modifica_autoriza};
+                        const datosPersonales = {Dni, Apellido, Nombre, Ubicacion, Funcion};
 
                         // 3️⃣ Actualizar persona
                         conn.query("UPDATE pol_persona SET ? WHERE id_persona = ?", [datosPersonales, id_persona], (err) => {
@@ -569,7 +550,7 @@ controller.actualizarUsuario = (req, res) => {
                                     return res.status(500).send("Error al actualizar datos personales");
                                 }
                                 // 4️⃣ Actualizar usuario
-                                conn.query(`UPDATE pol_usuarios SET Estado = ?, Usuario = ?, Email = ?, Fecha_Baja = ?, Telefono = ? WHERE id_Persona = ?`, [1, Usuario, Email, Fecha_baja, Telefono, id_Persona], (err) => {
+                                conn.query(`UPDATE pol_usuarios SET Estado = ?, Usuario = ?, Email = ?, Fecha_Baja = ?, Telefono = ?, Ubicacion = ?, Funcion = ? WHERE id_Persona = ?`, [1, Usuario, Email, Fecha_baja, Telefono, Ubicacion, Funcion, id_Persona], (err) => {
                                         if (err) {
                                             console.error("ERROR SQL:", err.sqlMessage);
                                             return res.status(500).send("Error SQL");
@@ -588,34 +569,18 @@ controller.actualizarUsuario = (req, res) => {
 
 controller.accesoUsuario = (req, res) => {
     const id = req.params.id;
-
     req.getConnection((err, conn) => {
         if (err) {
             console.error("Error de conexión", err);
             return res.status(500).send("ERROR DE CONEXIÓN");
         }
-
-        // 🔹 Traer roles
-        conn.query(
-            "SELECT * FROM pol_roles WHERE Nombre_rol != ? ORDER BY id_rol ",
-            ["SIN PERFIL"],
-            (err, roles) => {
+        conn.query("SELECT * FROM pol_roles WHERE Nombre_rol != ? ORDER BY id_rol ", ["SIN PERFIL"], (err, roles) => {
                 if (err) return res.json(err);
-
-                conn.query(
-                    "SELECT * FROM pol_unidades WHERE id_unidades >= 99 OR id_unidades = 90",
-                    (err, unidades) => {
+                conn.query("SELECT * FROM pol_unidades WHERE id_unidades >= 99 OR id_unidades = 90", (err, unidades) => {
                         if (err) return res.json(err);
-
-                        conn.query(
-                            "SELECT * FROM pol_usuariounidades INNER JOIN pol_unidades USING(id_Unidades) WHERE id_usuario = ? AND pol_usuariounidades.Estado = 1",
-                            [id],
-                            (err, dependencias) => {
+                        conn.query("SELECT * FROM pol_usuariounidades INNER JOIN pol_unidades USING(id_Unidades) WHERE id_usuario = ? AND pol_usuariounidades.Estado = 1", [id], (err, dependencias) => {
                                 if (err) return res.json(err);
-
-                                conn.query(
-                                    `SELECT id_usuario, pol_persona.id_Persona as id_Persona, Usuario, Email, Apellido, Nombre, Dni, id_rol, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) LEFT JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE id_usuario = ?`,
-                                    [id],
+                                conn.query(`SELECT id_usuario, pol_persona.id_Persona as id_Persona, Usuario, Email, Apellido, Nombre, Dni, id_rol, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) LEFT JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE id_usuario = ?`, [id],
                                     (err, usuarios) => {
                                         if (err) return res.json(err);
                                         res.render("acceso_usuario", {
