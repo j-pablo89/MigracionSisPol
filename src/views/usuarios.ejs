@@ -13,8 +13,8 @@
         <div> 
             <div class="row mb-3">
                 <div class="col-md-4 col-6 mb-2">
-                     <label class="text-white d-none d-md-block form-label">Buscar:</label>
-                     <label class="text-white d-block d-md-none form-label">Buscar:</label>
+                     <label class="text-white d-none d-md-block form-label">Buscar usuarios:</label>
+                     <label class="text-white d-block d-md-none form-label">Buscar usuarios:</label>
                      <input type="text" id="filtroBusqueda" class="form-control">
                 </div>
             </div>
@@ -50,7 +50,7 @@
                             mostrarBotones = esUsuarioComun;
                         }
                         %>
-                        <tr class="<%= claseFila %>" style="height: 50px;">
+                        <tr class="<%= claseFila %> usuario-fila" data-busqueda="<%= [usuario.Usuario, usuario.Dni, usuario.Permiso, usuario.Apellido, usuario.Nombre, usuario.nombre_rol, usuario.Estado === 1 ? 'activo' : 'inactivo'].join(' ') %>" style="height: 50px;">
                         <td class="align-middle"><%= j++ %></td>
                         <td class="align-middle"><%= usuario.Usuario %></td>
                         <td class="align-middle"><%= usuario.nombre_rol %></td>
@@ -89,10 +89,23 @@
                     </tbody>
                 </table>
             </div>
-            <div class="d-block d-md-none">
+            <div id="listaUsuariosMobile" class="d-block d-md-none">
             <% if (usuarios) { %>
                 <% for (let usuario of usuarios) { %>
-                    <div class="card mb-3 shadow-sm <%= usuario.nombre_rol === 'ADMINISTRADOR' ? 'bg-bordo' : '' %>">
+                    <%
+                    const rol = usuario.nombre_rol;
+                    const rolViewer = session.nombre_rol;
+                    const esAdmin = rol === 'ADMINISTRADOR';
+                    const esSuperAdmin = rol === 'SUPERADMIN';
+                    const claseFila =  esSuperAdmin ? 'bg-superadmin' : esAdmin ? 'bg-bordo' : '';
+                    let mostrarBotones = false;
+                    if (rolViewer === 'SUPERADMIN') {
+                        mostrarBotones = !esSuperAdmin;
+                    } else if (rolViewer === 'ADMINISTRADOR') {
+                        mostrarBotones = esUsuarioComun;
+                    }
+                    %>
+                    <div class="card mb-3 shadow-sm usuario-card <%= claseFila %>" data-busqueda="<%= [usuario.Usuario, usuario.Dni, usuario.Permiso, usuario.Apellido, usuario.Nombre, usuario.nombre_rol, usuario.Estado === 1 ? 'activo' : 'inactivo'].join(' ') %>">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2">
                                 <img src="<%= usuario.Avatar_url %>" alt="" class="rounded me-3" style="width: 40px; height: 40px;">
@@ -106,7 +119,7 @@
                                     <form action="/reactivar_usuario/<%= usuario.id_usuario %>" method="POST" style="display:inline;">
                                         <button class="btn btn-outline-success btn-sm" type="submit">ACTIVAR</button>
                                     </form>
-                                <% } else { %>
+                                <% } else if (mostrarBotones) { %>
                                     <form class="formResetClave" action="/usuarios" method="POST" style="display:inline;">
                                         <input type="hidden" name="id_usuario" value="<%= usuario.id_usuario %>">
                                         <input type="hidden" name="Dni" value="<%= usuario.Dni %>">
@@ -120,16 +133,59 @@
                     </div>
                 <% } %>
             <% } %>
+                <div id="sinResultadosMobile" class="text-white text-center py-3 d-none">No se encontraron usuarios</div>
             </div>
         </div>
     </div>
 </div>
 
   <script>
-     function cargarModalAcceso(id, perfil) {
+    function cargarModalAcceso(id, perfil) {
         document.getElementById("modal_id_usuario").value = id;
-      }
-  </script>
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const filtroInput = document.getElementById("filtroBusqueda");
+        if (!filtroInput) return;
+
+        const cardsMovil = document.querySelectorAll(".usuario-card");
+        const sinResultadosMobile = document.getElementById("sinResultadosMobile");
+
+        function normalizar(texto) {
+            return (texto || "")
+                .toString()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .trim();
+        }
+
+        function aplicarFiltroCards() {
+
+            const filtro = normalizar(filtroInput.value);
+            let visibles = 0;
+
+            cardsMovil.forEach((card) => {
+
+                const textoBusqueda = normalizar(card.dataset.busqueda);
+
+                const coincide = textoBusqueda.includes(filtro);
+
+                card.style.display = coincide ? "" : "none";
+
+                if (coincide) visibles++;
+            });
+
+            if (sinResultadosMobile) {
+                sinResultadosMobile.classList.toggle("d-none", visibles > 0);
+            }
+        }
+
+        filtroInput.addEventListener("input", aplicarFiltroCards);
+
+    });
+</script>
 
 
 <%- include('partials/_footer') %>

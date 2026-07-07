@@ -21,6 +21,7 @@ router.post('/usuarios', verifyToken, WebController.limpiarClave);
 router.get('/modificar_usuario/:id', verifyToken, WebController.modificarUsuario);
 router.post('/actualizar_usuario/:id',verifyToken, WebController.actualizarUsuario);
 router.get('/usuarios_conectados',verifyToken, WebController.conexionUsuarios);
+router.post('/usuarios_conectados',verifyToken, WebController.conexionUsuarios);
 // router.get('/estadisticas',verifyToken, WebController.estadisticas);
 router.post('/login', WebController.login);
 router.get('/login', (req, res) => {

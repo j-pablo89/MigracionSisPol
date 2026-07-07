@@ -582,7 +582,14 @@ document.querySelectorAll(".cerrarModalClave").forEach((btn) => {
       modalCambiarClave.showModal();
       return;
     }
-
+    document.getElementById("contrasenia").value = "";
+    document.getElementById("nuevaContrasenia").value = "";
+    document.getElementById("confirmaContrasenia").value = "";
+    document.getElementById("contadorClave").textContent = "0 / 10 caracteres";
+    document.getElementById("mensajeClave").textContent = "";
+    document.getElementById("mensajeCoincide").textContent = "";
+    document.getElementById("barraClave").style.width = "0%";
+    
     modalCambiarClave.close();
   });
 });
@@ -988,22 +995,24 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
           const nombre = fila.cells[5].textContent.toLowerCase();
           const dni = fila.cells[1].textContent.toLowerCase();
           const permisos = fila.cells[3].textContent.toLowerCase();
+          const estado = fila.cells[6].textContent.toLowerCase();
 
-          fila.style.display = nombre.includes(filtro) || apellido.includes(filtro) || dni.includes(filtro) || permisos.includes(filtro) ? "" : "none";});
+          fila.style.display = nombre.includes(filtro) || apellido.includes(filtro) || dni.includes(filtro) || permisos.includes(filtro) || estado.includes(filtro) ? "" : "none";});
         // Tarjetas (mobile)
-        const cards = document.querySelectorAll(".d-block.d-md-none .card");
-        cards.forEach((card) => {
-          const apellido = card.querySelector("p.mb-2")?.textContent.toLowerCase() || "";
-          const nombre = card.querySelector("p.mb-2")?.textContent.toLowerCase() || "";
-          const dni = card.querySelector("p:nth-of-type(2)")?.textContent.toLowerCase() || "";
-          const permisos = card.querySelector("p:nth-of-type(3)")?.textContent.toLowerCase() || "";
-          
-          if (nombre.includes(filtro) || apellido.includes(filtro) || dni.includes(filtro) || permisos.includes(filtro)) {
-            card.style.display = "";
-          } else {
-            card.style.display = "none";
-          }
-        });
+        // const cards = document.querySelectorAll(".d-block.d-md-none .card");
+        // cards.forEach((card) => {
+        //   const apellido = card.querySelector("p.mb-1")?.textContent.toLowerCase() || "";
+        //   const nombre = card.querySelector("p:nth-of-type(2)")?.textContent.toLowerCase() || "";
+        //   const dni = card.querySelector("p:nth-of-type(3)")?.textContent.toLowerCase() || "";
+        //   const permisos = card.querySelector("p:nth-of-type(4)")?.textContent.toLowerCase() || "";
+        //   const estado = card.querySelector("p:nth-of-type(5)")?.textContent.toLowerCase() || "";
+
+        //   if (nombre.includes(filtro) || apellido.includes(filtro) || dni.includes(filtro) || permisos.includes(filtro) || estado.includes(filtro)) {
+        //     card.style.display = "";
+        //   } else {
+        //     card.style.display = "none";
+        //   }
+        // });
       });
   }
 

@@ -484,7 +484,7 @@ controller.modificarUsuario = (req, res) => {
                     return res.json(err);
                 }
                 conn.query(
-                    "SELECT id_usuario, pol_persona.id_Persona, Usuario, Contrasenia, Email, Apellido, Nombre, Dni, Telefono, Fecha_baja, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) INNER JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE id_usuario = ?",
+                    "SELECT id_usuario, pol_persona.id_Persona, Usuario, Contrasenia, Email, Apellido, Nombre, Dni, Telefono, Fecha_baja, Ubicacion, Funcion, permiso_principal AS Permiso, nombre_rol FROM pol_persona INNER JOIN pol_usuarios using(id_persona) INNER JOIN pol_usuarioperfiles using(id_usuario) INNER JOIN pol_roles USING(id_rol) WHERE id_usuario = ?",
                     [id],
                     (err, usuarios) => {
                         if (err) {
@@ -2080,8 +2080,31 @@ controller.conexionUsuarios = (req, res) => {
     req.getConnection((err, conn) => {
         if (err) return res.json(err);
 
+        const fechaInicio = req.body?.fechaInicio || req.query?.fechaInicio || "";
+        const fechaFin = req.body?.fechaFin || req.query?.fechaFin || "";
+
+        const condiciones = [];
+        const params = [];
+
+        if (fechaInicio) {
+            condiciones.push("DATE(FechaHoraSesion) >= ?");
+            params.push(fechaInicio);
+        }
+
+        if (fechaFin) {
+            condiciones.push("DATE(FechaHoraSesion) <= ?");
+            params.push(fechaFin);
+        }
+
+        if (condiciones.length === 0) {
+            condiciones.push("DATE(FechaHoraSesion) = CURDATE()");
+        }
+
+        const whereClause = condiciones.length > 0 ? `WHERE ${condiciones.join(" AND ")}` : "";
+
         conn.query(
-            "SELECT pol_logueo.*, pol_usuarios.Usuario, pol_persona.Apellido, pol_persona.Nombre, pol_persona.Dni, pol_unidades.Detalle, pol_usuarioperfiles.id_rol, pol_roles.Nombre_rol AS Rol FROM pol_logueo INNER JOIN pol_usuarios USING(id_usuario) INNER JOIN pol_persona USING(id_Persona) INNER JOIN pol_usuariounidades USING(id_usuario) INNER JOIN pol_unidades USING(id_Unidades) INNER JOIN pol_usuarioperfiles USING(id_usuario) INNER JOIN pol_roles USING(id_Rol) ORDER BY FechaHoraSesion DESC",
+            `SELECT pol_logueo.*, pol_usuarios.Usuario, pol_persona.Apellido, pol_persona.Nombre, pol_persona.Dni, pol_unidades.Detalle, pol_usuarioperfiles.id_rol, pol_roles.Nombre_rol AS Rol FROM pol_logueo INNER JOIN pol_usuarios USING(id_usuario) INNER JOIN pol_persona USING(id_Persona) INNER JOIN pol_usuariounidades USING(id_usuario) INNER JOIN pol_unidades USING(id_Unidades) INNER JOIN pol_usuarioperfiles USING(id_usuario) INNER JOIN pol_roles USING(id_Rol) ${whereClause} ORDER BY FechaHoraSesion DESC`,
+            params,
             (err, usuarios) => {
                 if (err) {
                     return res.json(err);
@@ -2100,6 +2123,8 @@ controller.conexionUsuarios = (req, res) => {
                 });
                 res.render("usuarios_conectados", {
                     usuarios: usuarios,
+                    fechaInicio,
+                    fechaFin,
                 });
             },
         );

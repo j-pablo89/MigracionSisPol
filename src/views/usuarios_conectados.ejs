@@ -4,11 +4,27 @@
     <div class="container mt-5 mb-3">
         <h3 class="text-white text-center text-borderWhite">CONEXIONES USUARIOS</h3>
     </div>
+    <div>
+        <h5 class="text-white">Busqueda por fecha</h5>
+        <form class="row g-3 bg-light fw-bold mt-3 border border-5 border-primary" action="/usuarios_conectados"
+            method="POST" id="formBusqueda">
+            <div class="col-md-4 mb-3">
+                <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+                <input type="date" class="form-control" name="fechaInicio" id="fechaInicio" value="<%= fechaInicio || '' %>" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="fechaFin" class="form-label">Fecha Fin</label>
+                <input type="date" class="form-control" name="fechaFin" id="fechaFin" value="<%= fechaFin || '' %>" required>
+            </div>
+            <div class="col-md-4 mb-3 d-flex align-items-end ">
+                <button type="submit" class="btn btn-success-strong border border-1 border-black">Buscar</button>
+            </div>
+        </form>
+    </div>
     <div class="table-responsive mt-5" style="overflow-x:auto; max-height: 600px;"> 
         <table class="table table-bordered table-striped align-middle tabla-movimientos">
             <thead class="table-primary text-center" style="position: sticky;">
                 <tr>
-                    <th class="col-id">ID</th>
                     <th class="col-usuario">Usuario</th>
                     <th class="col-dep">Dependencia</th>
                     <th class="col-nombre">Apellido y Nombre</th>
@@ -20,10 +36,8 @@
             </thead>
             <tbody>
                 <%if (usuarios && usuarios.length > 0) {%>
-                    <%j = 1%>
                     <% usuarios.forEach( usuario => { %>
                     <tr>
-                        <td class="text-center"><%=j%></td>
                         <td><%=usuario.Usuario%></td>
                         <td><%=usuario.Detalle%></td>
                         <td><%=usuario.Apellido%>, <%=usuario.Nombre%></td>
@@ -32,7 +46,6 @@
                         <td><%=usuario.Tipo%></td>
                         <td><%=usuario.Rol%></td>
                     </tr>
-                    <%j = j + 1%>
                     <%})%>
                 <%}%>
             </tbody>
