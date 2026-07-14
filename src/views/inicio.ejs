@@ -147,21 +147,31 @@
   // Datos iniciales (inyectados desde backend)
   let anioActual = new Date().getFullYear();
   const labelsInicial = <%- labels %>;
-  const dataInicial = <%- data %>;
+  const dataIngresosInicial = <%- dataIngresos %>;
+  const dataEgresosInicial = <%- dataEgresos %>;
 
-  function crearGrafico(labels, data, anio) {
+  function crearGrafico(labels, ingresos, egresos, anio) {
     if (chart) chart.destroy();
     chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
-        datasets: [{
-          label: `Ingresos por mes (${anio})`,
-          data,
-          backgroundColor: 'rgba(0, 191, 255,0.8)',
-          borderColor: 'rgba(224, 255, 255,1)',
-          borderWidth: 2
-        }]
+        datasets: [
+          {
+            label: `Ingresos por mes (${anio})`,
+            data: ingresos,
+            backgroundColor: 'rgba(0, 191, 255,0.8)',
+            borderColor: 'rgba(224, 255, 255,1)',
+            borderWidth: 2
+          },
+          {
+            label: `Egresos por mes (${anio})`,
+            data: egresos,
+            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2
+          }
+        ]
       },
       options: {
         scales: { y: { beginAtZero: true } }
@@ -169,7 +179,7 @@
     });
   }
 
-  crearGrafico(labelsInicial, dataInicial, anioActual);
+  crearGrafico(labelsInicial, dataIngresosInicial, dataEgresosInicial, anioActual);
 
   async function cambiarAnio(anio) {
     try {
@@ -179,7 +189,7 @@
       if (result && result.labels.length > 0) {
         anioActual = anio;
         document.getElementById('anioActual').textContent = anio;
-        crearGrafico(result.labels, result.data, anio);
+        crearGrafico(result.labels, result.ingresos, result.egresos, anio);
       } else {
         alert(`No hay datos disponibles para el año ${anio}`);
       }

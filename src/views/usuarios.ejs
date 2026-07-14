@@ -97,6 +97,7 @@
                     const rolViewer = session.nombre_rol;
                     const esAdmin = rol === 'ADMINISTRADOR';
                     const esSuperAdmin = rol === 'SUPERADMIN';
+                    const esUsuarioComun = ['USUARIO', 'USUARIO GENERAL', 'SIN PERFIL'].includes(rol);
                     const claseFila =  esSuperAdmin ? 'bg-superadmin' : esAdmin ? 'bg-bordo' : '';
                     let mostrarBotones = false;
                     if (rolViewer === 'SUPERADMIN') {

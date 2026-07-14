@@ -54,7 +54,8 @@
          <label for="Localidad_nombre" class="form-label">Localidad</label>
           <select id="Localidad_id" aria-label="Default select example" name="id_localidad" placeholder="Seleccione localidad" data-original="<%= detenidos.Localidad %>" required>
             <% localidades.forEach(loc => { %>
-            <option value="<%= loc.id_localidad %>" 
+            <option value="<%= loc.id_localidad %>"
+              data-provincia="<%= loc.id_provincia %>"
               <%= loc.id_localidad == detenidos.id_localidad ? 'selected' : '' %>>
               <%= loc.nombre %>
             </option>
@@ -105,35 +106,50 @@
   });
 
   
-  // ✅ GUARDAR OPCIONES ORIGINALES (CLAVE)
   const localidadesOriginales = [];
 
   document.querySelectorAll("#Localidad_id option").forEach(opt => {
     localidadesOriginales.push({
       value: opt.value,
       text: opt.text,
-      provincia: opt.dataset.provincia
+      provincia: opt.dataset.provincia || ""
     });
   });
 
-  // ✅ FILTRO LOCALIDAD SEGÚN PROVINCIA (ARREGLADO)
-  provinciaSelect.on("change", function(value) {
+  const localidadInicial = document.getElementById("Localidad_id")?.value || "";
 
-    localidadSelect.clear(true); // limpia selección
-    localidadSelect.clearOptions(); // limpia opciones
+  const cargarLocalidadesPorProvincia = (provinciaId) => {
+    localidadSelect.clear(true);
+    localidadSelect.clearOptions();
 
-    const filtradas = localidadesOriginales.filter(loc => 
-      !value || loc.provincia == value
+    const filtradas = localidadesOriginales.filter(loc =>
+      !provinciaId || loc.provincia === provinciaId
     );
 
     filtradas.forEach(loc => {
       localidadSelect.addOption({
         value: loc.value,
-        text: loc.text
+        text: loc.text,
+        data: { provincia: loc.provincia }
       });
     });
 
     localidadSelect.refreshOptions(false);
+
+    if (localidadInicial && filtradas.some(loc => loc.value === localidadInicial)) {
+      localidadSelect.setValue(localidadInicial, true);
+    } else {
+      localidadSelect.clear(true);
+    }
+  };
+
+  const provinciaInicial = document.getElementById("Provincia_id")?.value || "";
+  if (provinciaInicial) {
+    cargarLocalidadesPorProvincia(provinciaInicial);
+  }
+
+  provinciaSelect.on("change", function(value) {
+    cargarLocalidadesPorProvincia(value);
   });
   
 });

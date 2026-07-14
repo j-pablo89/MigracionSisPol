@@ -3,7 +3,7 @@
 // ========================================================= WATERMARK DINÁMICO =============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Watermark iniciando..."); // 👈 debug
+  console.log("Watermark iniciando..."); 
 
   const container = document.getElementById("watermark");
   if (!container) {
@@ -11,18 +11,21 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const texto = document.body.dataset.usuario;
+  const texto = document.body.dataset.username;
+  const usuario = document.body.dataset.watermark;
 
-  console.log("Texto watermark:", texto); // 👈 debug
+  const cadena = `${usuario}\n${texto}`;
 
-  if (!texto) return;
+  console.log("Texto watermark:", texto); 
+
+  if (!cadena) return;
   const spacingX = 300;
   const spacingY = 180;
   for (let y = -1000; y < 2000; y += spacingY) {
     for (let x = -1000; x < 2000; x += spacingX) {
       const div = document.createElement("div");
       div.className = "watermark-text";
-      div.innerText = texto;
+      div.innerText = cadena;
       div.style.top = y + "px";
       div.style.left = x + "px";
       container.appendChild(div);
@@ -238,8 +241,7 @@ window.habilitarEdicion = function (index) {
     if (
       !campo.name?.startsWith("id_InternoLegajo") &&
       !campo.name?.startsWith("id_internoprontuario") &&
-      !campo.name?.startsWith("id_Persona") &&
-      !campo.name?.startsWith("Fecha_cumple_condena_disabled1")
+      !campo.name?.startsWith("id_Persona") 
     ) {
       campo.removeAttribute("readonly");
       campo.removeAttribute("disabled");
@@ -823,6 +825,12 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
       causa_actualizada: {
         titulo: "Causa actualizada",
         texto: "La causa fue actualizada correctamente.",
+        icono: "success",
+      },
+
+      causa_guardada:{
+        titulo: "Causa guardada",
+        texto: "La causa fue guardada correctamente.",
         icono: "success",
       },
 
@@ -2179,10 +2187,10 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         e.preventDefault();
 
         Swal.fire({
-          title: "¿Deseas guardar este detenido?",
+          title: "¿Deseas registrar este detenido?",
           icon: "question",
           showCancelButton: true,
-          confirmButtonText: "Sí, guardar",
+          confirmButtonText: "Sí, registrar",
           cancelButtonText: "Cancelar",
         }).then((result) => {
           if (result.isConfirmed) {
@@ -2217,7 +2225,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
     }
 
     // 🔹 Eventos de cambio en fecha y campos de cantidad
-    document.getElementById("Fecha_cumple_condena2").addEventListener("change", function () {
+    document.getElementById("Fecha_cumple_condena").addEventListener("change", function () {
         console.log("INGRESAA AL EVENTO DE CAMBIO DE FECHA");
         let fechaBase = new Date();
         fechaBase.setFullYear(fechaBase.getFullYear());
@@ -2631,10 +2639,28 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         });
       });
     });
-
+    document.getElementById("btnGuardarCausaNueva").addEventListener("click", function (e) {
+      e.preventDefault();
+      guardarCausa();
+    });
+    function guardarCausa() {
+      const form = document.getElementById("formCausaNueva");
+      if (!form) return;
+      Swal.fire({
+        title: "¿Deseas guardar esta causa?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, guardar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#28a745",
+        cancelButtonColor: "#d33",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      })
+    }
     // ================= SITUACIÓN PROCESAL =================
-
-    
     const hoya = new Date().toISOString().split("T")[0];
     document.querySelectorAll("input[type='date']").forEach((input) => {
       if (!input.classList.contains("no-max-date")) {
@@ -2645,17 +2671,25 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
     });
 
     const role = document.getElementById("main-container")?.dataset.role;
-    const isAdmin = role === "ADMINISTRADOR";
+    const isAdminOrSuperadmin = role === "ADMINISTRADOR" || role === "SUPERADMIN";
 
-    // Admin no debe recibir bloqueo automático porque a él se le permite editar siempre.
-    if (isAdmin) return;
+    // Admin y superadmin no reciben bloqueo automático porque pueden editar siempre.
+    if (isAdminOrSuperadmin) return;
 
     const EDIT_WINDOW_MS = 120000; // 2 minutos
 
     document.querySelectorAll(".card[data-fecha-alta]").forEach((card) => {
       const canEdit = card.dataset.canEdit === "true";
       const fechaAlta = card.dataset.fechaAlta;
-      if (!fechaAlta || !canEdit) return;
+      const modificarBtn = card.querySelector('button[id^="modificar-"]');
+
+      if (!fechaAlta || !canEdit) {
+        if (modificarBtn) {
+          modificarBtn.disabled = true;
+          modificarBtn.title = "Periodo de edición expirado";
+        }
+        return;
+      }
 
       const fechaAltaMs = new Date(fechaAlta).getTime();
       if (isNaN(fechaAltaMs)) return;
@@ -2665,11 +2699,15 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         if (card.dataset.expirationAlertShown === "true") return;
 
         card.dataset.expirationAlertShown = "true";
+        if (modificarBtn) {
+          modificarBtn.disabled = true;
+          modificarBtn.title = "Periodo de edición expirado";
+        }
         Swal.fire({
           icon: "warning",
           title: "Tiempo expirado",
-          text: "El periodo de edición de esta causa ha expirado. Recargue la pantalla para bloquear la edición.",
-          confirmButtonText: "Recargar pantalla",
+          text: "Pasaron 2 minutos y esta causa ya no puede modificarse.",
+          confirmButtonText: "Aceptar",
         }).then((result) => {
           if (result.isConfirmed) {
             location.reload();
@@ -2677,12 +2715,17 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         });
         return;
       }
+
       setTimeout(() => {
+        if (modificarBtn) {
+          modificarBtn.disabled = true;
+          modificarBtn.title = "Periodo de edición expirado";
+        }
         Swal.fire({
           icon: "warning",
           title: "Tiempo expirado",
-          text: "El periodo de edición de esta causa ha expirado. Debes recargar para bloquear.",
-          confirmButtonText: "Recargar pantalla",
+          text: "Pasaron 2 minutos y esta causa ya no puede modificarse.",
+          confirmButtonText: "Aceptar",
         }).then((result) => {
           if (result.isConfirmed) location.reload();
         });

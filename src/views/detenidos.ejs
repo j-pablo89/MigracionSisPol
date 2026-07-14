@@ -288,7 +288,7 @@
                             <% } else { %>
                             <div class="text-center"><a href="/agregar_foto/<%= detenido.id_InternoLegajo%>"><img src="img/perfil.ico" alt="" class="m-2" width="80px"></a></div>
                             <% } %>
-                            <div><p class="mb-2"><%= detenido.APELLIDO %> <%= detenido.NOMBRE %></p></div>
+                            <div><h5 class="mb-2"><%= detenido.APELLIDO %> <%= detenido.NOMBRE %></h5></div>
                             <div></div>
                         </div>
                         <p class="mb-1"><strong>DNI:</strong> <%= detenido.DNI %></p>
@@ -311,7 +311,7 @@
                                 data-origen="<%= detenido.Unidad_Alojado%>"
                                 data-frente="<%= detenido.frente %>"
                                 data-cantidad_causas="<%= detenido.cantidad_causas %>"
-                                data-esadmin="<%= session.nombre_rol === 'ADMINISTRADOR' %>">ACCIONES</button>
+                                data-esadmin="<%= session.nombre_rol === 'ADMINISTRADOR' || session.nombre_rol === 'SUPERADMIN' %>">ACCIONES</button>
                             <% } %>
                         <% } %>
                     </div>   

@@ -205,30 +205,50 @@ controller.inicio = (req, res) => {
         if (err) return res.json(err); // <--- return aquí para salir si error en conexión
 
         conn.query("SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = YEAR(CURDATE()) GROUP BY MONTH(Fecha_alta) ORDER BY mes",
-            (err, resultado) => {
+            (err, resultadoIngresos) => {
                 if (err) {
                     return res.json(err); // <--- return aquí para no continuar si error en query
                 }
 
-                const labels = resultado.map((row) => `MES ${row.mes}`);
-                const data = resultado.map((row) => row.cantidad);
-                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND TIMESTAMPDIFF(DAY, im.Fecha_movimiento, NOW()) <= 6 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosUltimos6Dias) => {
+                const labels = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                const ingresosData = Array(12).fill(0);
+                resultadoIngresos.forEach((row) => {
+                    if (row.mes >= 1 && row.mes <= 12) {
+                        ingresosData[row.mes - 1] = Number(row.cantidad) || 0;
+                    }
+                });
+
+                conn.query("SELECT MONTH(Fecha_movimiento) AS mes, COUNT(*) AS cantidad FROM pol_internomovimiento WHERE YEAR(Fecha_movimiento) = YEAR(CURDATE()) AND Tipo_movimiento = 'EGRESO' OR (Tipo_movimiento = 'MOVIMIENTO' AND Unidad_Destino = '50') GROUP BY MONTH(Fecha_movimiento) ORDER BY mes",
+                    (err, resultadoEgresos) => {
+                        if (err) {
+                            return res.json(err);
+                        }
+
+                        const egresosData = Array(12).fill(0);
+                        resultadoEgresos.forEach((row) => {
+                            if (row.mes >= 1 && row.mes <= 12) {
+                                egresosData[row.mes - 1] = Number(row.cantidad) || 0;
+                            }
+                        });
+
+                        conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND TIMESTAMPDIFF(DAY, im.Fecha_movimiento, NOW()) <= 6 AND im.Unidad_Destino != 50 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosUltimos6Dias) => {
                         if (err) {
                             return res.json(err);
                         }
                         let anioactual = new Date().getFullYear();
-                        conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND YEAR(im.Fecha_movimiento) = YEAR(CURDATE()) GROUP BY im.Unidad_Destino, u.Detalle",
+                        conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND YEAR(im.Fecha_movimiento) = YEAR(CURDATE()) AND im.Unidad_Destino != 50 GROUP BY im.Unidad_Destino, u.Detalle",
                             (err, ingresosAnioActual) => {
                                 if (err) {
                                     return res.json(err);
                                 }
-                                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosTotales) => {
+                                conn.query("SELECT u.Detalle AS detalle_dependencia, im.Unidad_Destino, COUNT(*) AS cantidad FROM pol_internolegajo il INNER JOIN (SELECT * FROM pol_internomovimiento m WHERE m.id_InternoMovimiento IN (SELECT MAX(id_InternoMovimiento) FROM pol_internomovimiento GROUP BY id_InternoLegajo)) im ON im.id_InternoLegajo = il.id_InternoLegajo INNER JOIN pol_unidades u ON u.id_Unidades = im.Unidad_Destino WHERE il.Estado = 1 AND im.Unidad_Destino != 50 GROUP BY im.Unidad_Destino, u.Detalle", (err, ingresosTotales) => {
                                         if (err) {
                                             return res.json(err);
                                         }
                                         return res.render("inicio", {
                                             labels: JSON.stringify(labels),
-                                            data: JSON.stringify(data),
+                                            dataIngresos: JSON.stringify(ingresosData),
+                                            dataEgresos: JSON.stringify(egresosData),
                                             ingresosUltimos6Dias,
                                             ingresosAnioActual,
                                             ingresosTotales,
@@ -242,7 +262,8 @@ controller.inicio = (req, res) => {
             },
         );
     });
-};
+});
+}
 
 controller.getIngresosPorAnio = (req, res) => {
     const anio = req.params.anio;
@@ -250,30 +271,46 @@ controller.getIngresosPorAnio = (req, res) => {
     req.getConnection((err, conn) => {
         if (err) return res.status(500).json({ error: "Error de conexión" });
 
-        const sql = `SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = ? GROUP BY MONTH(Fecha_alta) ORDER BY mes`;
+        const sqlIngresos = `SELECT MONTH(Fecha_alta) AS mes, COUNT(*) AS cantidad FROM pol_internolegajo WHERE YEAR(Fecha_alta) = ? GROUP BY MONTH(Fecha_alta) ORDER BY mes`;
+        const sqlEgresos = `SELECT MONTH(Fecha_movimiento) AS mes, COUNT(*) AS cantidad FROM pol_internomovimiento WHERE YEAR(Fecha_movimiento) = ? AND Tipo_movimiento = 'EGRESO' GROUP BY MONTH(Fecha_movimiento) ORDER BY mes`;
 
-        conn.query(sql, [anio], (err, resultado) => {
-            if (err) return res.status(500).json({ error: "Error en la consulta" });
+        conn.query(sqlIngresos, [anio], (err, resultadoIngresos) => {
+            if (err) return res.status(500).json({ error: "Error en la consulta de ingresos" });
 
-            // Armar labels y data para el gráfico
-            const meses = [
-                "Ene",
-                "Feb",
-                "Mar",
-                "Abr",
-                "May",
-                "Jun",
-                "Jul",
-                "Ago",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dic",
-            ];
-            const labels = resultado.map((r) => meses[r.mes - 1]);
-            const data = resultado.map((r) => r.cantidad);
+            conn.query(sqlEgresos, [anio], (err, resultadoEgresos) => {
+                if (err) return res.status(500).json({ error: "Error en la consulta de egresos" });
 
-            res.json({ labels, data });
+                const meses = [
+                    "Ene",
+                    "Feb",
+                    "Mar",
+                    "Abr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Ago",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dic",
+                ];
+                const ingresos = Array(12).fill(0);
+                const egresos = Array(12).fill(0);
+
+                resultadoIngresos.forEach((r) => {
+                    if (r.mes >= 1 && r.mes <= 12) {
+                        ingresos[r.mes - 1] = Number(r.cantidad) || 0;
+                    }
+                });
+
+                resultadoEgresos.forEach((r) => {
+                    if (r.mes >= 1 && r.mes <= 12) {
+                        egresos[r.mes - 1] = Number(r.cantidad) || 0;
+                    }
+                });
+
+                res.json({ labels: meses, ingresos, egresos });
+            });
         });
     });
 };
@@ -285,9 +322,7 @@ controller.listarUsuarios = (req, res) => {
                 if (err) {
                     res.json(err);
                 }
-                console.log("USUARIOS: ", usuarios);
-                conn.query(
-                    "SELECT * FROM pol_unidades WHERE id_Unidades >= 90",
+                conn.query("SELECT * FROM pol_unidades WHERE id_Unidades >= 90",
                     (err, unidades) => {
                         if (err) {
                             res.json(err);
@@ -296,7 +331,6 @@ controller.listarUsuarios = (req, res) => {
                                 if (err) {
                                     res.json(err);
                                 }
-                                console.log("USUARIOS: ", usuarios);
                                 res.render("usuarios", {
                                     unidades: unidades,
                                     usuarios: usuarios,
@@ -417,7 +451,8 @@ controller.guardarUsuario = async (req, res) => {
             return res.status(400).send("DNI inválido");
         }
         let Fecha_alta = mysqlDateTime;
-        const usuarioPersonal = {Dni, Apellido, Nombre, Alta_autoriza};
+        let tipo_persona = "EMPLEADO";
+        const usuarioPersonal = {Dni, Apellido, Nombre, Alta_autoriza, tipo_persona};
         conn.query("INSERT INTO pol_persona SET ?", usuarioPersonal, (err, resultado) => {
                 if (err) {
                     console.error("Error al insertar persona", err);
@@ -541,7 +576,7 @@ controller.actualizarUsuario = (req, res) => {
                             console.error("Error al guardar historial:", err);
                             return res.status(500).send("Error al guardar historial");
                         }
-                        const datosPersonales = {Dni, Apellido, Nombre, Ubicacion, Funcion};
+                        const datosPersonales = {Dni, Apellido, Nombre};
 
                         // 3️⃣ Actualizar persona
                         conn.query("UPDATE pol_persona SET ? WHERE id_persona = ?", [datosPersonales, id_persona], (err) => {
@@ -656,13 +691,12 @@ controller.guardarAcceso = (req, res) => {
                                 console.log("ACTUALES:", actualesIds);
                                 console.log("NUEVAS:", nuevas);
 
-                                // 🔴 1️⃣ Desactivar solo las que ya no están seleccionadas
                                 const aDesactivar = actualesIds.filter(
                                     (id) => !nuevas.includes(id),
                                 );
 
                                 if (aDesactivar.length > 0) {
-                                    conn.query(`UPDATE pol_usuariounidades SET Estado = 0 WHERE id_usuario = ? AND id_Unidades IN (?)`, [idUsuario, aDesactivar], (err) => {
+                                    conn.query(`UPDATE pol_usuariounidades SET Estado = 0, Modifica_autoriza = ? WHERE id_usuario = ? AND id_Unidades IN (?)`, [login, idUsuario, aDesactivar], (err) => {
                                             if (err)
                                                 return conn.rollback(() =>
                                                     res.status(500).send("Error desactivando unidades"),
@@ -677,7 +711,7 @@ controller.guardarAcceso = (req, res) => {
                                 function insertarOReactivar() {
                                     if (nuevas.length === 0) return actualizarPerfil();
 
-                                    const valores = nuevas.map((idUnidad) => [ idUsuario, idUnidad, login, 1,new Date()]);
+                                    const valores = nuevas.map((idUnidad) => [ idUsuario, idUnidad, 1, login, new Date()]);
 
                                     console.log("VALORES A INSERTAR:", valores);
 
@@ -700,8 +734,8 @@ controller.guardarAcceso = (req, res) => {
                         const valores = nuevas.map((idUnidad) => [
                             idUsuario,
                             idUnidad,
-                            login,
                             1,
+                            login,
                             new Date(),
                         ]);
 
@@ -720,7 +754,7 @@ controller.guardarAcceso = (req, res) => {
                                         res.status(500).send(err.sqlMessage);
                                     });
                                 }
-
+                                console.log("USUARIO CREADO");
                                 console.log(result);
                                 actualizarPerfil();
                             }
@@ -813,18 +847,12 @@ controller.desactivarUsuario = (req, res) => {
 
                     const idRolSinPerfil = rowsRol.length > 0 ? rowsRol[0].id_rol : null;
 
-                    conn.query(
-                        "UPDATE pol_usuarioperfiles SET id_rol = ?, permiso_principal = ? WHERE id_usuario = ?",
-                        [idRolSinPerfil, 'SIN PERMISOS', id],
-                        (err) => {
+                    conn.query("UPDATE pol_usuarioperfiles SET id_rol = ?, permiso_principal = ? WHERE id_usuario = ?",[idRolSinPerfil, 'SIN PERMISOS', id], (err) => {
                             if (err) {
                                 console.error('Error al actualizar perfil al desactivar:', err);
                                 // seguimos con la desactivación incluso si falla este update
                             }
-
-                            conn.query(
-                                `INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'DESACTIVAR_USUARIO', ?, ?, ?)`,
-                                [id, datosAnteriores, datosNuevos, login],
+                            conn.query(`INSERT INTO pol_usuarios_historial (id_usuario, accion, datos_anteriores, datos_nuevos, usuario_modifica) VALUES (?, 'DESACTIVAR_USUARIO', ?, ?, ?)`, [id, datosAnteriores, datosNuevos, login],
                                 (err) => {
                                     if (err) {
                                         console.error("Error guardando historial:", err);
@@ -1051,7 +1079,8 @@ controller.guardarDetenido = (req, res) => {
         if (results.length > 0) {
             return res.redirect('/detenidos?error=existe');
         }
-        const datosPersonales = {Nombre, Apellido, Dni, Sexo, Fecha_nacimiento, Domicilio, id_localidad, id_provincia, Alta_autoriza };
+        let tipo_persona = "DETENIDO";
+        const datosPersonales = {Nombre, Apellido, Dni, Sexo, Fecha_nacimiento, Domicilio, id_localidad, id_provincia, Alta_autoriza, tipo_persona };
         conn.query("INSERT INTO pol_persona SET ?", [datosPersonales], (err, resultado) => {
                 if (err) {
                     console.error("Error al insertar nueva persona", err);
@@ -1291,27 +1320,17 @@ controller.causaDetenido = (req, res) => {
                                         return res.json(err);
                                     }
                                     // Calcular tiempo restante para edición por cada causa (120 segundos desde Fecha_alta)
-                                    const now = Date.now();
                                     const perfil = req.session && req.session.nombre_rol;
-                                    const isAdmin = perfil === 'ADMINISTRADOR';
-                                    const isRestrictedUser = perfil === 'USUARIO GENERAL' || perfil === 'USUARIO';
+                                    const isAdminOrSuperadmin = perfil === 'ADMINISTRADOR' || perfil === 'SUPERADMIN';
 
                                     detenidos = detenidos.map((item) => {
-                                        let canEdit = true;
+                                        let canEdit = false;
 
-                                        if (item.Estado !== 1) {
-                                            canEdit = false;
-                                        }
-
-                                        if (!isAdmin && item.Fecha_alta) {
-                                            const fechaAltaMs = new Date(item.Fecha_alta).getTime();
-                                            if (Date.now() - fechaAltaMs > 120000) {
-                                                canEdit = false;
-                                            }
-                                        }
-
-                                        if (isAdmin) {
+                                        if (item.Estado === 2 && isAdminOrSuperadmin) {
                                             canEdit = true;
+                                        } else if (item.Estado === 2 && item.Fecha_alta) {
+                                            const fechaAltaMs = new Date(item.Fecha_alta).getTime();
+                                            canEdit = !Number.isNaN(fechaAltaMs) && (Date.now() - fechaAltaMs) <= 120000;
                                         }
 
                                         return {
@@ -1365,7 +1384,7 @@ controller.guardarCausaDetenido = (req, res) => {
                     if (err) {
                         console.error("Error al insertar en el historial", err);
                     }
-                res.redirect("/detenidos");
+                res.redirect("/detenidos?msg=causa_guardada");
             });
         });
     });
@@ -1380,7 +1399,7 @@ controller.actualizarCausaDetenido = (req, res) => {
             return res.status(500).send("ERROR DE CONEXIÓN");
         }
         const perfil = req.session && req.session.nombre_rol;
-        const isAdmin = perfil === 'ADMINISTRADOR';
+        const isAdmin = perfil === 'ADMINISTRADOR' || perfil === 'SUPERADMIN';;
 
         conn.query("SELECT * FROM pol_internoprontuario WHERE id_InternoProntuario = ?", [id_internoprontuario], (err, rows) => {
             if (err) {
@@ -1797,7 +1816,7 @@ controller.liberarDetenido = (req, res) => {
                             console.error("Error al liberar detenido:", err);
                             return res.redirect(`/detenidos?error=1`);
                         }
-                        const updateQuery = "INSERT INTO pol_internomovimiento (id_InternoLegajo, id_InternoProntuario, Unidad_Alojado, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, ?, 'EGRESO', ?, ?)";
+                        const updateQuery = "INSERT INTO pol_internomovimiento (id_InternoLegajo, id_InternoProntuario, Unidad_Alojado, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, 'EGRESO', ?, ?)";
                         conn.query(updateQuery,
                             [
                                 id,
@@ -1836,9 +1855,11 @@ controller.moverDetenido = (req, res) => {
                 return res.json(err);
             }
             const unidad_alojado = rows[0].Unidad_alojado;
-            const detalleMovimiento = {Oficio, Institucion,direccion, personalCustodio, observaciones};
+            const detalleMovimiento = {Oficio, Institucion, direccion, personalCustodio, observaciones};
+            console.log("DETALLE MOVIMIENTO: ", detalleMovimiento);
             conn.query("INSERT INTO pol_internomovimiento (id_InternoLegajo, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, 'MOVIMIENTO',?,?)", [id, unidad_alojado, nuevoAlojamiento, JSON.stringify(detalleMovimiento), login], (err, result) => {
                 if (err) {
+                    console.error("Error al insertar movimiento:", err);
                     return res.json(err);
                 }
                 res.redirect(`/detenidos?msg=tareaExitosa`);
@@ -1863,8 +1884,24 @@ controller.regresarDetenido = (req, res) => {
                 return res.json(err);
             }
             const unidad_alojado = rows[0].Unidad_alojado;
-            const Detalle = rows[0].Detalle;
-            const detalleMovimiento = {Detalle, observaciones};
+            const detalleAnterior = rows[0].Detalle;
+            let detalleBase = {};
+
+            if (typeof detalleAnterior === 'string') {
+                try {
+                    detalleBase = JSON.parse(detalleAnterior);
+                } catch (error) {
+                    detalleBase = {};
+                }
+            } else if (detalleAnterior && typeof detalleAnterior === 'object') {
+                detalleBase = detalleAnterior;
+            }
+
+            const detalleMovimiento = {
+                ...(detalleBase.Detalle && typeof detalleBase.Detalle === 'object' && !Array.isArray(detalleBase.Detalle) ? detalleBase.Detalle : detalleBase),
+                observaciones
+            };
+
             conn.query("INSERT INTO pol_internomovimiento (id_InternoLegajo, Unidad_Alojado, Unidad_Destino, Tipo_Movimiento, Detalle, Usuario) VALUES (?, ?, ?, 'REGRESA A COMISARIA',?,?)", [id, unidadAlojado, unidadAlojado, JSON.stringify(detalleMovimiento), login], (err, result) => {
                 if (err) {
                     return res.json(err);
@@ -1940,7 +1977,7 @@ controller.trasladarDetenido = (req, res) => {
 controller.movimientosComisarias = (req, res) => {
     req.getConnection((err, conn) => {
         if (err) return res.json(err);
-        conn.query("SELECT im.id_InternoMovimiento, pp.Apellido, pp.Nombre, pp.Dni, im.Tipo_movimiento, pu.Detalle AS Detalle_Alojado, pua.Detalle AS Detalle_Destino, im.Fecha_movimiento, im.Usuario, im.Detalle FROM pol_internomovimiento im INNER JOIN pol_internolegajo il USING(id_InternoLegajo) INNER JOIN pol_persona pp USING(id_persona) INNER JOIN pol_unidades pu ON pu.id_Unidades = im.Unidad_Alojado INNER JOIN pol_unidades pua ON pua.id_Unidades = im.Unidad_Destino ORDER BY im.id_InternoMovimiento ASC",
+        conn.query("SELECT im.id_InternoMovimiento, pp.Apellido, pp.Nombre, pp.Dni, im.Tipo_movimiento, pu.Detalle AS Detalle_Alojado, pua.Detalle AS Detalle_Destino, im.Fecha_movimiento, im.Usuario, im.Detalle FROM pol_internomovimiento im INNER JOIN pol_internolegajo il USING(id_InternoLegajo) INNER JOIN pol_persona pp USING(id_persona) INNER JOIN pol_unidades pu ON pu.id_Unidades = im.Unidad_Alojado LEFT JOIN pol_unidades pua ON pua.id_Unidades = im.Unidad_Destino ORDER BY im.id_InternoMovimiento ASC",
             (err, rows) => {
                 if (err) {
                     console.error("Error al obtener movimientos de comisarias:", err);

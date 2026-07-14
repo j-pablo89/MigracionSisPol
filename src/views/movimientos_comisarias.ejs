@@ -1,5 +1,26 @@
 <%- include('partials/_header2') %>
 
+<% function renderDetalleValor(valor) {
+  if (valor === null || valor === undefined) return '';
+  if (typeof valor === 'string') {
+    try {
+      return renderDetalleValor(JSON.parse(valor));
+    } catch (error) {
+      return valor;
+    }
+  }
+  if (Array.isArray(valor)) {
+    return valor.map(item => `<div>${renderDetalleValor(item)}</div>`).join('');
+  }
+  if (typeof valor === 'object') {
+    return Object.entries(valor).map(([clave, valorActual]) => {
+      const valorFormateado = typeof valorActual === 'object' && valorActual !== null ? renderDetalleValor(valorActual) : valorActual;
+      return `<div><strong>${clave}:</strong> ${valorFormateado}</div>`;
+    }).join('');
+  }
+  return String(valor);
+} %>
+
 <div class="container-fluid mainSection" id="main-container" data-page="movimientos_comisarias">
     <div class="container mt-5 mb-3">
         <h3 class="text-white text-center text-borderWhite">MOVIMIENTOS COMISARIAS</h3>
@@ -39,7 +60,13 @@
                       <td><%= movimiento.Fecha_movimiento %></td>
                       <td><%= movimiento.Tipo_movimiento %></td>
                       <td><%= movimiento.Usuario %></td>
-                      <td><%= movimiento.Detalle %></td>
+                      <td class="text-wrap">
+                        <% if (movimiento.Detalle) { %>
+                          <%- renderDetalleValor(movimiento.Detalle) %>
+                        <% } else { %>
+                          -
+                        <% } %>
+                      </td>
                     </tr>
                     <% j = j + 1%>
                   <% }); %>

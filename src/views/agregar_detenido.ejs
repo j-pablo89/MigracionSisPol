@@ -141,8 +141,8 @@
       </div>
       <div class="form-group mb-3" style="display: none;" id="divFecha">
         <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
-          <label for="Fecha_cumple_condena2">Fecha Cumple Condena:</label>
-          <input type="date" id="Fecha_cumple_condena2" name="Fecha_cumple_condena2" class="form-control" style="width: 200px">   
+          <label for="Fecha_cumple_condena">Fecha Cumple Condena:</label>
+          <input type="date" id="Fecha_cumple_condena" name="Fecha_cumple_condena" class="form-control" style="width: 200px">   
           <label for="Cantidad-dias">Días:</label>
           <input type="number" id="Cantidad-dias" min="0" max="31" class="form-control" style="width: 80px;" required readonly>             
           <label for="Cantidad-meses">Meses:</label>
@@ -178,124 +178,125 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
 
-  const hoy = new Date().toISOString().split("T")[0];
+    const hoy = new Date().toISOString().split("T")[0];
+    const fechaHecho = document.querySelector("#Fecha_hecho");
+    const fechaDetencion = document.querySelector("#Fecha_Detencion");
+    const fechaOficio = document.querySelector("#Oficio_Fecha");
+    const fechaCumpleCondena = document.querySelector("#Fecha_cumple_condena");
+    
+    if (fechaHecho) fechaHecho.max = hoy;
+    if (fechaDetencion) fechaDetencion.max = hoy;
+    if (fechaOficio) fechaOficio.max = hoy;
+    if (fechaCumpleCondena) fechaCumpleCondena.min = hoy;
 
-  const fechaHecho = document.querySelector("#Fecha_hecho");
-  const fechaDetencion = document.querySelector("#Fecha_Detencion");
-  const fechaOficio = document.querySelector("#Oficio_Fecha");
+  });
 
-  if (fechaHecho) fechaHecho.max = hoy;
-  if (fechaDetencion) fechaDetencion.max = hoy;
-  if (fechaOficio) fechaOficio.max = hoy;
-
-});
-
-document.getElementById("Fecha_nacimiento").addEventListener("change", function() {
-    const fechaNacimiento = new Date(this.value);
-    const hoy = new Date();
-    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-    const mes = hoy.getMonth() - fechaNacimiento.getMonth();
-    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
-        edad--;
-    }
-    document.getElementById("edadCalculada").textContent = edad + " años";
-});
-
-
-document.addEventListener("DOMContentLoaded", function() {
-
-  const provinciaSelect = new TomSelect("#Provincia_id", {
-    create: false,
-    sortField: { field: "text", direction: "asc" },
-    render: {
-      option: function(data, escape) {
-        return `<div>${escape(data.text)}</div>`;
+  document.getElementById("Fecha_nacimiento").addEventListener("change", function() {
+      const fechaNacimiento = new Date(this.value);
+      const hoy = new Date();
+      let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+      const mes = hoy.getMonth() - fechaNacimiento.getMonth();
+      if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+          edad--;
       }
-    }
+      document.getElementById("edadCalculada").textContent = edad + " años";
   });
 
-  const localidadSelect = new TomSelect("#Localidad_id", {
-    create: false,
-    sortField: { field: "text", direction: "asc" },
-    maxOptions: null,
-    render: {
-      option: function(data, escape) {
-        return `<div>${escape(data.text)}</div>`;
+
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const provinciaSelect = new TomSelect("#Provincia_id", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
       }
-    }
-  });
-
-  const autoridadSelect = new TomSelect("#Autoridad_judicial_id", {
-  create: false,
-    sortField: { field: "text", direction: "asc" },
-    maxOptions: null,
-    render: {
-      option: function(data, escape) {
-        return `<div>${escape(data.text)}</div>`;
-      }
-    }
-  });
-
-  const comisariaDepSelect = new TomSelect("#Comisaria_dependiente_id", {
-    create: false,
-    sortField: { field: "text", direction: "asc" },
-    maxOptions: null,
-    render: {
-      option: function(data, escape) {
-        return `<div>${escape(data.text)}</div>`;
-      }
-    }
-  });
-
-  const comisariaAlojSelect = new TomSelect("#Comisaria_alojamiento_id", {
-    create: false,
-    sortField: { field: "text", direction: "asc" },
-    maxOptions: null,
-    render: {
-      option: function(data, escape) {
-        return `<div>${escape(data.text)}</div>`;
-      }
-    }
-  });
-
-  const sexoSelect = new TomSelect("#Sexo_nombre", {
-    create: false
-  });
-
-  const situacionProcesalSelect = new TomSelect("#Situacion_procesal", {
-    create: false
-  });
-
-  // ✅ GUARDAR OPCIONES ORIGINALES (CLAVE)
-  const localidadesOriginales = [];
-
-  document.querySelectorAll("#Localidad_id option").forEach(opt => {
-    localidadesOriginales.push({
-      value: opt.value,
-      text: opt.text,
-      provincia: opt.dataset.provincia
     });
-  });
 
-  // ✅ FILTRO LOCALIDAD SEGÚN PROVINCIA (ARREGLADO)
-  provinciaSelect.on("change", function(value) {
+    const localidadSelect = new TomSelect("#Localidad_id", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
 
-    localidadSelect.clear(true); // limpia selección
-    localidadSelect.clearOptions(); // limpia opciones
+    const autoridadSelect = new TomSelect("#Autoridad_judicial_id", {
+    create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
 
-    const filtradas = localidadesOriginales.filter(loc => 
-      !value || loc.provincia == value
-    );
+    const comisariaDepSelect = new TomSelect("#Comisaria_dependiente_id", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
 
-    filtradas.forEach(loc => {
-      localidadSelect.addOption({
-        value: loc.value,
-        text: loc.text
+    const comisariaAlojSelect = new TomSelect("#Comisaria_alojamiento_id", {
+      create: false,
+      sortField: { field: "text", direction: "asc" },
+      maxOptions: null,
+      render: {
+        option: function(data, escape) {
+          return `<div>${escape(data.text)}</div>`;
+        }
+      }
+    });
+
+    const sexoSelect = new TomSelect("#Sexo_nombre", {
+      create: false
+    });
+
+    const situacionProcesalSelect = new TomSelect("#Situacion_procesal", {
+      create: false
+    });
+
+    // ✅ GUARDAR OPCIONES ORIGINALES (CLAVE)
+    const localidadesOriginales = [];
+
+    document.querySelectorAll("#Localidad_id option").forEach(opt => {
+      localidadesOriginales.push({
+        value: opt.value,
+        text: opt.text,
+        provincia: opt.dataset.provincia
       });
     });
 
-    localidadSelect.refreshOptions(false);
-  });
+    // ✅ FILTRO LOCALIDAD SEGÚN PROVINCIA (ARREGLADO)
+    provinciaSelect.on("change", function(value) {
+
+      localidadSelect.clear(true); // limpia selección
+      localidadSelect.clearOptions(); // limpia opciones
+
+      const filtradas = localidadesOriginales.filter(loc => 
+        !value || loc.provincia == value
+      );
+
+      filtradas.forEach(loc => {
+        localidadSelect.addOption({
+          value: loc.value,
+          text: loc.text
+        });
+      });
+
+      localidadSelect.refreshOptions(false);
+    });
 
 });
 

@@ -16,7 +16,7 @@
     </div>
     <div class="modal fade ps-2" id="modalNuevaCausa" tabindex="-1">
       <div class="modal-dialog modal-lg">
-        <form class="row g-3 modal-content bg-light fw-bold border border-5 border-primary" action="/guardar_causa/<%= datos.id_InternoLegajo %>" method="POST">
+        <form class="row g-3 modal-content bg-light fw-bold border border-5 border-primary" action="/guardar_causa/<%= datos.id_InternoLegajo %>" method="POST" id="formCausaNueva">
           <div class="modal-header d-flex justify-content-center align-self-center m-0 p-0 bg-secondary">
               <h3 class="fw-bold text-white my-3">AGREGAR CAUSA</h3>
           </div>
@@ -101,7 +101,7 @@
               <textarea class="form-control" id="Detalle" name="Detalle" onkeyup="this.value = this.value.toUpperCase()" required></textarea>
             </div>
             <div class="col-6 text-center mb-3 mt-5">
-              <button type="submit" class="btn btn-success-strong border border-1 border-black">Guardar</button>
+              <button type="button" class="btn btn-success-strong border border-1 border-black" id="btnGuardarCausaNueva">Guardar</button>
             </div>
             <div class="col-6 text-center mb-3 mt-5">
               <a href="/detenidos" class="btn btn-danger-strong border border-1 border-black">Cancelar</a>
@@ -124,12 +124,12 @@
       <% } %>
     <% }else if (detenido.Estado === 0) { %>
       <div>
-        <h5 class="fw-bold text-danger-strong mx-2">Causa Anulada</h5><pre class="ms-2">Por: <%= detenido.Modifica_autoriza %> - Fecha: <%= detenido.Fecha_modifica.toISOString().slice(0, 10)%></pre>
+        <h5 class="fw-bold text-danger-strong mx-2">Causa Anulada</h5><pre class="ms-2">Por: <%= detenido.Modifica_autoriza %> - Fecha: <%= detenido.Fecha_modifica ? new Date(detenido.Fecha_modifica).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '' %></pre>
       </div>
       <div class="card border border-4 border-black mb-3 bg-danger-strong mx-2" id="card-<%= index %>" data-can-edit="<%= detenido.canEdit ? 'true' : 'false' %>" data-fecha-alta="<%= detenido.Fecha_alta ? detenido.Fecha_alta : '' %>">
       <% }else if (detenido.Estado === 1) { %>
         <div>
-           <h5 class="fw-bold text-black mx-2">Causa Cerrada</h5><pre class="ms-2">Por: <%= detenido.Modifica_autoriza %> - Fecha: <%= detenido.Fecha_modifica.toISOString().slice(0, 10)%></pre>
+           <h5 class="fw-bold text-black mx-2">Causa Cerrada</h5><pre class="ms-2">Por: <%= detenido.Modifica_autoriza %> - Fecha: <%= detenido.Fecha_modifica ? new Date(detenido.Fecha_modifica).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '' %></pre>
         </div>
         <div class="card text-bg-terciary border border-4 border-black mb-3 mx-2" id="card-<%= index %>" data-can-edit="<%= detenido.canEdit ? 'true' : 'false' %>" data-fecha-alta="<%= detenido.Fecha_alta ? detenido.Fecha_alta : '' %>">
           <% } %>
@@ -138,7 +138,6 @@
             <input type="hidden" name="id_InternoLegajo" value="<%= datos.id_InternoLegajo %>">
             <input type="hidden" name="id_internoprontuario" value="<%= detenido.id_InternoProntuario %>">
             <input type="hidden" name="id_Persona" value="<%= detenido.id_Persona %>">
-
             <div class="row px-1">
                 <div class="col-md-4 mb-2">
                   <label class="form-label">Causa</label>
@@ -180,9 +179,11 @@
                     id="Fecha_cumple_condena-<%= index %>"
                     name="Fecha_cumple_condena_disabled1"
                     class="form-control no-max-date"
+                    disabled
                     value="<%= detenido.Fecha_cumple_condena ? detenido.Fecha_cumple_condena.toISOString().slice(0, 10) : '' %>"
                     data-original="<%= detenido.Fecha_cumple_condena ? detenido.Fecha_cumple_condena.toISOString().slice(0, 10) : '' %>"
-                    readonly>
+                    readonly
+                    >
 
                   <input type="hidden"
                     name="Fecha_cumple_condena_disabled2"
@@ -201,7 +202,6 @@
                     <% }) %>
                   </select>
                 </div>
-                
                 <div class="col-md-4 mb-2">
                   <label class="form-label">Fecha Hecho</label>
                   <input type="date" name="Fecha_Hecho" class="form-control " disabled value="<%= detenido.Fecha_Hecho.toISOString().slice(0, 10)%>" readonly data-original="<%= detenido.Fecha_Hecho.toISOString().slice(0, 10)%>">
