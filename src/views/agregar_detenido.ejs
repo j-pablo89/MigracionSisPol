@@ -267,7 +267,6 @@
       create: false
     });
 
-    // ✅ GUARDAR OPCIONES ORIGINALES (CLAVE)
     const localidadesOriginales = [];
 
     document.querySelectorAll("#Localidad_id option").forEach(opt => {
@@ -278,11 +277,10 @@
       });
     });
 
-    // ✅ FILTRO LOCALIDAD SEGÚN PROVINCIA (ARREGLADO)
     provinciaSelect.on("change", function(value) {
 
-      localidadSelect.clear(true); // limpia selección
-      localidadSelect.clearOptions(); // limpia opciones
+      localidadSelect.clear(true); 
+      localidadSelect.clearOptions(); 
 
       const filtradas = localidadesOriginales.filter(loc => 
         !value || loc.provincia == value

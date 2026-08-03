@@ -3,11 +3,8 @@
 // ========================================================= WATERMARK DINÁMICO =============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Watermark iniciando..."); 
-
   const container = document.getElementById("watermark");
   if (!container) {
-    console.log("No existe #watermark");
     return;
   }
 
@@ -15,9 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const usuario = document.body.dataset.watermark;
 
   const cadena = `${usuario}\n${texto}`;
-
-  console.log("Texto watermark:", texto); 
-
   if (!cadena) return;
   const spacingX = 300;
   const spacingY = 180;
@@ -31,11 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
       container.appendChild(div);
     }
   }
-
-  console.log(
-    "Cantidad generada:",
-    document.querySelectorAll(".watermark-text").length,
-  );
 });
 function obtenerIniciales(nombre) {
                     return nombre
@@ -260,8 +249,6 @@ window.habilitarEdicion = function (index) {
   function cambiarEstadoCampoFecha(index, mostrar) {
     const inputFecha = document.getElementById(`Fecha_cumple_condena-${index}`);
     if (!inputFecha) return;
-
-    console.log("ENTRA EN FUNCION");
 
     inputFecha.disabled = !mostrar;
     inputFecha.readOnly = !mostrar;
@@ -938,6 +925,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
   //*********************************************************************************************************  */
 
   if (pageType === "inicio") {
+    
   }
 
   if (pageType === "listar_usuarios") {
@@ -1217,7 +1205,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         'option[value="LECTURA"]',
       );
 
-      if (textoRol === "ADMINISTRADOR") {
+      if (textoRol === "ADMINISTRADOR" || textoRol === "SUPERADMIN") {
         opcionLectura.style.display = "none";
         selectPermiso.value = "ABM";
         selectPermiso.setAttribute('readonly');
@@ -1238,6 +1226,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
     const ADMIN_ID = "1";
     const USER_ID = "2";
     const USUARIO_ID = "3";
+    const SUPERADMIN_ID = "5";
 
     const D5_ADMIN_ID = "90";
     const D5_ID = "99";
@@ -1273,7 +1262,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         eliminados.clear();
       }
 
-      if (rol === ADMIN_ID) {
+      if (rol === ADMIN_ID || rol === SUPERADMIN_ID) {
         bloquearTabla(true);
         hiddenInputsContainer.innerHTML = "";
 
@@ -1591,23 +1580,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
           const dni = btn.dataset.dni || "";
           const Origen = btn.dataset.origen || "";
           const esAdmin = btn.dataset.esadmin;
-          console.log("ALOJAMIENTO ORIGEN ", Origen);
           const cantidadCausas = Number(btn.dataset.cantidad_causas) || 0;
-          console.log(
-            "Cantidad causas:",
-            cantidadCausas,
-            typeof cantidadCausas,
-          );
-          console.log(
-            "ID:",
-            id,
-            "Nombre:",
-            nombre,
-            "Apellido:",
-            apellido,
-            "DNI:",
-            dni,
-          );
           const alojamiento = btn.dataset.alojado;
 
           if (
@@ -1616,7 +1589,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
             alojamiento === "997" ||
             alojamiento === "996"
           ) {
-            console.log("INGRESAA");
             document.getElementById("btnMover").classList = "d-none";
             document.getElementById("btnRegresar").classList =
               "btn btn-secondary w3-button abrir-modal-regresar border border-1 border-black";
@@ -1627,13 +1599,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
             document.getElementById("btnRegresar").classList = "d-none";
             document.getElementById("btnTrasladar").disabled = false;
           }
-
-          // Liberar (solo si existe el botón y cumple la condición)
-
-          console.log("Es admin:", esAdmin);
-
           const btnLiberar = document.getElementById("btnLiberar");
-
           if (btnLiberar) {
             if (!esAdmin) {
               btnLiberar.style.display = "none";
@@ -1803,8 +1769,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
 
     selectAlojamiento.addEventListener("change", () => {
       const valor = selectAlojamiento.value;
-      console.log("VALOR SELECCIONADO: ", valor);
-
       if (valor === "999") {
         lugar.style.display = "none";
         direccion.style.display = "block";
@@ -1839,17 +1803,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         const dni = btn.dataset.dni;
         const alojamiento = btn.dataset.alojado;
         const Origen = btn.dataset.origen;
-        console.log(
-          "ID:",
-          id,
-          "Nombre:",
-          nombre,
-          "Apellido:",
-          apellido,
-          "DNI:",
-          dni,
-        );
-        console.log("ALOJAMIENTO: ", Origen);
         const nombreyapellido = document.createElement("h6");
         nombreyapellido.textContent = `DETENIDO: ${nombre}, ${apellido}`;
         nombreyapellido.className = "text-black fw-bold fst-italic fs-6";
@@ -1909,7 +1862,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         let alojado = btn.dataset.alojado;
         const unidad_destino = btn.dataset.detdestino;
         const frente = btn.dataset.frente;
-        console.log("DETALLE CODIFICADO: ", detalle);
         let partes = detalle.split(",");
         let oficio = partes[0];
         let institucion = partes[1];
@@ -1956,7 +1908,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
         const provinciaElement = document.createElement("h6");
         provinciaElement.innerHTML = `<strong>PROVINCIA:</strong> ${provincia}`;
         datosColumna2.appendChild(provinciaElement);
-        console.log("ALOJADO: ", alojado);
         if (
           alojado.trim() === "HOSPITAL" ||
           alojado.trim() === "CLINICA" ||
@@ -1990,9 +1941,7 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
           "btn btn-primary border border-1 border-black";
         enlaceElement.textContent = "Ver causas";
         datosColumna3.appendChild(enlaceElement);
-        console.log(id);
         mimodalDetalle.showModal();
-        console.log(id);
       });
     });
 
@@ -2226,14 +2175,11 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
 
     // 🔹 Eventos de cambio en fecha y campos de cantidad
     document.getElementById("Fecha_cumple_condena").addEventListener("change", function () {
-        console.log("INGRESAA AL EVENTO DE CAMBIO DE FECHA");
         let fechaBase = new Date();
         fechaBase.setFullYear(fechaBase.getFullYear());
         fechaBase.setMonth(fechaBase.getMonth());
         fechaBase.setDate(fechaBase.getDate());
-
         let fechaCumpleCondena = new Date(this.value);
-        console.log(fechaBase, fechaCumpleCondena);
         if (
           !isNaN(fechaBase.getTime()) &&
           !isNaN(fechaCumpleCondena.getTime())
@@ -2325,7 +2271,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
     let detenidoExistente = false;
 
     async function consultaDetenido(dni) {
-      console.log("Consultando detenido con DNI:", dni); // 👈 debug
       if (dni.length === 8) {
         try {
           const consulta = await fetch(`/api/interleg/${dni}`);
@@ -2333,7 +2278,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
 
           if (data.existe) {
             detenidoExistente = true;
-            console.log("Detenido encontrado:", data); // 👈 debug
             let html = "";
 
             if (data.mysql) {
@@ -2372,7 +2316,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
               }
             });
           } else {
-            console.log("No se encontró detenido con DNI:", dni); // 👈 debug
             detenidoExistente = false;
           }
         } catch (error) {
@@ -2561,7 +2504,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
   }
 
   if (pageType === "causa_detenido") {
-    console.log("Script SweetAlert actualizar cargado");
 
     // Seleccion de situacion procesal y calculo de fecha de cumplimiento de condena ///////
     // LLAMO AL ELEMENTO DE SITUACIÓN PROCESAL PARA MOSTRAR U OCULTAR CAMPOS DE FECHA
@@ -2573,14 +2515,12 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
     });
     // LLAMO AL ELEMENTO DE FECHA DE CUMPLIMIENTO DE CONDENA PARA CALCULAR LA DIFERENCIA DE TIEMPO
     document.getElementById("Fecha_cumple_condena").addEventListener("change", function () {
-        console.log("INGRESAA AL EVENTO DE CAMBIO DE FECHA");
         let fechaBase = new Date();
         fechaBase.setFullYear(fechaBase.getFullYear());
         fechaBase.setMonth(fechaBase.getMonth());
         fechaBase.setDate(fechaBase.getDate());
 
         let fechaCumpleCondena = new Date(this.value);
-        console.log(fechaBase, fechaCumpleCondena);
         if (
           !isNaN(fechaBase.getTime()) &&
           !isNaN(fechaCumpleCondena.getTime())
@@ -2596,7 +2536,6 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
 
     // FUNCION PARA CALCULAR LA FECHA DE CUMPLIMIENTO DE CONDENA A PARTIR DE LOS CAMPOS DE CANTIDAD DE TIEMPO
     function actualizarFechaDesdeCampos() {
-      console.log("INGRESA AL EVENTO DE CAMBIO DE CANTIDAD");
       let dias = parseInt(document.getElementById("Cantidad-dias").value) || 0;
       let meses = parseInt(document.getElementById("Cantidad-meses").value) || 0;
       let anios = parseInt(document.getElementById("Cantidad-anios").value) || 0;
@@ -3058,6 +2997,325 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
               : "none";
         });
       });
+
+    // PAGINACION
+
+    
+      const tbody = document.querySelector('.tabla-movimientos tbody');
+      if(!tbody) return;
+      const allRows = Array.from(tbody.querySelectorAll('tr'));
+      const searchInput = document.getElementById('filtroBusqueda');
+      const paginationControls = document.getElementById('paginationControls');
+      const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+      let currentPage = 1;
+      let pageSize = parseInt(pageSizeSelect.value, 10) || 15;
+
+      function getFilteredRows(){
+        const q = (searchInput && searchInput.value || '').toLowerCase().trim();
+        if(!q) return allRows.slice();
+        return allRows.filter(r => r.textContent.toLowerCase().includes(q));
+      }
+
+      function render(){
+        const filtered = getFilteredRows();
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if(currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        allRows.forEach(r => r.style.display = 'none');
+        filtered.slice(start, end).forEach(r => r.style.display = 'table-row');
+
+        renderControls(totalPages);
+      }
+
+      function renderControls(totalPages){
+        paginationControls.innerHTML = '';
+        const btn = (text, disabled, cb, primary) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn btn-sm mx-1 ' + (primary ? 'btn-primary' : 'btn-outline-light');
+          b.innerText = text;
+          if(disabled) b.disabled = true;
+          b.addEventListener('click', cb);
+          return b;
+        };
+
+        const prev = btn('<', currentPage === 1, () => { currentPage--; render(); });
+        const next = btn('>', currentPage === totalPages, () => { currentPage++; render(); });
+
+        paginationControls.appendChild(prev);
+
+        const maxButtons = 3;
+        let startPage = Math.max(1, currentPage - Math.floor(maxButtons/2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if(endPage - startPage + 1 < maxButtons){
+          startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for(let p = startPage; p <= endPage; p++){
+          const pbtn = btn(p, false, () => { currentPage = p; render(); }, p === currentPage);
+          paginationControls.appendChild(pbtn);
+        }
+
+        paginationControls.appendChild(next);
+      }
+
+      if(searchInput){
+        searchInput.addEventListener('input', function(){ currentPage = 1; render(); });
+      }
+
+      pageSizeSelect.addEventListener('change', function(){
+        pageSize = parseInt(this.value, 10) || 15;
+        currentPage = 1;
+        render();
+      });
+
+      // Initial render: show first page (15 rows)
+      render();
+    
+  }
+  
+  if (pageType === "usuarios_conectados") {
+    const tbody = document.querySelector('.tabla-movimientos tbody');
+    if(!tbody) return;
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    const paginationControls = document.getElementById('paginationControls');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+    let currentPage = 1;
+    let pageSize = parseInt(pageSizeSelect.value, 10) || 15;
+
+    function render(){
+      const total = allRows.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if(currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      allRows.forEach(r => r.style.display = 'none');
+      allRows.slice(start, end).forEach(r => r.style.display = 'table-row');
+
+      renderControls(totalPages);
+    }
+
+    function renderControls(totalPages){
+      paginationControls.innerHTML = '';
+      const btn = (text, disabled, cb, primary) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn btn-sm mx-1 ' + (primary ? 'btn-primary' : 'btn-outline-light');
+        b.innerText = text;
+        if(disabled) b.disabled = true;
+        b.addEventListener('click', cb);
+        return b;
+      };
+
+      const prev = btn('<', currentPage === 1, () => { currentPage--; render(); });
+      const next = btn('>', currentPage === totalPages, () => { currentPage++; render(); });
+
+      paginationControls.appendChild(prev);
+
+      const maxButtons = 3;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons/2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if(endPage - startPage + 1 < maxButtons){
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      for(let p = startPage; p <= endPage; p++){
+        const pbtn = btn(p, false, () => { currentPage = p; render(); }, p === currentPage);
+        paginationControls.appendChild(pbtn);
+      }
+
+      paginationControls.appendChild(next);
+    }
+
+    pageSizeSelect.addEventListener('change', function(){
+      pageSize = parseInt(this.value, 10) || 15;
+      currentPage = 1;
+      render();
+    });
+
+    render();
+  }
+
+  if (pageType === "listar_detenidos") {
+    // FILTRO PARA BUSQUEDA TABLA DETENIDOS
+    const searchInputDet = document.getElementById("filtroBusqueda");
+    if (searchInputDet) {
+      searchInputDet.addEventListener("keyup", function () {
+        const filtro = this.value.toLowerCase().trim();
+        const filas = document.querySelectorAll("#tablaDetenidos tbody tr");
+        filas.forEach((fila) => {
+          const apellido = (fila.cells[2]?.textContent || '').toLowerCase();
+          const nombre = (fila.cells[3]?.textContent || '').toLowerCase();
+          const dni = (fila.cells[4]?.textContent || '').toLowerCase();
+          const alojamiento = (fila.cells[5]?.textContent || '').toLowerCase();
+          fila.style.display =
+            apellido.includes(filtro) ||
+            nombre.includes(filtro) ||
+            dni.includes(filtro) ||
+            alojamiento.includes(filtro)
+              ? ""
+              : "none";
+        });
+      });
+    }
+
+    // PAGINACION DETENIDOS
+    const tbody = document.querySelector('#tablaDetenidos tbody');
+    if (tbody) {
+      const allRows = Array.from(tbody.querySelectorAll('tr'));
+      const paginationControls = document.getElementById('paginationControls');
+      const pageSizeSelect = document.getElementById('pageSizeSelect');
+      let currentPage = 1;
+      let pageSize = parseInt(pageSizeSelect.value, 10) || 15;
+
+      function getFilteredRows(){
+        const q = (searchInputDet && searchInputDet.value || '').toLowerCase().trim();
+        if(!q) return allRows.slice();
+        return allRows.filter(r => r.textContent.toLowerCase().includes(q));
+      }
+
+      function render(){
+        const filtered = getFilteredRows();
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if(currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        allRows.forEach(r => r.style.display = 'none');
+        filtered.slice(start, end).forEach(r => r.style.display = 'table-row');
+
+        renderControls(totalPages);
+      }
+
+      function renderControls(totalPages){
+        if(!paginationControls) return;
+        paginationControls.innerHTML = '';
+        const btn = (text, disabled, cb, primary) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn btn-sm mx-1 ' + (primary ? 'btn-primary' : 'btn-outline-light');
+          b.innerText = text;
+          if(disabled) b.disabled = true;
+          b.addEventListener('click', cb);
+          return b;
+        };
+
+        const prev = btn('<', currentPage === 1, () => { currentPage--; render(); });
+        const next = btn('>', currentPage === totalPages, () => { currentPage++; render(); });
+
+        paginationControls.appendChild(prev);
+
+        const maxButtons = 3;
+        let startPage = Math.max(1, currentPage - Math.floor(maxButtons/2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if(endPage - startPage + 1 < maxButtons){
+          startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for(let p = startPage; p <= endPage; p++){
+          const pbtn = btn(p, false, () => { currentPage = p; render(); }, p === currentPage);
+          paginationControls.appendChild(pbtn);
+        }
+
+        paginationControls.appendChild(next);
+      }
+
+      if(searchInputDet){
+        searchInputDet.addEventListener('input', function(){ currentPage = 1; render(); });
+      }
+
+      pageSizeSelect.addEventListener('change', function(){
+        pageSize = parseInt(this.value, 10) || 15;
+        currentPage = 1;
+        render();
+      });
+
+      // initial render
+      render();
+    }
+  }
+
+  if (pageType === "listar_usuarios") {
+    const searchInput = document.getElementById('filtroBusqueda');
+    const tbody = document.querySelector('#tablaUsuarios tbody');
+    const paginationControls = document.getElementById('paginationControls');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    if (!tbody || !paginationControls || !pageSizeSelect) return;
+
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    let currentPage = 1;
+    let pageSize = parseInt(pageSizeSelect.value, 10) || 15;
+
+    function getFilteredRows(){
+      const q = (searchInput && searchInput.value || '').toLowerCase().trim();
+      if(!q) return allRows.slice();
+      return allRows.filter(r => r.textContent.toLowerCase().includes(q));
+    }
+
+    function render(){
+      const filtered = getFilteredRows();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if(currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      allRows.forEach(r => r.style.display = 'none');
+      filtered.slice(start, end).forEach(r => r.style.display = 'table-row');
+
+      renderControls(totalPages);
+    }
+
+    function renderControls(totalPages){
+      paginationControls.innerHTML = '';
+      const btn = (text, disabled, cb, primary) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn btn-sm mx-1 ' + (primary ? 'btn-primary' : 'btn-outline-light');
+        b.innerText = text;
+        if(disabled) b.disabled = true;
+        b.addEventListener('click', cb);
+        return b;
+      };
+
+      const prev = btn('<', currentPage === 1, () => { currentPage--; render(); });
+      const next = btn('>', currentPage === totalPages, () => { currentPage++; render(); });
+
+      paginationControls.appendChild(prev);
+
+      const maxButtons = 3;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons/2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if(endPage - startPage + 1 < maxButtons){
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      for(let p = startPage; p <= endPage; p++){
+        const pbtn = btn(p, false, () => { currentPage = p; render(); }, p === currentPage);
+        paginationControls.appendChild(pbtn);
+      }
+
+      paginationControls.appendChild(next);
+    }
+
+    if(searchInput){
+      searchInput.addEventListener('input', function(){ currentPage = 1; render(); });
+    }
+
+    pageSizeSelect.addEventListener('change', function(){
+      pageSize = parseInt(this.value, 10) || 15;
+      currentPage = 1;
+      render();
+    });
+
+    render();
   }
   
 });

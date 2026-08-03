@@ -184,7 +184,6 @@
                     data-original="<%= detenido.Fecha_cumple_condena ? detenido.Fecha_cumple_condena.toISOString().slice(0, 10) : '' %>"
                     readonly
                     >
-
                   <input type="hidden"
                     name="Fecha_cumple_condena_disabled2"
                     value="<%= detenido.Fecha_cumple_condena ? detenido.Fecha_cumple_condena.toISOString().slice(0, 10) : '' %>"
@@ -307,35 +306,27 @@
   });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const inputFecha = document.querySelector('input[name="Fecha_cumple_condena_disabled2"]');
-    console.log("Input fecha cumple condena:", inputFecha); // Verificar que el input se seleccione correctamente
-    const span = document.getElementById("tiempoCondena");
-
-    if (!inputFecha.value) {
-        return;
-    }
-
-    const fechaFin = new Date(inputFecha.value);
-    const hoy = new Date();
-
-    let años = fechaFin.getFullYear() - hoy.getFullYear();
-    let meses = fechaFin.getMonth() - hoy.getMonth();
-    let dias = fechaFin.getDate() - hoy.getDate();
-
-    if (dias < 0) {
-        meses--;
-        dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
-    }
-
-    if (meses < 0) {
-        años--;
-        meses += 12;
-    }
-
-    span.textContent = `Tiempo calculado: ${años} años, ${meses} meses y ${dias} días`;
-});
+  document.addEventListener("DOMContentLoaded", function () {
+      const inputFecha = document.querySelector('input[name="Fecha_cumple_condena_disabled2"]');
+      const span = document.getElementById("tiempoCondena");
+      if (!inputFecha.value) {
+          return;
+      }
+      const fechaFin = new Date(inputFecha.value);
+      const hoy = new Date();
+      let años = fechaFin.getFullYear() - hoy.getFullYear();
+      let meses = fechaFin.getMonth() - hoy.getMonth();
+      let dias = fechaFin.getDate() - hoy.getDate();
+      if (dias < 0) {
+          meses--;
+          dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
+      }
+      if (meses < 0) {
+          años--;
+          meses += 12;
+      }
+      span.textContent = `Tiempo calculado: ${años} años, ${meses} meses y ${dias} días`;
+  });
 </script>
 
 <%- include ('partials/_footer')%>

@@ -89,13 +89,9 @@
     const input = document.getElementById('foto' + campo);
 
     if (!btn || !timer || !input) return;
-
-    // Evitar múltiples temporizadores
     if (btn.dataset.timerActivo === 'true') return;
-
     btn.dataset.timerActivo = 'true';
     btn.style.display = 'inline-block';
-
     let restante = Math.max(0, Math.ceil(initialRemainingMs / 1000));
     if (restante <= 0) {
       timer.textContent = 'Tiempo finalizado';
@@ -105,7 +101,6 @@
     }
 
     timer.textContent = `Tiempo restante: ${formatTime(restante)}`;
-
     const interval = setInterval(() => {
       restante -= 1;
       if (restante <= 0) {

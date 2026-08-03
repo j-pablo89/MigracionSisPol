@@ -7,9 +7,8 @@ const mysql2 = require('mysql2');
 const myConnection = require('express-myconnection');
 const flash = require('connect-flash');
 const session = require('express-session');
-
-const verifyToken = require('./middlewares/authMiddleware'); // Importar el middleware
-require('dotenv').config();  // Asegúrate de que esta línea esté al principio
+const verifyToken = require('./middlewares/authMiddleware');
+require('dotenv').config();
 
 // IMPORTANDO RUTAS
 const Routes = require('./routes/routes');
@@ -40,11 +39,9 @@ app.use(session({
 }));
 
 app.get('/ping', (req, res) => {
-
   if (!req.session || !req.session.userId) {
     return res.status(401).json({ timeout: true });
   }
-
   res.sendStatus(200);
 });
 
@@ -53,7 +50,7 @@ app.use(flash());
 // MIDDLEWARE PARA SESION
 
 app.use((req, res, next) => {
-    res.locals.session = req.session; // Pasar la sesión a las vistas
+    res.locals.session = req.session;
     next();
 });
 
@@ -70,16 +67,15 @@ app.use('/', Routes);
 
 app.use("/Sispenal/fotos", express.static("\\\\10.0.0.10\\Sispenal\\Fotos"));
 
-
 // ARCHIVOS ESTÁTICOS
 app.use(express.static(path.join(__dirname, 'public')));
 
 //MANEJO DEL ERROR 404
 app.use((req, res) => {
-    res.status(404).render('error404'); // Usar render para enviar una vista EJS
+    res.status(404).render('error404');
 });
 app.use((req, res) => {
-    res.status(401).render('error401'); // Usar render para enviar una vista EJS
+    res.status(401).render('error401');
 });
 
 // INICIANDO EL SERVIDOR

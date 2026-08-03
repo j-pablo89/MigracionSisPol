@@ -17,7 +17,7 @@
                       </thead>
                       <tbody>
                         <% if (ingresosUltimos6Dias && ingresosUltimos6Dias.length > 0) {  %>
-                          <% console.log("INGRESOS ULTIMOS 6 DIAS: ", ingresosUltimos6Dias); %>
+                          
                           <% ingresosUltimos6Dias.forEach(ingreso => { %>
                             <tr>
                               <td><%= ingreso.detalle_dependencia %></td>
@@ -43,7 +43,7 @@
                       </thead>
                       <tbody>
                       <% if (ingresosAnioActual && ingresosAnioActual.length > 0) {  %>
-                        <% console.log("INGRESOS 2025: ", ingresosAnioActual); %>
+                        
                         <% ingresosAnioActual.forEach(ingreso => { %>
                           <tr>
                             <td><%= ingreso.detalle_dependencia %></td>
@@ -59,7 +59,7 @@
           <div class="col">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">ALOJADOS TOTAL</h6>
+                    <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">ALOJADOS TOTAL: <%= ingresosTotales.reduce((sum, ingtotal) => sum + parseInt(ingtotal.cantidad), 0) %></h6>
                     <thead>
                         <tr class="table-primary">
                             <th scope="col">Dependencia</th>
@@ -69,7 +69,6 @@
                     </thead>
                     <tbody>
                       <% if (ingresosTotales && ingresosTotales.length > 0) {  %>
-                        <% console.log("EGRESOS 2025: ", ingresosTotales); %>
                         <% ingresosTotales.forEach(ingtotal => { %>
                           <tr>
                             <td><%= ingtotal.detalle_dependencia %></td>
@@ -101,8 +100,6 @@
 <script>
   const ctx = document.getElementById('graficoIngresos').getContext('2d');
   let chart;
-
-  // Datos iniciales (inyectados desde backend)
   let anioActual = new Date().getFullYear();
   const labelsInicial = <%- labels %>;
   const dataInicial = <%- data %>;
@@ -126,9 +123,7 @@
       }
     });
   }
-
   crearGrafico(labelsInicial, dataInicial, anioActual);
-
   async function cambiarAnio(anio) {
     try {
       const res = await fetch(`/api/ingresos/${anio}`);
@@ -146,7 +141,6 @@
       alert('Error al cargar los datos del año');
     }
   }
-
   document.getElementById('btnPrev').addEventListener('click', () => cambiarAnio(anioActual - 1));
   document.getElementById('btnNext').addEventListener('click', () => cambiarAnio(anioActual + 1));
 </script>

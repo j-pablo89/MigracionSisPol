@@ -49,9 +49,7 @@
                                         data-fechanacimiento="<%= detenido.FECHA_NACIMIENTO %>"
                                         data-localidad="<%= detenido.LOCALIDAD %>"
                                         data-provincia="<%= detenido.PROVINCIA %>">
-                                        
                                         <%= j %>
-                                        <%= console.log("DETALLES: ", detenido.Detalle )%>
                                         </u>
                                     </td>
                                     <% if (detenido.frente) { %>
@@ -89,50 +87,43 @@
                     </tbody>
                 </table>
             </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="d-flex align-items-center">
+                    <label class="text-white me-2 mb-0">Mostrar:</label>
+                    <select id="pageSizeSelect" class="form-select d-inline w-auto">
+                        <option value="15" selected>15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div id="paginationControls"></div>
+            </div>
             <dialog id="modalAcciones" class="border border-3 border-primary bg-light p-0 w-100" style="max-width: 500px;">
-                
                 <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
                     <h5 class="modal-title text-white">ACCIONES</h5>
                     <button type="button" class="btn btn-danger-strong cerrarModalAcciones px-2 py-0">X</button>
                 </div>
-
                 <div class="modal-body p-3">
-
-                <!-- 🔥 GRID RESPONSIVE -->
                 <div class="acciones-grid">
-
                     <input id="btnLiberar" class="btn btn-primary abrir-modal border border-1 border-black" value="LIBERAR">
-
                     <input id="btnMover" class="btn btn-primary abrir-modal-mover border border-1 border-black" value="MOVER">
-
                     <input id="btnRegresar" class="btn btn-secondary d-none abrir-modal-regresar border border-1 border-black" value="REGRESAR">
-
                     <input id="btnTrasladar" class="btn btn-primary abrir-modal-trasladar border border-1 border-black" value="TRASLADAR">
-
                     <a id="linkModificar" class="btn btn-primary border border-1 border-black">MODIFICAR</a>
-
                     <a id="linkCausas" class="btn btn-primary border border-1 border-black">CAUSAS</a>
-
                     <a id="linkArchivos" class="btn btn-primary border border-1 border-black">ARCHIVOS</a>
-
                 </div>
-
                 </div>
-
                 <div class="modal-footer d-flex justify-content-center p-3">
                     <button class="btn btn-danger-strong" onclick="modalAcciones.close()">CERRAR</button>
                 </div>
-
             </dialog>
-
-            
             <!-- MODAL LIBERAR DETENIDO -->
            <dialog id="mimodal" class="border border-3 border-primary bg-light p-0"> 
                 <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
                     <h5 class="modal-title text-white">LIBERAR DETENIDO</h5>
                     <button type="button" class="btn btn-danger-strong text-end px-2 py-0" value="CERRAR" onclick="mimodal.close()" value="CERRAR">X</button>
                 </div>
-                <!-- action se completa con JS -->
                 <form id="formLiberar" class="p-3" method="POST">
                     <div class="modal-body mb-5 text-black">
                         <p>¿Está seguro que desea liberar al detenido?</p>
@@ -152,7 +143,6 @@
                 <div id="datosPersonales" class="text-black p-3 fw-bold fst-italic fs-3">
                 </div>
                 <hr>
-                <!-- action se completa con JS -->
                 <form id="formMover" class="px-3 pb-3" method="POST">
                     <div class="modal-body mb-3 text-black">
                         <div>
@@ -186,7 +176,6 @@
                                 <textarea class="form-control" id="observaciones" name="observaciones"></textarea>
                             </div>
                         </div>
-                        
                     </div>
                     <div class="modal-footer d-flex justify-content-between gap-md-5 gap-4">
                         <button class="btn btn-success-strong border border-1 border-black" type="submit" style="width: 120px;">ACEPTAR</button>
@@ -217,7 +206,6 @@
                     </div>
                 </div>
             </dialog>
-
             <!-- MODAL REGRESAR DETENIDO -->
             <dialog id="mimodalRegresar" class="border border-3 border-primary bg-light p-0">
                 <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
@@ -227,7 +215,6 @@
                 <div id="datosPersonalesRegresar" class="text-black">
                 </div>
                 <hr>
-                <!-- action se completa con JS -->
                 <form id="formRegresar" class="px-3 pb-3" method="POST">
                     <div id="origenAlojamiento"></div>
                     <div class="modal-body mb-3 text-black">
@@ -244,7 +231,6 @@
                     </div>
                 </form>
             </dialog>
-
             <!-- MODAL TRASLADAR DETENIDO -->
             <dialog id="mimodalTrasladar" class="border border-3 border-primary bg-light p-0">
                 <div class="modal-header d-flex justify-content-between mb-3 bg-secondary p-2">
@@ -256,19 +242,19 @@
                 <hr>
                 <form id="formTrasladar" class="px-3 pb-3" method="POST">
                     <div class="mb-3 text-black d-flex justify-content-md-start flex-column">
-                            <label for="Comisaria_destino" class="form-label">Comisaría Destino</label>
-                            <select id="Comisaria_destino_id" name="id_comisaria_destino" class="mb-3" required>
-                                <option value="">Seleccione comisaría</option>
-                                <% for (unidad of unidades) { %>
-                                    <option value="<%= unidad.id_Unidades %>"><%= unidad.Detalle %></option>
-                                <% } %>
-                            </select>
-                            <label for="Movil" class="form-label">Numero Movil:</label>
-                            <input type="text" class="form-control mb-3" id="Movil" name="Movil" required>
-                            <label for="personalCustodio" class="form-label">Personal Custodio:</label>
-                            <input type="text" class="form-control mb-3" id="personalCustodio" name="personalCustodio" required>
-                            <label for="observaciones" class="form-label">Observaciones:</label>
-                            <textarea class="form-control mb-3" id="observaciones" name="observaciones" required></textarea>
+                        <label for="Comisaria_destino" class="form-label">Comisaría Destino</label>
+                        <select id="Comisaria_destino_id" name="id_comisaria_destino" class="mb-3" required>
+                            <option value="">Seleccione comisaría</option>
+                            <% for (unidad of unidades) { %>
+                                <option value="<%= unidad.id_Unidades %>"><%= unidad.Detalle %></option>
+                            <% } %>
+                        </select>
+                        <label for="Movil" class="form-label">Numero Movil:</label>
+                        <input type="text" class="form-control mb-3" id="Movil" name="Movil" required>
+                        <label for="personalCustodio" class="form-label">Personal Custodio:</label>
+                        <input type="text" class="form-control mb-3" id="personalCustodio" name="personalCustodio" required>
+                        <label for="observaciones" class="form-label">Observaciones:</label>
+                        <textarea class="form-control mb-3" id="observaciones" name="observaciones" required></textarea>
                     </div>
                     <div class="modal-footer d-flex justify-content-between gap-md-5 gap-4">
                         <button class="btn btn-success-strong border border-1 border-black" type="submit" style="width: 120px;">ACEPTAR</button>
@@ -276,7 +262,6 @@
                     </div>
                 </form>
             </dialog>
-
             <div class="d-block d-md-none">
             <% if (detenidos) { %>
                 <% for (let detenido of detenidos) { %>
@@ -294,7 +279,6 @@
                         <p class="mb-1"><strong>DNI:</strong> <%= detenido.DNI %></p>
                         <p class="mb-1"><strong>Alojamiento:</strong> <%= detenido.detalle_destino %></p>
                         <p class="mb-1"><strong>Cantidad de Causas:</strong> <%= detenido.cantidad_causas %></p>
-                        
                     </div>
                     <hr>
                     <% if (session.permiso === 'ABM') { %>

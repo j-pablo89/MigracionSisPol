@@ -399,6 +399,26 @@ dialog::backdrop
     gap: 15px;
   }
 
+/* Ajustes para columna de acciones en tablas */
+.centrar-td {
+    padding: 0.25rem !important;
+}
+.centrar-td .btn-group {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.centrar-td .dropdown-toggle {
+    padding: 0.25rem 0.5rem;
+    height: 36px; /* altura cómoda y consistente */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.centrar-td .dropdown-menu { 
+    min-width: 140px;
+}
+
   .acciones-grid .btn {
     width: 100%;
   }

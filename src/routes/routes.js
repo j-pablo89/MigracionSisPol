@@ -6,9 +6,13 @@ const { uploadWithErrorHandler } = require('../middlewares/upload');
 const { uploadFilesWithErrorHandler } = require('../middlewares/uploadfiles');
 const { checkRole } = require('../middlewares/authRoles');
 const { puedeModificarUsuario } = require('../middlewares/puedeModificarUsuario');
+
+
+
 // ******************* CONTROL DE USUARIOS *************************
 router.get('/inicio', verifyToken, WebController.inicio);
 router.get('/api/ingresos/:anio', WebController.getIngresosPorAnio);
+router.get('/api/detenidos-por-region/:region', WebController.detenidosPorRegion);
 router.get('/usuarios', verifyToken, WebController.listarUsuarios);
 router.get('/verificar_usuario/:dni', WebController.verificarUsuario);
 router.get('/agregar_usuario', verifyToken, WebController.nuevoUsuario);
@@ -22,20 +26,15 @@ router.get('/modificar_usuario/:id', verifyToken, WebController.modificarUsuario
 router.post('/actualizar_usuario/:id',verifyToken, WebController.actualizarUsuario);
 router.get('/usuarios_conectados',verifyToken, WebController.conexionUsuarios);
 router.post('/usuarios_conectados',verifyToken, WebController.conexionUsuarios);
-// router.get('/estadisticas',verifyToken, WebController.estadisticas);
 router.post('/login', WebController.login);
-router.get('/login', (req, res) => {
-    const timeout = req.query.timeout || null;
-    res.render('login', { timeout });
-});
-router.get('/', (req, res) => {
-    res.render('login', { timeout: null });
-});
+router.get('/login', (req, res) => {const timeout = req.query.timeout || null;res.render('login', { timeout });});
+router.get('/', (req, res) => {res.render('login', { timeout: null });});
 router.get('/logout', verifyToken, WebController.logout);
-router.get('/error401', (req, res) => {
-    const error_msg = req.query.error_msg || '';
-    res.render('error401', { error_msg });
-});
+router.get('/error401', (req, res) => {const error_msg = req.query.error_msg || '';res.render('error401', { error_msg });});
+
+
+
+
 // ******************* CONTROL DE DETENIDOS ***************************
 router.get('/detenidos', verifyToken, WebController.listarDetenidos);
 router.get('/agregar_detenido', verifyToken, WebController.nuevoDetenido);
@@ -49,14 +48,7 @@ router.post('/cerrar_causa/:id', verifyToken, WebController.cerrarCausaDetenido)
 router.post('/reabrir_causa/:id', verifyToken, WebController.reabrirCausaDetenido);
 router.post('/anular_causa/:id', verifyToken, WebController.anularCausaDetenido);
 router.get('/agregar_foto/:id', verifyToken, WebController.agregarFoto);
-router.post('/guardar_foto/:id',uploadWithErrorHandler([
-    { name: 'frente', maxCount: 1 },
-    { name: 'izquierdo', maxCount: 1 },
-    { name: 'derecho', maxCount: 1 },
-    { name: 'espalda', maxCount: 1 }
-  ]),
-  WebController.guardarFotos
-);
+router.post('/guardar_foto/:id',uploadWithErrorHandler([{ name: 'frente', maxCount: 1 },{ name: 'izquierdo', maxCount: 1 },{ name: 'derecho', maxCount: 1 },{ name: 'espalda', maxCount: 1 }]),WebController.guardarFotos);
 router.get('/agregar_archivo/:id', verifyToken, WebController.agregarArchivo);
 router.post('/guardar_archivo/:id', verifyToken,uploadFilesWithErrorHandler([{ name: 'archivo', maxCount: 1 }]),WebController.guardarArchivo);
 router.post('/liberar_detenido/:id', verifyToken, WebController.liberarDetenido);
@@ -68,6 +60,8 @@ router.get('/movimientos_comisarias', verifyToken, WebController.movimientosComi
 router.get('/movimientos_comisarias/exportar', verifyToken, WebController.exportarMovimientosComisarias);
 router.get("/interleg", verifyToken, WebController.buscarInterleg);
 router.get("/api/interleg/:dni", verifyToken, WebController.consultaDetenido);
+
+
 // ===================== RUTAS API NOTIFICACIONES =====================
 router.get('/api/notificaciones', verifyToken, WebController.obtenerNotificaciones);
 router.post('/api/notificaciones/:id/responder', verifyToken, WebController.responderNotificacion);

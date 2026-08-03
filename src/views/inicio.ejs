@@ -1,7 +1,5 @@
 <%- include('partials/_header2') %>
-
 <style>
-
   .bg-image-hero {
     height: 175vh;
     filter: brightness(0.7);
@@ -12,14 +10,12 @@
     left: 0;
     z-index: -1;
   }
-
   @media (min-width: 768px) {
     .bg-image-hero {
       height: 200vh;
     }
   }
 </style>
-
 <div class="container-fluid mainSection" id="main-container" data-page="inicio">
       <img src="img/policia2.jpg" alt="" class="img-fluid w-100 bg-image-hero">
       <div class="row mt-5 pt-5 mb-md-5">
@@ -59,7 +55,7 @@
                       </thead>
                       <tbody>
                         <% if (ingresosUltimos6Dias && ingresosUltimos6Dias.length > 0) {  %>
-                          <% console.log("INGRESOS ULTIMOS 6 DIAS: ", ingresosUltimos6Dias); %>
+                          
                           <% ingresosUltimos6Dias.forEach(ingreso => { %>
                             <tr>
                               <td><%= ingreso.detalle_dependencia %></td>
@@ -85,7 +81,7 @@
                       </thead>
                       <tbody>
                       <% if (ingresosAnioActual && ingresosAnioActual.length > 0) {  %>
-                        <% console.log("INGRESOS 2025: ", ingresosAnioActual); %>
+                        
                         <% ingresosAnioActual.forEach(ingreso => { %>
                           <tr>
                             <td><%= ingreso.detalle_dependencia %></td>
@@ -101,7 +97,7 @@
           <div class="col">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">ALOJADOS TOTAL</h6>
+                    <h6 class="rounded-2 text-center fw-bold text-black bg-success-subtle border border-1 border-info py-1">ALOJADOS TOTAL: <%= ingresosTotales.reduce((sum, ingtotal) => sum + parseInt(ingtotal.cantidad), 0) %></h6>
                     <thead>
                         <tr class="table-primary">
                             <th scope="col">Dependencia</th>
@@ -111,7 +107,7 @@
                     </thead>
                     <tbody>
                       <% if (ingresosTotales && ingresosTotales.length > 0) {  %>
-                        <% console.log("EGRESOS 2025: ", ingresosTotales); %>
+                        
                         <% ingresosTotales.forEach(ingtotal => { %>
                           <tr>
                             <td><%= ingtotal.detalle_dependencia %></td>
@@ -125,15 +121,54 @@
             </div>
           </div>
         </div>
-        <div class="container-fluid">  
-          <div class="ps-5 alert alert-dismissible alert-dark text-center">
-            <h4 class="text-white fw-bolder mb-3">ESTADÍSTICAS DE INGRESOS</h4>
-            <div class="d-flex justify-content-center align-items-center mb-3">
-              <button id="btnPrev" class="btn btn-outline-light btn-sm me-3">◀</button>
-              <h5 id="anioActual" class="text-white fw-bold mb-0"><%= new Date().getFullYear() %></h5>
-              <button id="btnNext" class="btn btn-outline-light btn-sm ms-3">▶</button>
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-12 col-md-6 mb-4">
+              <div class="ps-5 alert alert-dismissible alert-dark text-center h-100">
+                <h4 class="text-white fw-bolder mb-3">ESTADÍSTICAS DE INGRESOS</h4>
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                  <button id="btnPrev" class="btn btn-outline-light btn-sm me-3">◀</button>
+                  <h5 id="anioActual" class="text-white fw-bold mb-0"><%= new Date().getFullYear() %></h5>
+                  <button id="btnNext" class="btn btn-outline-light btn-sm ms-3">▶</button>
+                </div>
+                <canvas id="graficoIngresos"></canvas>
+              </div>
             </div>
-            <canvas id="graficoIngresos" width="400" height="200"></canvas>
+            <div class="col-12 col-md-6 mb-4">
+              <div class="ps-5 alert alert-dismissible alert-dark text-center h-100">
+                <h4 class="text-white fw-bolder mb-3">DETENIDOS POR UNIDAD REGIONAL</h4>
+                <canvas id="graficoRegiones"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="modalDetenidosRegion" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-white" id="modalDetenidosRegionTitulo">Detenidos por región</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="modalDetenidosLoading" class="text-center py-3 d-none">
+              <div class="spinner-border" role="status"></div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
+                <thead>
+                  <tr class="table-primary">
+                    <th scope="col">Apellido y Nombre</th>
+                    <th scope="col">DNI</th>
+                    <th scope="col">Comisaría</th>
+                  </tr>
+                </thead>
+                <tbody id="modalDetenidosBody">
+                </tbody>
+              </table>
+            </div>
+            <p id="modalDetenidosVacio" class="text-center text-muted d-none">No hay detenidos registrados en esta región.</p>
           </div>
         </div>
       </div>
@@ -143,8 +178,6 @@
 <script>
   const ctx = document.getElementById('graficoIngresos').getContext('2d');
   let chart;
-
-  // Datos iniciales (inyectados desde backend)
   let anioActual = new Date().getFullYear();
   const labelsInicial = <%- labels %>;
   const dataIngresosInicial = <%- dataIngresos %>;
@@ -159,6 +192,7 @@
         datasets: [
           {
             label: `Ingresos por mes (${anio})`,
+            color: 'rgba(0, 0, 0, 0.8)',
             data: ingresos,
             backgroundColor: 'rgba(0, 191, 255,0.8)',
             borderColor: 'rgba(224, 255, 255,1)',
@@ -166,6 +200,7 @@
           },
           {
             label: `Egresos por mes (${anio})`,
+            color: 'rgba(0, 0, 0, 0.8)',
             data: egresos,
             backgroundColor: 'rgba(255, 99, 132, 0.8)',
             borderColor: 'rgba(255, 99, 132, 1)',
@@ -201,5 +236,94 @@
 
   document.getElementById('btnPrev').addEventListener('click', () => cambiarAnio(anioActual - 1));
   document.getElementById('btnNext').addEventListener('click', () => cambiarAnio(anioActual + 1));
+    const ctxRegiones = document.getElementById('graficoRegiones').getContext('2d');
+    const labelsRegiones = <%- labelsRegiones %>;
+    const dataRegiones = <%- dataRegiones %>;
+    const coloresPorRegion = {
+      'UNIDAD REGIONAL CAPITAL': 'rgba(0, 191, 255, 0.8)',
+      'UNIDAD REGIONAL ESTE': 'rgba(255, 99, 132, 0.8)',
+      'UNIDAD REGIONAL OESTE': 'rgba(255, 205, 86, 0.8)',
+      'UNIDAD REGIONAL SUR': 'rgba(75, 192, 192, 0.8)',
+      'ALCAIDIA': 'rgba(153, 102, 255, 0.8)',
+      'OTROS': 'rgba(201, 203, 207, 0.8)'
+    };
+
+    const backgroundColorsRegiones = labelsRegiones.map(
+      label => coloresPorRegion[label] || 'rgba(150, 150, 150, 0.8)'
+    );
+
+    new Chart(ctxRegiones, {
+      type: 'pie',
+      data: {
+        labels: labelsRegiones,
+        datasets: [{
+          data: dataRegiones,
+          backgroundColor: backgroundColorsRegiones,
+          borderColor: 'rgba(255, 255, 255, 0.6)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const region = labelsRegiones[index];
+            abrirModalDetenidos(region);
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#fff' },
+            onClick: (evt, legendItem) => {
+              abrirModalDetenidos(legendItem.text);
+            }
+          },
+          title: {
+            display: false
+          }
+        }
+      }
+    });
+    async function abrirModalDetenidos(region) {
+      const modalEl = document.getElementById('modalDetenidosRegion');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      const titulo = document.getElementById('modalDetenidosRegionTitulo');
+      const tbody = document.getElementById('modalDetenidosBody');
+      const loading = document.getElementById('modalDetenidosLoading');
+      const vacio = document.getElementById('modalDetenidosVacio');
+      titulo.textContent = `Detenidos - ${region}`;
+      tbody.innerHTML = '';
+      vacio.classList.add('d-none');
+      loading.classList.remove('d-none');
+      modal.show();
+      try {
+        const res = await fetch(`/api/detenidos-por-region/${encodeURIComponent(region)}`);
+        const result = await res.json();
+
+        loading.classList.add('d-none');
+
+        if (!result.detenidos || result.detenidos.length === 0) {
+          vacio.classList.remove('d-none');
+          return;
+        }
+
+        result.detenidos.forEach(d => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${d.Apellido ?? ''} ${d.Nombre ?? ''}</td>
+            <td>${d.Dni ?? ''}</td>
+            <td>${d.comisaria ?? ''}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+        loading.classList.add('d-none');
+        alert('Error al cargar los detenidos de la región');
+      }
+    }
+
 </script>
 <%- include('partials/_footer') %>

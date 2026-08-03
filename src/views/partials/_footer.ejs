@@ -23,7 +23,6 @@
 <script>
     (function(){
         try{
-            // Bloqueo global: evita que el botón "Atrás" navegue fuera de la aplicación
             history.pushState(null, null, location.href);
             window.addEventListener('popstate', function (e) {
                 history.pushState(null, null, location.href);
@@ -35,10 +34,7 @@
   
 </script>
 <script>
-  // 🔴 Variable global
   window.forzarCambioClaveActivo = <%= session.forzarCambioClave ? 'true' : 'false' %>;
-
-  // 🔴 Abrir modal automáticamente
   if (window.forzarCambioClaveActivo) {
     window.addEventListener("load", () => {
       const modal = document.getElementById("modalCambiarClave");
