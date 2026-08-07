@@ -1,0 +1,96 @@
+<%- include('partials/_header2') %>
+
+<div class="container-fluid mainSection" id="main-container" data-page="detenidos_general">
+    <div class="container mt-5 mb-3">
+        <h3 class="text-white text-center text-borderWhite">TABLA GENERAL DE DETENIDOS</h3>
+    </div>
+    <div class="mb-3">
+        <div class="col-md-4 col-6 mb-2">
+            <label class="text-white d-none d-md-block form-label" >Buscar:</label>
+            <label class="text-white d-block d-md-none form-label" >Buscar:</label>
+            <input type="text" id="filtroBusqueda" class="form-control" placeholder="Buscar por dni, apellido, nombre, alojamiento, destino, tipo, usuario">
+        </div>
+    </div>
+    <div class="table-responsive mt-5" style="overflow-x: auto; height: 400px;" id="tablaDetenidosGeneral"> 
+        <table class="table table-bordered table-striped align-middle tablaDetenidosGeneral">
+            <thead class="table-primary">
+              <tr>
+                  <th class="col">ID</th>
+                  <th class="col">Acciones</th>
+                  <th class="col">Apellido y Nombre</th>
+                  <th class="col">DNI</th>
+                  <th class="col">Sexo</th>
+                  <th class="col">Comisaria Dependiente</th>
+                  <th class="col">Comisaria Alojamiento</th>
+                  <th class="col">Causa</th>
+                  <th class="col">Estado</th>
+                  <th class="col">Fecha Hecho</th>
+                  <th class="col">Fecha Detencion</th>
+                  <th class="col">Tiempo Detenido</th>
+                  <th class="col">Autoridad Judicial</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (detenido && detenido.length > 0) {  %>
+                  <% j = 1 %>
+                <% detenido.forEach(detenido => { %>
+                  <tr>
+                    <td><%= j %></td>
+                    <td>
+                      <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-danger btn-mover" title="Enviar al primer lugar"
+                                data-accion="arriba" data-id="<%= detenido.id_InternoLegajo %>">
+                          <i class="bx bx-arrow-to-top"></i>
+                        </button>
+                        <button type="button" class="btn btn-success btn-mover" title="Subir una posición"
+                                data-accion="subir" data-id="<%= detenido.id_InternoLegajo %>">
+                          <i class="bx bx-caret-up-circle"></i>
+                        </button>
+                        <button type="button" class="btn btn-success btn-mover" title="Bajar una posición"
+                                data-accion="bajar" data-id="<%= detenido.id_InternoLegajo %>">
+                          <i class="bx bx-caret-down-circle"></i>
+                        </button>
+                      </div>
+                      <div class="d-flex justify-content-center gap-2">
+                        <small>Prioridad: <%= detenido.Prioridad !== null ? detenido.Prioridad : '' %></small>
+                      </div>
+                    </td>
+                    <td><%= detenido.Apellido %> <%= detenido.Nombre %></td>
+                    <td><%= detenido.Dni %></td>
+                    <td><%= detenido.Sexo %></td>
+                    <td><%= detenido.Detalle_Dependiente %></td>
+                    <td><%= detenido.Detalle_Alojamiento %></td>
+                    <td><%= detenido.Causa %></td>
+                    <td><%= detenido.Situacion_procesal %></td>
+                    <td><%= detenido.Fecha_Hecho %></td>
+                    <td><%= detenido.Fecha_Detencion %></td>
+                    <td><%= detenido.anios %> AÑOS, <%= detenido.meses %> MESES, <%= detenido.dias %> DIAS</td>
+                    <td><%= detenido.Autoridad_Judicial %></td>
+                  </tr>
+                  <% j = j + 1%>
+                <% }); %>
+              <% } %>
+          </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div class="d-flex align-items-center">
+        <label class="text-white me-2 mb-0">Mostrar:</label>
+        <select id="pageSizeSelect" class="form-select d-inline w-auto">
+          <option value="15" selected>15</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <div id="paginationControls"></div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="/movimientos_comisarias/exportar" class="btn btn-success-strong text-center">
+        <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+      </a>
+    </div>
+    
+</div>
+
+<%- include('partials/_footer') %>

@@ -3317,5 +3317,100 @@ document.getElementById("btnVerConfirmacion").addEventListener("click", () => al
 
     render();
   }
-  
+
+  if (pageType === "detenidos_general") {
+    const tbody = document.querySelector('.tablaDetenidosGeneral tbody');
+      if(!tbody) return;
+      const allRows = Array.from(tbody.querySelectorAll('tr'));
+      const searchInput = document.getElementById('filtroBusqueda');
+      const paginationControls = document.getElementById('paginationControls');
+      const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+      let currentPage = 1;
+      let pageSize = parseInt(pageSizeSelect.value, 10) || 15;
+
+      function getFilteredRows(){
+        const q = (searchInput && searchInput.value || '').toLowerCase().trim();
+        if(!q) return allRows.slice();
+        return allRows.filter(r => r.textContent.toLowerCase().includes(q));
+      }
+
+      function render(){
+        const filtered = getFilteredRows();
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if(currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        allRows.forEach(r => r.style.display = 'none');
+        filtered.slice(start, end).forEach(r => r.style.display = 'table-row');
+
+        renderControls(totalPages);
+      }
+
+      function renderControls(totalPages){
+        paginationControls.innerHTML = '';
+        const btn = (text, disabled, cb, primary) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn btn-sm mx-1 ' + (primary ? 'btn-primary' : 'btn-outline-light');
+          b.innerText = text;
+          if(disabled) b.disabled = true;
+          b.addEventListener('click', cb);
+          return b;
+        };
+
+        const prev = btn('<', currentPage === 1, () => { currentPage--; render(); });
+        const next = btn('>', currentPage === totalPages, () => { currentPage++; render(); });
+
+        paginationControls.appendChild(prev);
+
+        const maxButtons = 3;
+        let startPage = Math.max(1, currentPage - Math.floor(maxButtons/2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if(endPage - startPage + 1 < maxButtons){
+          startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for(let p = startPage; p <= endPage; p++){
+          const pbtn = btn(p, false, () => { currentPage = p; render(); }, p === currentPage);
+          paginationControls.appendChild(pbtn);
+        }
+
+        paginationControls.appendChild(next);
+      }
+
+      if(searchInput){
+        searchInput.addEventListener('input', function(){ currentPage = 1; render(); });
+      }
+
+      pageSizeSelect.addEventListener('change', function(){
+        pageSize = parseInt(this.value, 10) || 15;
+        currentPage = 1;
+        render();
+      });
+
+      
+      render();
+
+      document.getElementById('tablaDetenidosGeneral').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-mover');
+        if (!btn) return;
+
+        const accion = btn.dataset.accion; // 'arriba' | 'subir' | 'bajar'
+        const id = btn.dataset.id;
+
+        btn.disabled = true;
+        try {
+          const resp = await fetch(`/detenidos_general/prelacion/${accion}/${id}`, { method: 'POST' });
+          if (!resp.ok) throw new Error('Error en la petición');
+          location.reload(); 
+        } catch (err) {
+          alert('No se pudo actualizar la prioridad');
+          btn.disabled = false;
+        }
+      });
+  }
+
 });

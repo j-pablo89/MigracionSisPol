@@ -2937,4 +2937,178 @@ controller.consultaDetenido = async (req, res) => {
   }
 };
 
+controller.detenidosGeneral = (req, res) => {
+  req.getConnection((err, conn) => {
+    if (err) {
+      return res.status(500).json({ error: "Error de conexión a la base de datos" });
+    }
+    conn.query(`SELECT
+          il.id_InternoLegajo AS id_InternoLegajo,
+          pp.Apellido AS Apellido, pp.Nombre AS Nombre, pp.Dni AS Dni, pp.Sexo AS Sexo, pp.tipo_persona AS tipo_persona,
+          pua.Detalle AS Detalle_Alojamiento, pud.Detalle AS Detalle_Dependiente,
+          ip.Causa AS Causa, ip.Situacion_procesal AS Situacion_procesal, ip.Fecha_Hecho AS Fecha_Hecho, ip.Fecha_Detencion AS Fecha_Detencion,
+          TIMESTAMPDIFF(YEAR, CURDATE(), Fecha_Detencion) AS anios,
+          MOD(TIMESTAMPDIFF(MONTH, CURDATE(), Fecha_Detencion), 12) AS meses,
+          DATEDIFF(DATE_ADD(CURDATE(), INTERVAL TIMESTAMPDIFF(MONTH, CURDATE(), Fecha_Detencion) MONTH), Fecha_Detencion) AS dias,
+          aj.descripcion AS Autoridad_Judicial,
+          prel.prioridad AS Prioridad
+      FROM pol_persona pp
+      INNER JOIN pol_internolegajo il USING(id_persona)
+      LEFT JOIN pol_internoprontuario ip USING(id_InternoLegajo)
+      LEFT JOIN pol_internomovimiento im USING(id_InternoLegajo)
+      LEFT JOIN pol_unidades pua ON pua.id_Unidades = im.Unidad_Alojado
+      LEFT JOIN pol_unidades pud ON pud.id_Unidades = ip.Unidad_Dependencia
+      LEFT JOIN pol_autoridadjudicial aj ON aj.id_AutoridadJudicial = ip.id_AutoridadJudicial
+      LEFT JOIN pol_prelacion prel ON prel.id_InternoLegajo = il.id_InternoLegajo AND prel.estado = 'ACTIVO'
+      WHERE pp.tipo_persona <> 'EMPLEADO'
+      ORDER BY (prel.prioridad IS NULL) ASC, prel.prioridad ASC`,
+      (err, results) => {
+        if (err) {
+          return res.status(500).json({ error: "Error al obtener datos" });
+        }
+
+        results.forEach((detenido) => {
+          const opciones = { dateStyle: "short" };
+          if (detenido.Fecha_Hecho instanceof Date) {
+            detenido.Fecha_Hecho = detenido.Fecha_Hecho.toLocaleString("es-AR", opciones);
+          }
+          if (detenido.Fecha_Detencion instanceof Date) {
+            detenido.Fecha_Detencion = detenido.Fecha_Detencion.toLocaleString("es-AR", opciones);
+          }
+        });
+        res.render("detenidos_general", { detenido: results });
+      }
+    );
+  });
+};
+
+controller.enviarArriba = (req, res) => {
+  const idInternoLegajo = req.params.id;
+  const usuario = (req.session && req.session.usuario) || "SISTEMA"; // ajustar según tu manejo de sesión
+
+  req.getConnection((err, conn) => {
+    if (err) return res.status(500).json({ error: "Error de conexión" });
+
+    conn.beginTransaction((err) => {
+      if (err) return res.status(500).json({ error: "Error al iniciar transacción" });
+
+      conn.query("SELECT id_prelacion, prioridad FROM pol_prelacion WHERE id_InternoLegajo = ? AND estado = 'ACTIVO' FOR UPDATE", [idInternoLegajo],
+        (err, existentes) => {
+          if (err) return conn.rollback(() => res.status(500).json({ error: "Error al verificar prelación" }));
+
+          if (existentes.length === 0) {
+            // No estaba: hacemos lugar arriba de todo e insertamos en prioridad 1
+            conn.query(
+              "UPDATE pol_prelacion SET prioridad = prioridad + 1 WHERE estado = 'ACTIVO'",
+              (err) => {
+                if (err) return conn.rollback(() => res.status(500).json({ error: "Error al reordenar" }));
+
+                conn.query(
+                  "INSERT INTO pol_prelacion (id_InternoLegajo, estado, prioridad, Alta_autoriza) VALUES (?, 'ACTIVO', 1, ?)",
+                  [idInternoLegajo, usuario],
+                  (err) => {
+                    if (err) return conn.rollback(() => res.status(500).json({ error: "Error al insertar" }));
+
+                    conn.commit((err) => {
+                      if (err) return conn.rollback(() => res.status(500).json({ error: "Error al confirmar" }));
+                      res.json({ ok: true });
+                    });
+                  }
+                );
+              }
+            );
+          } else {
+            // Ya estaba activo: lo mandamos al primer lugar
+            const prioridadActual = existentes[0].prioridad;
+
+            conn.query(
+              "UPDATE pol_prelacion SET prioridad = prioridad + 1 WHERE estado = 'ACTIVO' AND prioridad < ?",
+              [prioridadActual],
+              (err) => {
+                if (err) return conn.rollback(() => res.status(500).json({ error: "Error al reordenar" }));
+
+                conn.query(
+                  "UPDATE pol_prelacion SET prioridad = 1, Modifica_autoriza = ? WHERE id_InternoLegajo = ? AND estado = 'ACTIVO'",
+                  [usuario, idInternoLegajo],
+                  (err) => {
+                    if (err) return conn.rollback(() => res.status(500).json({ error: "Error al actualizar" }));
+
+                    conn.commit((err) => {
+                      if (err) return conn.rollback(() => res.status(500).json({ error: "Error al confirmar" }));
+                      res.json({ ok: true });
+                    });
+                  }
+                );
+              }
+            );
+          }
+        }
+      );
+    });
+  });
+}
+
+function moverPosicion(req, res, direccion) {
+  const idInternoLegajo = req.params.id;
+  const usuario = (req.session && req.session.usuario) || "SISTEMA";
+
+  req.getConnection((err, conn) => {
+    if (err) return res.status(500).json({ error: "Error de conexión" });
+
+    conn.beginTransaction((err) => {
+      if (err) return res.status(500).json({ error: "Error al iniciar transacción" });
+
+      conn.query(
+        "SELECT prioridad FROM pol_prelacion WHERE id_InternoLegajo = ? AND estado = 'ACTIVO' FOR UPDATE",
+        [idInternoLegajo],
+        (err, rows) => {
+          if (err || rows.length === 0) {
+            return conn.rollback(() => res.status(400).json({ error: "El registro no está en prelación" }));
+          }
+
+          const prioridadActual = rows[0].prioridad;
+          const prioridadDestino = direccion === "SUBIR" ? prioridadActual - 1 : prioridadActual + 1;
+
+          conn.query(
+            "SELECT id_InternoLegajo FROM pol_prelacion WHERE estado = 'ACTIVO' AND prioridad = ? FOR UPDATE",
+            [prioridadDestino],
+            (err, vecino) => {
+              if (err) return conn.rollback(() => res.status(500).json({ error: "Error al buscar vecino" }));
+
+              if (vecino.length === 0) {
+                // Ya está en el extremo (primero o último): no hay nada para hacer
+                return conn.rollback(() => res.json({ ok: true, sinCambios: true }));
+              }
+
+              conn.query(
+                "UPDATE pol_prelacion SET prioridad = ?, Modifica_autoriza = ? WHERE id_InternoLegajo = ? AND estado = 'ACTIVO'",
+                [prioridadActual, usuario, vecino[0].id_InternoLegajo],
+                (err) => {
+                  if (err) return conn.rollback(() => res.status(500).json({ error: "Error al mover vecino" }));
+
+                  conn.query(
+                    "UPDATE pol_prelacion SET prioridad = ?, Modifica_autoriza = ? WHERE id_InternoLegajo = ? AND estado = 'ACTIVO'",
+                    [prioridadDestino, usuario, idInternoLegajo],
+                    (err) => {
+                      if (err) return conn.rollback(() => res.status(500).json({ error: "Error al actualizar" }));
+
+                      conn.commit((err) => {
+                        if (err) return conn.rollback(() => res.status(500).json({ error: "Error al confirmar" }));
+                        res.json({ ok: true });
+                      });
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    });
+  });
+}
+
+controller.subirPosicion = (req, res) => moverPosicion(req, res, "SUBIR");
+controller.bajarPosicion = (req, res) => moverPosicion(req, res, "BAJAR");
+
 module.exports = controller;

@@ -317,6 +317,7 @@
       let años = fechaFin.getFullYear() - hoy.getFullYear();
       let meses = fechaFin.getMonth() - hoy.getMonth();
       let dias = fechaFin.getDate() - hoy.getDate();
+      dias = dias + 1;
       if (dias < 0) {
           meses--;
           dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();

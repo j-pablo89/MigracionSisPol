@@ -60,6 +60,10 @@ router.get('/movimientos_comisarias', verifyToken, WebController.movimientosComi
 router.get('/movimientos_comisarias/exportar', verifyToken, WebController.exportarMovimientosComisarias);
 router.get("/interleg", verifyToken, WebController.buscarInterleg);
 router.get("/api/interleg/:dni", verifyToken, WebController.consultaDetenido);
+router.get("/detenidos_general", verifyToken, WebController.detenidosGeneral);
+router.post("/detenidos_general/prelacion/arriba/:id", WebController.enviarArriba);
+router.post("/detenidos_general/prelacion/subir/:id", WebController.subirPosicion);
+router.post("/detenidos_general/prelacion/bajar/:id", WebController.bajarPosicion);
 
 
 // ===================== RUTAS API NOTIFICACIONES =====================
