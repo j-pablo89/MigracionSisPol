@@ -229,7 +229,7 @@
                 <% }%>
               </div>
               <div class="mt-2 d-flex justify-content-center gap-2 flex-wrap justify-content-md-start">
-                <% if (session.permiso === 'ABM') { %>
+                <% if (session.permiso === 'ABM' || session.nombre_rol === 'ADMINISTRADOR' || session.nombre_rol === 'SUPERADMIN') { %>
                   <% if (detenido.Estado === 2) { %>
                     <button type="button" class="btn btn-warning border border-1 border-black" onclick="habilitarEdicion('<%= index %>')" id="modificar-<%= index %>" <%= detenido.canEdit ? '' : 'disabled title="Periodo de edición expirado"' %>>Modificar</button>
                     <button type="submit" class="btn btn-success-strong d-none border border-1 border-black" id="actualizar-<%= index %>">Actualizar</button>

@@ -2947,7 +2947,7 @@ controller.detenidosGeneral = (req, res) => {
           pp.Apellido AS Apellido, pp.Nombre AS Nombre, pp.Dni AS Dni, pp.Sexo AS Sexo, pp.tipo_persona AS tipo_persona,
           pua.Detalle AS Detalle_Alojamiento, pud.Detalle AS Detalle_Dependiente,
           ip.Causa AS Causa, ip.Situacion_procesal AS Situacion_procesal, ip.Fecha_Hecho AS Fecha_Hecho, ip.Fecha_Detencion AS Fecha_Detencion,
-          TIMESTAMPDIFF(YEAR, CURDATE(), Fecha_Detencion) AS anios,
+          TIMESTAMPDIFF(YEAR, Fecha_Detencion, CURDATE() ) AS anios,
           MOD(TIMESTAMPDIFF(MONTH, CURDATE(), Fecha_Detencion), 12) AS meses,
           DATEDIFF(DATE_ADD(CURDATE(), INTERVAL TIMESTAMPDIFF(MONTH, CURDATE(), Fecha_Detencion) MONTH), Fecha_Detencion) AS dias,
           aj.descripcion AS Autoridad_Judicial,
@@ -2984,7 +2984,7 @@ controller.detenidosGeneral = (req, res) => {
 
 controller.enviarArriba = (req, res) => {
   const idInternoLegajo = req.params.id;
-  const usuario = (req.session && req.session.usuario) || "SISTEMA"; // ajustar según tu manejo de sesión
+  const usuario = req.session.username || "SISTEMA"; // ajustar según tu manejo de sesión
 
   req.getConnection((err, conn) => {
     if (err) return res.status(500).json({ error: "Error de conexión" });
@@ -2997,18 +2997,11 @@ controller.enviarArriba = (req, res) => {
           if (err) return conn.rollback(() => res.status(500).json({ error: "Error al verificar prelación" }));
 
           if (existentes.length === 0) {
-            // No estaba: hacemos lugar arriba de todo e insertamos en prioridad 1
-            conn.query(
-              "UPDATE pol_prelacion SET prioridad = prioridad + 1 WHERE estado = 'ACTIVO'",
-              (err) => {
+            
+            conn.query("UPDATE pol_prelacion SET prioridad = prioridad + 1 WHERE estado = 'ACTIVO'", (err) => {
                 if (err) return conn.rollback(() => res.status(500).json({ error: "Error al reordenar" }));
-
-                conn.query(
-                  "INSERT INTO pol_prelacion (id_InternoLegajo, estado, prioridad, Alta_autoriza) VALUES (?, 'ACTIVO', 1, ?)",
-                  [idInternoLegajo, usuario],
-                  (err) => {
+                conn.query("INSERT INTO pol_prelacion (id_InternoLegajo, estado, prioridad, Alta_autoriza) VALUES (?, 'ACTIVO', 1, ?)", [idInternoLegajo, usuario], (err) => {
                     if (err) return conn.rollback(() => res.status(500).json({ error: "Error al insertar" }));
-
                     conn.commit((err) => {
                       if (err) return conn.rollback(() => res.status(500).json({ error: "Error al confirmar" }));
                       res.json({ ok: true });
@@ -3018,21 +3011,13 @@ controller.enviarArriba = (req, res) => {
               }
             );
           } else {
-            // Ya estaba activo: lo mandamos al primer lugar
+            
             const prioridadActual = existentes[0].prioridad;
 
-            conn.query(
-              "UPDATE pol_prelacion SET prioridad = prioridad + 1 WHERE estado = 'ACTIVO' AND prioridad < ?",
-              [prioridadActual],
-              (err) => {
+            conn.query("UPDATE pol_prelacion SET prioridad = prioridad + 1 WHERE estado = 'ACTIVO' AND prioridad < ?", [prioridadActual], (err) => {
                 if (err) return conn.rollback(() => res.status(500).json({ error: "Error al reordenar" }));
-
-                conn.query(
-                  "UPDATE pol_prelacion SET prioridad = 1, Modifica_autoriza = ? WHERE id_InternoLegajo = ? AND estado = 'ACTIVO'",
-                  [usuario, idInternoLegajo],
-                  (err) => {
+                conn.query("UPDATE pol_prelacion SET prioridad = 1, Modifica_autoriza = ? WHERE id_InternoLegajo = ? AND estado = 'ACTIVO'", [usuario, idInternoLegajo], (err) => {
                     if (err) return conn.rollback(() => res.status(500).json({ error: "Error al actualizar" }));
-
                     conn.commit((err) => {
                       if (err) return conn.rollback(() => res.status(500).json({ error: "Error al confirmar" }));
                       res.json({ ok: true });
@@ -3050,7 +3035,7 @@ controller.enviarArriba = (req, res) => {
 
 function moverPosicion(req, res, direccion) {
   const idInternoLegajo = req.params.id;
-  const usuario = (req.session && req.session.usuario) || "SISTEMA";
+  const usuario = req.session.username || "SISTEMA";
 
   req.getConnection((err, conn) => {
     if (err) return res.status(500).json({ error: "Error de conexión" });
