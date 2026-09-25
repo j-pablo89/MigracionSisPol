@@ -9,6 +9,8 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const verifyToken = require('./middlewares/authMiddleware');
 const chatController = require('./controllers/chatController');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 // IMPORTANDO RUTAS
@@ -82,11 +84,9 @@ app.use((req, res) => {
 // SERVICIO DE CHAT
 const server = http.createServer(app);
 const io = new Server(server);
-io.engine.use(sessionMiddleware);
-
 chatController(io);
 
 // INICIANDO EL SERVIDOR
-app.listen(app.get('port'), () => {
+server.listen(app.get('port'), () => {
     console.log(`SERVER ON PORT ${app.get('port')}`);
 });

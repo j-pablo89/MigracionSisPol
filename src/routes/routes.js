@@ -6,6 +6,7 @@ const { uploadWithErrorHandler } = require('../middlewares/upload');
 const { uploadFilesWithErrorHandler } = require('../middlewares/uploadfiles');
 const { checkRole } = require('../middlewares/authRoles');
 const { puedeModificarUsuario } = require('../middlewares/puedeModificarUsuario');
+const chatService = require('../services/chatService');
 
 
 
@@ -31,7 +32,9 @@ router.get('/login', (req, res) => {const timeout = req.query.timeout || null;re
 router.get('/', (req, res) => {res.render('login', { timeout: null });});
 router.get('/logout', verifyToken, WebController.logout);
 router.get('/error401', (req, res) => {const error_msg = req.query.error_msg || '';res.render('error401', { error_msg });});
-
+router.get('/api/chat/mensajes', verifyToken, async (req, res) => {
+  res.json(await chatService.obtenerHistorial());
+});
 
 
 

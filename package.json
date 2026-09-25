@@ -36,6 +36,7 @@
     "odbc": "^2.4.9",
     "pm2": "^7.0.1",
     "sharp": "^0.33.5",
+    "socket.io": "^4.8.4",
     "sweetalert2": "^11.22.0"
   },
   "devDependencies": {

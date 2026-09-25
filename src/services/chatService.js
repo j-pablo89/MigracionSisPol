@@ -1,8 +1,8 @@
-const pool = require('../db'); // o como se llame tu conexión existente
+const pool = require('../config/db');
 
 async function guardarMensaje(usuario, contenido) {
   const [result] = await pool.query(
-    'INSERT INTO chat_mensajes (usuario_id, contenido) VALUES (?, ?)',
+    'INSERT INTO pol_chat_mensajes (id_usuario, Contenido) VALUES (?, ?)',
     [usuario.id, contenido]
   );
 
@@ -10,7 +10,6 @@ async function guardarMensaje(usuario, contenido) {
     id: result.insertId,
     usuarioId: usuario.id,
     nombreUsuario: usuario.nombre,
-    comisaria: usuario.comisaria_nombre,
     contenido,
     enviadoEn: new Date()
   };
@@ -18,9 +17,12 @@ async function guardarMensaje(usuario, contenido) {
 
 async function obtenerHistorial(limite = 50) {
   const [mensajes] = await pool.query(
-    `SELECT m.id, m.contenido, m.enviado_en, u.nombre AS nombreUsuario, u.comisaria_nombre
-     FROM chat_mensajes m JOIN usuarios u ON u.id = m.usuario_id
-     ORDER BY m.enviado_en DESC LIMIT ?`,
+    `SELECT m.id_Mensaje AS id, m.Contenido AS contenido, m.Fecha_Creacion AS enviadoEn,
+            m.id_usuario AS usuarioId, CONCAT(p.Nombre, ' ', p.Apellido) AS nombreUsuario
+     FROM pol_chat_mensajes m
+     INNER JOIN pol_usuarios u ON u.id_usuario = m.id_usuario
+     INNER JOIN pol_persona p ON p.id_Persona = u.id_Persona
+     ORDER BY m.Fecha_Creacion DESC LIMIT ?`,
     [limite]
   );
   return mensajes.reverse();
