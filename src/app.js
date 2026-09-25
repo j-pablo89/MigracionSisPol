@@ -8,6 +8,7 @@ const myConnection = require('express-myconnection');
 const flash = require('connect-flash');
 const session = require('express-session');
 const verifyToken = require('./middlewares/authMiddleware');
+const chatController = require('./controllers/chatController');
 require('dotenv').config();
 
 // IMPORTANDO RUTAS
@@ -77,6 +78,13 @@ app.use((req, res) => {
 app.use((req, res) => {
     res.status(401).render('error401');
 });
+
+// SERVICIO DE CHAT
+const server = http.createServer(app);
+const io = new Server(server);
+io.engine.use(sessionMiddleware);
+
+chatController(io);
 
 // INICIANDO EL SERVIDOR
 app.listen(app.get('port'), () => {
