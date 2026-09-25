@@ -1,4 +1,22 @@
 <%- include('_modal_cambio_clave') %>
+
+<!-- OFFCANVAS CHAT -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasChat" aria-labelledby="offcanvasChatLabel">
+  <div class="offcanvas-header bg-secondary">
+    <h5 class="offcanvas-title text-white" id="offcanvasChatLabel">Chat interno</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column p-0">
+    <div id="chatMensajes" class="flex-grow-1 p-3" style="overflow-y: auto;">
+      <p class="text-muted text-center small">Cargando mensajes...</p>
+    </div>
+    <form id="chatForm" class="d-flex gap-2 p-2 border-top" autocomplete="off">
+      <input type="text" id="chatInput" class="form-control" placeholder="Escribí un mensaje..." maxlength="500">
+      <button type="submit" class="btn btn-primary"><i class="bx bx-send"></i></button>
+    </form>
+  </div>
+</div>
+
 <footer>
     <div class="py-3">
         <div class="d-md-flex justify-content-md-around text-center">
@@ -19,6 +37,7 @@
 <script src="/sweetalert2/sweetalert2.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="/js/script.js"></script>
 <script>
     (function(){

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -11,7 +12,7 @@ const verifyToken = require('./middlewares/authMiddleware');
 const chatController = require('./controllers/chatController');
 const http = require('http');
 const { Server } = require('socket.io');
-require('dotenv').config();
+
 
 // IMPORTANDO RUTAS
 const Routes = require('./routes/routes');

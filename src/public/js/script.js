@@ -513,6 +513,109 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Polling cada 10 minutos
   setInterval(obtenerNotificaciones, 600000);
 
+  // ===================================================== SISTEMA DE CHAT INTERNO =======================================================
+  const chatContainer = document.getElementById("chatContainer");
+  const offcanvasChatEl = document.getElementById("offcanvasChat");
+  const chatMensajesEl = document.getElementById("chatMensajes");
+  const chatForm = document.getElementById("chatForm");
+  const chatInput = document.getElementById("chatInput");
+  const chatBadge = document.getElementById("chatBadge");
+
+  if (chatContainer && offcanvasChatEl) {
+    const usuarioIdActual = document.body.dataset.userid;
+    let chatAbierto = false;
+    let noLeidos = 0;
+    let historialCargado = false;
+
+    const socket = io({ withCredentials: true });
+
+    function formatearHora(fecha) {
+      return new Date(fecha).toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    function renderMensaje(msg) {
+      const esPropio = String(msg.usuarioId) === String(usuarioIdActual);
+      const wrapper = document.createElement("div");
+      wrapper.className = `d-flex mb-2 ${esPropio ? "justify-content-end" : "justify-content-start"}`;
+      wrapper.innerHTML = `
+        <div class="p-2 rounded-3 ${esPropio ? "bg-primary text-white" : "bg-light text-dark"}" style="max-width: 80%;">
+          ${!esPropio ? `<div class="small fw-bold">${msg.nombreUsuario}</div>` : ""}
+          <div>${msg.contenido}</div>
+          <div class="small ${esPropio ? "text-white-50" : "text-muted"} text-end">${formatearHora(msg.enviadoEn)}</div>
+        </div>
+      `;
+      chatMensajesEl.appendChild(wrapper);
+    }
+
+    function scrollAlFinal() {
+      chatMensajesEl.scrollTop = chatMensajesEl.scrollHeight;
+    }
+
+    async function cargarHistorial() {
+      try {
+        const res = await fetch("/api/chat/mensajes");
+        const mensajes = await res.json();
+        chatMensajesEl.innerHTML = "";
+        if (!mensajes || mensajes.length === 0) {
+          chatMensajesEl.innerHTML =
+            '<p class="text-muted text-center small">No hay mensajes todavía</p>';
+        } else {
+          mensajes.forEach(renderMensaje);
+          scrollAlFinal();
+        }
+        historialCargado = true;
+      } catch (error) {
+        console.error("Error al cargar historial del chat:", error);
+        chatMensajesEl.innerHTML =
+          '<p class="text-danger text-center small">No se pudo cargar el chat</p>';
+      }
+    }
+
+    function actualizarBadge() {
+      if (noLeidos > 0 && !chatAbierto) {
+        chatBadge.textContent = noLeidos;
+        chatBadge.style.display = "block";
+      } else {
+        chatBadge.style.display = "none";
+      }
+    }
+
+    socket.on("nuevo_mensaje", (msg) => {
+      if (chatAbierto) {
+        // Si ya cargó el historial y el offcanvas está abierto, solo agrega el mensaje nuevo
+        if (historialCargado) {
+          renderMensaje(msg);
+          scrollAlFinal();
+        }
+      } else {
+        noLeidos += 1;
+        actualizarBadge();
+      }
+    });
+
+    offcanvasChatEl.addEventListener("show.bs.offcanvas", () => {
+      chatAbierto = true;
+      noLeidos = 0;
+      actualizarBadge();
+      cargarHistorial();
+    });
+
+    offcanvasChatEl.addEventListener("hide.bs.offcanvas", () => {
+      chatAbierto = false;
+    });
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const contenido = chatInput.value.trim();
+      if (!contenido) return;
+      socket.emit("enviar_mensaje", contenido);
+      chatInput.value = "";
+    });
+  }
+
   // ======================================================= FIN SISTEMA NOTIFICACIONES ============================================================
 
   // ============================================ BUSQUEDA DE DETENIDO - CONVERTIR A MAYUSCULAS ===================================================
